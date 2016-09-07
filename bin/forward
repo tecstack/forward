@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+#
+# (c) 2016, Leann Mak <leannmak@139.com>
+#
+# This file is part of Forward.
+
+__requires__ = ['forward']
+try:
+    import pkg_resources
+except Exception:
+    # Use pkg_resources to find the correct versions of libraries and set
+    # sys.path appropriately when there are multiversion installs.  But we
+    # have code that better expresses the errors in the places where the code
+    # is actually used (the deps are optional for many code paths) so we don't
+    # want to fail here.
+    pass
+
+import os
+import shutil
+import sys
+import traceback
+
+from forward.utils.error import ForwardError
+from forward.utils.display import Display
+import forward.constants as C
+
+
+if __name__ == '__main__':
+
+    display = Display()
+    cli = None
+    me = os.path.basename(sys.argv[0])
+    exit_code = 0
+
+    try:
+        try:
+            if me == 'forward':
+                from forward.cli import CLI
+            else:
+                raise ForwardError('Unknown Forward Alias: %s' % me)
+        except ImportError as e:
+                raise
+
+        cli = CLI(sys.argv)
+        cli.parse()
+        result = cli.run()
+
+    except ForwardError as e:
+        cli.parser.print_help()
+        display.display('ForwardError:%s' % e.message)
+        exit_code = 1
+    except KeyboardInterrupt:
+        display.display('User Interrupted Execution')
+        exit_code = 99
+    except Exception as e:
+        have_cli_options = cli is not None and cli.options is not None
+        display.display('Unexpected Exception: %s' % e.message)
+        display.display(u'the full traceback was:\n\n%s' \
+                % traceback.format_exc())
+        exit_code = 250
+    finally:
+        # remove forward tempdir
+        shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
+
+    sys.exit(exit_code)

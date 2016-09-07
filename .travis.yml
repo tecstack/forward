@@ -1,0 +1,24 @@
+language: python
+python:
+  - "2.7"
+
+install:
+  - pip install -r requirements.txt
+script:
+  - tox
+  - nosetests -v test/ --exe
+
+notifications:
+  email:
+      recipients:
+        - leannmak@139.com
+      on_success: always
+      on_failure: always
+
+branches:
+  only:
+    - master
+    - forward
+
+after_success:
+- coveralls
