@@ -119,17 +119,19 @@ DEFAULT_WORKER = get_config(
 
 # connection
 DEFAULT_TRANSPORT = get_config(
-    p, DEFAULTS, 'transport', 'FORWARD_TRANSPORT', 'local')
+    p, DEFAULTS, 'transport', 'FORWARD_TRANSPORT', 'ssh')
 DEFAULT_REMOTE_USER = get_config(
     p, DEFAULTS, 'remote_user', 'FORWARD_REMOTE_USER', None)
 DEFAULT_ASK_PASS = get_config(
     p, DEFAULTS, 'ask_pass', 'FORWARD_ASK_PASS', False, isbool=True)
 DEFAULT_ASK_ACTIVATE = get_config(
     p, DEFAULTS, 'ask_activate', 'FORWARD_ASK_ACTIVATE', False, isbool=True)
+DEFAULT_SHARE = get_config(
+    p, DEFAULTS, 'share', 'FORWARD_SHARE', False, isbool=True)
 DEFAULT_REMOTE_PORT = get_config(
     p, DEFAULTS, 'remote_port', 'FORWARD_REMOTE_PORT', 22, isint=True)
 DEFAULT_TIMEOUT = get_config(
-    p, DEFAULTS, 'timeout', 'FORWARD_TIMEOUT', 30, isint=True)
+    p, DEFAULTS, 'timeout', 'FORWARD_TIMEOUT', 5, isint=True)
 
 # tmp
 DEFAULT_LOCAL_TMP = get_config(
@@ -189,3 +191,6 @@ DEFAULT_DEVICE_MODELS = frozenset(['unknown'])
 # current
 DEFAULT_HOME = get_config(
     p, DEFAULTS, 'forward_path', 'FORWARD_HOME', '', ispath=True)
+
+# display
+DEFAULT_IP_JUST = 16

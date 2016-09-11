@@ -6,24 +6,20 @@
 import unittest
 import os
 import shutil
-from mock import patch, Mock
 
-from forward.cli import CLI
-from forward.cli.console import ConsoleCLI
+from forward.api import Forward
 
 
 class TestForward(unittest.TestCase):
     '''
-        Unit test for Console CLI Forward
+        Unit test for NO-CLI Forward
     '''
     def setUp(self):
-        ''' create test data folder and relative files '''
+        ''' create test data folder and script '''
         self.test_folder = '.test'
         if not os.path.exists(self.test_folder):
             os.mkdir(self.test_folder)
         self.test_script = os.path.join(self.test_folder, 'forward_script.py')
-        self.test_log = os.path.join(self.test_folder, 'forward.log')
-        self.test_out = os.path.join(self.test_folder, 'forward_out')
         with open(self.test_script, 'w') as f:
             code_list = [
                 'def node(nodeInput):\r\n',
@@ -56,25 +52,25 @@ class TestForward(unittest.TestCase):
             if len(os.listdir(self.test_folder)) == 0:
                 shutil.rmtree(self.test_folder, True)
 
-    def test_forward_console_cli(self):
-        ''' run a forward console cli task '''
-        # forward -w 4 -s .test/forward_script.py -a {} --loglevel debug
-        # -l .test/forward.log --no-stdout-log -t txt -o .test/forward_out
-        # -i '["127.0.0.1", "192.168.182.14-192.168.182.16"]' -v bclinux7
-        # -m bclinux7 --connect ssh -P -A -p 22 -u maiyifan -T 2 -S
-        args = [
-            'forward', '-w', '4', '-s', self.test_script, '-a', '{}',
-            '--loglevel', 'info', '-l', self.test_log,
-            '--no-stdout-log', '-t', 'txt', '-o', self.test_out,
-            '-i', '["127.0.0.1", "192.168.182.14-192.168.182.16"]',
-            '-v', 'bclinux7', '-m', 'bclinux7', '--connect', 'ssh',
-            '-P', '-A', '-p', '22', '-u', 'maiyifan', '-T', '2']
-        mycli = ConsoleCLI(args=args)
-        mycli.parse()
-        result = None
-        passwords = Mock(return_value=('111111', ''))
-        with patch.object(CLI, 'ask_passwords', passwords):
-            result = mycli.run()
+    def test_forward_run(self):
+        ''' run a forward api task '''
+        self.test_log = os.path.join(self.test_folder, 'forward.log')
+        self.test_out = os.path.join(self.test_folder, 'forward_out')
+        inventory = [
+            dict(ip='127.0.0.1', vender='bclinux7', model='bclinux7',
+                 connect='ssh', conpass='111111', actpass='',
+                 remote_port=22, remote_user='maiyifan',),
+            dict(ip='192.168.182.14', vender='bclinux7', model='bclinux7',
+                 connect='ssh', conpass='111111', actpass='',
+                 remote_port=22, remote_user='maiyifan',),
+            dict(ip='192.168.182.16', vender='bclinux7', model='bclinux7',
+                 connect='ssh', conpass='111111', actpass='',
+                 remote_port=22, remote_user='maiyifan',)]
+        forward = Forward(
+            worker=4, script=self.test_script, args={}, timeout=2,
+            loglevel='INFO', logfile=self.test_log, no_std_log=True,
+            out='txt', outfile=self.test_out, inventory=inventory)
+        result = forward.run()
         self.assertEqual(result['status'], True)
         self.assertTrue(os.path.exists(self.test_log))
         self.test_out = '%s.%s' % (self.test_out, 'txt')

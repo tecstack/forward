@@ -46,5 +46,8 @@ setup(name='forward',
           'Topic :: System :: Systems Administration',
           'Topic :: Utilities',
       ],
-      scripts=['bin/forward', ],
+      scripts=[
+          'bin/forward',
+          'bin/forward-cross',
+      ],
       data_files=[],)

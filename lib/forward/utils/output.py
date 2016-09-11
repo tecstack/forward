@@ -33,7 +33,7 @@ class Output:
         data = to_string(data)
         delta = 100
         display = Display()
-        display.display('OUTPUT%s' % ('-' * 94))
+        display.display('\r\nOUTPUT%s' % ('-' * 74))
         for i in range(0, len(data), delta):
             display.display(data[i:(i + delta)])
             i += delta

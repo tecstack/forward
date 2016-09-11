@@ -11,6 +11,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing.dummy import Lock
 lock = Lock()
 
+from forward import constants as C
 from forward.utils.error import ForwardError
 from forward.utils.log import logger as DEFAULT_LOGGER
 from forward.executor.task_executor import TaskExecutor
@@ -30,23 +31,22 @@ class TaskQueueManager(object):
         by creating a pool of workers.
         The manager is responsible for dispatching tasks to hosts.
     '''
-    _just = 16
+    _just = C.DEFAULT_IP_JUST
     _module = 'forward.models'
 
-    def __init__(self, options, inventory, passwords,
-                 logger=DEFAULT_LOGGER):
+    def __init__(self, options, inventory, logger=DEFAULT_LOGGER):
         super(TaskQueueManager, self).__init__()
         self.options = options
         self.inventory = inventory
-        self.passwords = passwords
         self.logger = logger
         self._success = []
 
     def run(self):
         ''' use multi-threads to execute tasks '''
         op = self.options
+        # check host inventory
         if not self.inventory:
-            raise ForwardError('No IP Inventory Defined.')
+            raise ForwardError('No Host Inventory Defined.')
         # use multi-threads to get task instances then run the play
         try:
             pool = ThreadPool(op.worker) if op.worker else ThreadPool()
@@ -58,7 +58,7 @@ class TaskQueueManager(object):
             result = TaskExecutor(
                 instances=instances, script=op.script,
                 args=op.args).run()
-            display.display('STATUS%s' % ('-' * 94))
+            display.display('\r\nSTATUS%s' % ('-' * 74))
             pool.map(self._print_task_status, self.inventory)
             return result
         except ForwardError:
@@ -71,44 +71,47 @@ class TaskQueueManager(object):
             pool.join()
             self.cleanup()
 
-    def _get_instance(self, ip):
+    def _get_instance(self, host):
         ''' connect to a remote host '''
-        op = self.options
-        if not op.model:
+        if not host.model or host.model == list(C.DEFAULT_DEVICE_MODELS)[0]:
             raise ForwardError('No Device Model Defined.')
-        if not op.remote_user:
-            raise ForwardError('No Remote User Defined.')
-        if not op.vender:
+        if not host.vender or host.vender == list(C.DEFAULT_DEVICE_VENDERS)[0]:
             raise ForwardError('No Device Vender Defined.')
+        if not host.remote_user:
+            raise ForwardError('No Remote User Defined.')
         # use threading lock to ensure globals
         lock.acquire()
-        self.logger.debug('Connecting to %s ...' % ip)
+        self.logger.debug('Connecting to %s ...' % host.ip)
         try:
             instance = getattr(
                 import_module(
-                    '%s.%s' % (self._module, op.model)), op.model.upper())(
-                        ip=ip, port=op.remote_port, timeout=op.timeout)
+                    '%s.%s.%s' % (self._module, host.connect, host.model)),
+                host.model.upper())(
+                    ip=host.ip, port=host.remote_port,
+                    timeout=self.options.timeout)
             login = instance.login(
-                username=op.remote_user, password=self.passwords['con'])
+                username=host.remote_user, password=host.conpass)
             if login['status']:
-                self.logger.info('%s: Login Succeed.' % ip.ljust(self._just))
+                self.logger.info(
+                    '%s: Login Succeed.' % host.ip.ljust(self._just))
                 activate = instance.privilegeMode(
-                    secondPassword=self.passwords['act'], deviceType=op.vender)
+                    secondPassword=host.actpass, deviceType=host.vender)
                 if activate['status']:
                     self.logger.info(
-                        '%s: Enable Succeed.' % ip.ljust(self._just))
-                    self.logger.debug('Already Connected to %s.' % ip)
-                    self._success.append(ip)
-                    return instance, ip
+                        '%s: Enable Succeed.' % host.ip.ljust(self._just))
+                    self.logger.debug('Already Connected to %s.' % host.ip)
+                    self._success.append(host.ip)
+                    return instance, host.ip
                 else:
                     self.logger.warn(
-                        '%s: Enable Failed.' % ip.ljust(self._just))
+                        '%s: Enable Failed.' % host.ip.ljust(self._just))
             else:
-                self.logger.warn('%s: Login Failed.' % ip.ljust(self._just))
+                self.logger.warn(
+                    '%s: Login Failed.' % host.ip.ljust(self._just))
         except ForwardError:
             raise
         except Exception as e:
-            self.logger.debug('Cannot Connect to %s.' % ip)
+            self.logger.debug('Cannot Connect to %s.' % host.ip)
             self.logger.error(repr(e))
             self.logger.debug(traceback.format_exc())
         finally:
@@ -116,15 +119,15 @@ class TaskQueueManager(object):
 
     def _get_failed(self):
         ''' get a list of hosts whose task failed execute '''
-        return list(set(self.inventory) ^ set(self._success))
+        return list(set([x.ip for x in self.inventory]) ^ set(self._success))
 
-    def _print_task_status(self, ip):
+    def _print_task_status(self, host):
         ''' print task status of all hosts '''
         msg = None
-        if ip in self._success:
-            msg = '%s: OK' % ip.ljust(self._just)
+        if host.ip in self._success:
+            msg = '%s: OK' % host.ip.ljust(self._just)
         else:
-            msg = '%s: FAILED' % ip.ljust(self._just)
+            msg = '%s: FAILED' % host.ip.ljust(self._just)
         display.display(msg)
 
     def cleanup(self):

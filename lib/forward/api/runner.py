@@ -20,14 +20,16 @@ class Runner(object):
     """
         Runner for NO-CLI Extension
     """
-    def __init__(self, options, logger=DEFAULT_LOGGER):
+    def __init__(self, options, inventory, logger=DEFAULT_LOGGER):
         super(Runner, self).__init__()
         self.options = options
+        self.inventory = inventory
         self.logger = logger
 
     def run(self):
         ''' run a forward task '''
         op = self.options
+        inv = self.inventory
         # set logger
         try:
             if op.logfile:
@@ -41,23 +43,16 @@ class Runner(object):
         except Exception as e:
             self.logger.error(repr(e))
             self.logger.debug(traceback.format_exc())
-        # get connection passwords
-        passwords = {'con': op.conpass, 'act': op.actpass}
-        # get ip inventory of hosts
-        if op.inventory and isinstance(op.inventory, list):
-            for x in op.inventory:
-                if not check_ip_format(x):
-                    raise ForwardError('IP Inventory Illegal.')
+        # check ip inventory
+        for x in inv:
+            if not check_ip_format(x.ip):
+                raise ForwardError('Host IP Illegal: %s.' % x)
         # now execute tasks
         self._tqm = None
         result = None
         try:
             self._tqm = TaskQueueManager(
-                options=op,
-                inventory=op.inventory,
-                passwords=passwords,
-                logger=self.logger
-            )
+                options=op, inventory=inv, logger=self.logger)
             result = self._tqm.run()
         except ForwardError:
             raise

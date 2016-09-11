@@ -10,19 +10,10 @@ import optparse
 import os
 import re
 import getpass
-import traceback
 
-from ConfigParser import ConfigParser as cfgparse
-
-from forward.release import __version__
 from forward import constants as C
-from forward.utils.error import ForwardError
-from forward.utils.boolean import boolean
+from forward.release import __version__
 from forward.utils.log import logger as DEFAULT_LOGGER
-from forward.utils.log import set_loglevel_only, add_file_logger
-from forward.utils.output import Output
-from forward.utils.parse import get_ip_list
-from forward.executor.task_queue_manager import TaskQueueManager
 
 try:
     from __main__ import display
@@ -52,98 +43,22 @@ class CLI(object):
         self.logger = DEFAULT_LOGGER
         self.callback = callback
 
-    def execute(self):
-        ''' runs a child defined method using the execute_<action> pattern '''
-        fn = getattr(self, "execute_%s" % self.action)
-        fn()
-
     def parse(self):
-        self.parser = CLI.base_parser(
-            usage='usage: %prog [options]',
-            script_opts=True,
-            inventory_opts=True,
-            log_opts=True,
-            output_opts=True,
-            connect_opts=True,
-            run_opts=True
-        )
-        self.options, self.args = self.parser.parse_args(self.args[1:])
-        return True
+        raise Exception("Need to implement!")
 
     def run(self):
         ''' use Runner lib to do SSH things '''
-        # do configuration
-        if self.options.custom_conf_file:
-            display.display(
-                u"Using %s as config file" % self.options.custom_conf_file)
-        else:
-            display.display(u"No config file found; use cmd config.")
-        # get options from file, which has higher priority than from cmd
-        try:
-            self.read_cfg_file()
-        except Exception as e:
-            display.display(u"the full traceback was:\n\n%s"
-                            % traceback.format_exc())
-            raise ForwardError('Custom Configuration File Illegal.')
-        # set logger: may raise ForwardError if illegal args
-        if self.options.logfile:
-            self.logger = add_file_logger(
-                level=self.options.loglevel, file=self.options.logfile,
-                default=(not self.options.no_std_log))
-        elif self.options.loglevel != C.DEFAULT_LOGLEVEL:
-            self.logger = set_loglevel_only(level=self.options.loglevel)
-        # get connection passwords: may be ignored cause we are local
-        if self.options.connect == 'local':
-            self.options.ask_pass = False
-            self.options.ask_activate = False
-        conpass, actpass = self.ask_passwords()
-        passwords = {'con': conpass, 'act': actpass}
-        # get ip inventory of hosts
-        inventory = self.options.inventory
-        try:
-            inventory = eval(inventory) \
-                if isinstance(inventory, str) else inventory
-            inventory = get_ip_list(inventory)
-        except:
-            raise ForwardError('IP Inventory Illegal.')
-        # now execute tasks
-        self._tqm = None
-        result = None
-        try:
-            self._tqm = TaskQueueManager(
-                options=self.options,
-                inventory=inventory,
-                passwords=passwords,
-                logger=self.logger)
-            result = self._tqm.run()
-        except ForwardError:
-            raise
-        except Exception as e:
-            self.logger.error(repr(e))
-            self.logger.debug(traceback.format_exc())
-        finally:
-            if self._tqm:
-                self._tqm.cleanup()
-        # results output
-        if result:
-            try:
-                Output.output(result, self.options.outfile, self.options.out)
-            except ForwardError:
-                raise
-            except Exception as e:
-                self.logger.error(repr(e))
-                self.logger.debug(traceback.format_exc())
-        return result
+        raise Exception("Need to implement!")
 
-    def ask_passwords(self):
+    @staticmethod
+    def ask_passwords(ask_pass, ask_activate):
         ''' prompt for connection passwords if needed '''
-        op = self.options
         conpass = None
         actpass = None
         try:
-            if op.ask_pass:
+            if ask_pass:
                 conpass = getpass.getpass(prompt="Connection password: ")
-            if op.ask_activate:
+            if ask_activate:
                 actpass = getpass.getpass(prompt="Activation password: ")
         except EOFError:
             pass
@@ -155,16 +70,23 @@ class CLI(object):
 
     @staticmethod
     def base_parser(
-            usage='', script_opts=False, log_opts=False, output_opts=False,
-            inventory_opts=False, connect_opts=False, run_opts=False):
+            usage='', doc_opts=False, script_opts=False, log_opts=False,
+            output_opts=False, inventory_opts=False, connect_opts=False,
+            run_opts=False):
         ''' create an options parser for most forward scripts '''
         # base opts
         parser = SortedOptParser(usage, version=CLI.version('%prog'))
-        parser.add_option(
-            '-c', '--custom-conf-file', dest='custom_conf_file', type=str,
-            default=None,
-            metavar='FILE', action='callback', callback=CLI.expand_tilde,
-            help='specify custom configuration file path (default=None).')
+        if doc_opts:
+            parser.add_option(
+                '-C', '--play-opt-file', dest='playfile', type=str,
+                default=None, metavar='FILE', action='callback',
+                callback=CLI.expand_tilde,
+                help='specify play option file path (default=None).')
+            parser.add_option(
+                '-I', '--inventory-opt-file', dest='inventoryfile', type=str,
+                default=None, metavar='FILE', action='callback',
+                callback=CLI.expand_tilde,
+                help='specify inventory option file path (default=None).')
         if run_opts:
             run_group = optparse.OptionGroup(
                 parser, "RunTime Options",
@@ -197,8 +119,8 @@ class CLI(object):
                 % C.DEFAULT_LOGLEVEL)
             log_group.add_option(
                 '-l', '--log-file', dest='logfile', type=str,
-                default=os.path.join(C.DEFAULT_HOME,
-                                     C.DEFAULT_FORWARD_LOG_PATH),
+                default=os.path.join(
+                    C.DEFAULT_HOME, C.DEFAULT_FORWARD_LOG_PATH),
                 metavar="FILE", action='callback', callback=CLI.expand_tilde,
                 help='specify log out path (default=%s).'
                 % C.DEFAULT_FORWARD_LOG_PATH)
@@ -227,9 +149,9 @@ class CLI(object):
                 parser, "Inventory Options",
                 "control as which host to connect to")
             inventory_group.add_option(
-                '-i', '--ip-inventory', dest='inventory',
-                default=[list(C.LOCALHOST)[2]], type=str,
-                help='specify an ip inventory of remote hosts \
+                '-i', '--hosts', dest='hosts',
+                default=[list(C.LOCALHOST)[2]],
+                help='specify a group of remote hosts \
                       (default=[\'%s\']).' % list(C.LOCALHOST)[2])
             inventory_group.add_option(
                 '-v', '--device-vender', dest='vender',
@@ -258,7 +180,11 @@ class CLI(object):
             connect_group.add_option(
                 '-A', '--ask-activate', default=C.DEFAULT_ASK_ACTIVATE,
                 dest='ask_activate', action='store_true',
-                help='ask for connection activation password')
+                help='ask for activation password')
+            connect_group.add_option(
+                '-S', '--share', default=C.DEFAULT_SHARE,
+                dest='share', action='store_true',
+                help='share both connection and activation passwords or not')
             connect_group.add_option(
                 '-p', '--port', default=C.DEFAULT_REMOTE_PORT,
                 dest='remote_port', type=int,
@@ -277,9 +203,10 @@ class CLI(object):
             parser.add_option_group(connect_group)
         return parser
 
-    def get_option_groups(self):
+    @staticmethod
+    def get_option_groups(option_groups):
         ''' get option groups (and their types, str/int/float/bool)'''
-        gp = self.parser.option_groups
+        gp = option_groups
         pattern = re.compile(r'true|false')
         no_bools = {
             x.title.split(' ')[0].lower(): {
@@ -291,34 +218,6 @@ class CLI(object):
                 y.__dict__['dest'] for y in x.option_list if re.search(
                     pattern, y.__dict__['action'])} for x in gp}
         return no_bools, bools
-
-    def read_cfg_file(self):
-        ''' get and check custom configurations from file '''
-        if self.options.custom_conf_file:
-            no_bools, bools = self.get_option_groups()
-            if os.path.isfile(self.options.custom_conf_file):
-                config = cfgparse()
-                try:
-                    config.read(self.options.custom_conf_file)
-                    for x in config.sections():
-                        if x in no_bools.keys():
-                            for i, j in config.items(x):
-                                if i in no_bools[x].keys():
-                                    t = no_bools[x][i]
-                                    # type conversion for int/float
-                                    j = eval(t)(j) if (
-                                        t and t != 'string') else j
-                                    exec('self.options.%s=j' % i)
-                        if x in bools.keys():
-                            for i, j in config.items(x):
-                                if i in bools[x]:
-                                    j = boolean(j)
-                                    exec('self.options.%s=j' % i)
-                except Exception:
-                    raise
-                finally:
-                    return True
-        return False
 
     @staticmethod
     def version(prog):

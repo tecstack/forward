@@ -19,7 +19,7 @@ class TaskExecutor(object):
         This class handles a task blocks to execute on a given set of hosts.
         Usage:
         te = TaskExecutor(instances, script, args)
-        result = te.load_script()
+        result = te.run()
     """
 
     def __init__(self, instances=None, script=None, args=None):

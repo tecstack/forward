@@ -34,15 +34,23 @@ if __name__ == '__main__':
     exit_code = 0
 
     try:
+        sub = None
         try:
-            if me == 'forward':
-                from forward.cli import CLI
+            if me.find('-') != -1:
+                target = me.split('-')
+                if len(target) > 1:
+                    sub = target[1]
+                    myclass = "%sCLI" % sub.capitalize()
+                    mycli = getattr(__import__(
+                        "forward.cli.%s" % sub, fromlist=[myclass]), myclass)
+            elif me == 'forward':
+                from forward.cli.console import ConsoleCLI as mycli
             else:
                 raise ForwardError('Unknown Forward Alias: %s' % me)
         except ImportError as e:
                 raise
 
-        cli = CLI(sys.argv)
+        cli = mycli(sys.argv)
         cli.parse()
         result = cli.run()
 

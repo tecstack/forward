@@ -36,7 +36,7 @@ def check_loglevel(level):
         elif level.isdigit():
             level = int(level)
     if not (isinstance(level, int) and level in logging._levelNames):
-        raise ForwardError('Loglevel Illegal.')
+        raise ForwardError('Unknown Loglevel.')
     return level
 
 

@@ -5,27 +5,33 @@
 #
 # This file is part of Forward.
 
-import traceback
-
 from forward.utils.error import ForwardError
-from forward.api.option import Option
+from forward.args.play_option import PlayOption
+from forward.args.host_option import HostOption
 from forward.api.runner import Runner
 
 
 class Forward(object):
     """
-        NO-CLI Extension
+        ECI Extension
     """
     def __init__(self, **kw):
         super(Forward, self).__init__()
-        self.options = Option(**kw)
+        self.inventory = []
+        self.get_inventory(kw['inventory'])
+        kw.pop('inventory')
+        self.options = PlayOption(**kw)
 
     def run(self):
         try:
-            result = Runner(options=self.options).run()
+            result = Runner(
+                options=self.options, inventory=self.inventory).run()
             return result
         except ForwardError:
             raise
-        except Exception as e:
-            self.logger.error(repr(e))
-            self.logger.debug(traceback.format_exc())
+        except:
+            pass
+
+    def get_inventory(self, hosts):
+        for h in hosts:
+            self.inventory.append(HostOption(**h))

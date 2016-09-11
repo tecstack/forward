@@ -9,12 +9,12 @@ import shutil
 from mock import patch, Mock
 
 from forward.cli import CLI
-from forward.cli.console import ConsoleCLI
+from forward.cli.cross import CrossCLI
 
 
 class TestForward(unittest.TestCase):
     '''
-        Unit test for Console CLI Forward
+        Unit test for Doc CLI Forward
     '''
     def setUp(self):
         ''' create test data folder and relative files '''
@@ -22,6 +22,9 @@ class TestForward(unittest.TestCase):
         if not os.path.exists(self.test_folder):
             os.mkdir(self.test_folder)
         self.test_script = os.path.join(self.test_folder, 'forward_script.py')
+        self.test_play = os.path.join(self.test_folder, 'forward_play.cfg')
+        self.test_inventory = os.path.join(
+            self.test_folder, 'forward_inventory.cfg')
         self.test_log = os.path.join(self.test_folder, 'forward.log')
         self.test_out = os.path.join(self.test_folder, 'forward_out')
         with open(self.test_script, 'w') as f:
@@ -39,6 +42,44 @@ class TestForward(unittest.TestCase):
                 '(njInfo["errLog"], device, version["errLog"])\r\n',
                 '\treturn njInfo\r\n']
             f.writelines(code_list)
+        with open(self.test_play, 'w') as f:
+            opt_list = [
+                '[runtime]\r\n',
+                'worker = 4\r\n',
+                '[script]\r\n',
+                'script = %s\r\n' % self.test_script,
+                'args = {}\r\n',
+                '[logging]\r\n',
+                'loglevel = debug\r\n',
+                'logfile = %s\r\n' % self.test_log,
+                'no_std_log = False\r\n',
+                '[output]\r\n',
+                'out = txt\r\n',
+                'outfile = %s\r\n' % self.test_out,
+                '[connection]\r\n',
+                'timeout = 2\r\n']
+            f.writelines(opt_list)
+        with open(self.test_inventory, 'w') as f:
+            opt_list = [
+                '[Tony Copper]\r\n',
+                'hosts = ["127.0.0.1", "192.168.182.135"]\r\n',
+                'vender = bclinux7\r\n',
+                'model = bclinux7\r\n',
+                'connect = ssh\r\n',
+                'ask_pass = True\r\n',
+                'ask_activate = True\r\n',
+                'share = True\r\n',
+                'remote_user = maiyifan\r\n',
+                '[Monkey D Luffy]\r\n',
+                'hosts = ["192.168.182.14-192.168.182.16"]\r\n',
+                'vender = bclinux7\r\n',
+                'model = bclinux7\r\n',
+                'connect = ssh\r\n',
+                'ask_pass = True\r\n',
+                'ask_activate = False\r\n',
+                'remote_user = maiyifan\r\n',
+                'remote_port = 22\r\n']
+            f.writelines(opt_list)
 
     def tearDown(self):
         ''' remove test files '''
@@ -48,6 +89,10 @@ class TestForward(unittest.TestCase):
             test_pyc = '%s.pyc' % os.path.splitext(self.test_script)[0]
         if os.path.exists(test_pyc):
             os.remove(test_pyc)
+        if os.path.exists(self.test_play):
+            os.remove(self.test_play)
+        if os.path.exists(self.test_inventory):
+            os.remove(self.test_inventory)
         if os.path.exists(self.test_log):
             os.remove(self.test_log)
         if os.path.exists(self.test_out):
@@ -56,20 +101,11 @@ class TestForward(unittest.TestCase):
             if len(os.listdir(self.test_folder)) == 0:
                 shutil.rmtree(self.test_folder, True)
 
-    def test_forward_console_cli(self):
-        ''' run a forward console cli task '''
-        # forward -w 4 -s .test/forward_script.py -a {} --loglevel debug
-        # -l .test/forward.log --no-stdout-log -t txt -o .test/forward_out
-        # -i '["127.0.0.1", "192.168.182.14-192.168.182.16"]' -v bclinux7
-        # -m bclinux7 --connect ssh -P -A -p 22 -u maiyifan -T 2 -S
+    def test_forward_cross_cli(self):
+        ''' run a forward cross cli task '''
         args = [
-            'forward', '-w', '4', '-s', self.test_script, '-a', '{}',
-            '--loglevel', 'info', '-l', self.test_log,
-            '--no-stdout-log', '-t', 'txt', '-o', self.test_out,
-            '-i', '["127.0.0.1", "192.168.182.14-192.168.182.16"]',
-            '-v', 'bclinux7', '-m', 'bclinux7', '--connect', 'ssh',
-            '-P', '-A', '-p', '22', '-u', 'maiyifan', '-T', '2']
-        mycli = ConsoleCLI(args=args)
+            'forward-cross', '-C', self.test_play, '-I', self.test_inventory]
+        mycli = CrossCLI(args)
         mycli.parse()
         result = None
         passwords = Mock(return_value=('111111', ''))
