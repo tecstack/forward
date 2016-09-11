@@ -1,0 +1,39 @@
+##################### HEY DEAR FRIENDS, WELCOME TO FORWARD! ###################
+# FORWARD IS A SIMPLE AUTOMATION TOOL FOR IT OPERATIONS. (C) 2016, C-ANT, INC.
+# YOU CAN DEFINE YOUR EXECUABLE HOST GROUPS HERE FOR A FORWARD TASK. AND DON'T
+# FORGET TO NAME THEM INSIDE A BRACKET AS YOU LIKE FIRST OF ALL.
+# MOREOVER, YOU SHOULD CONCERN ABOUT AND ASSIGN ITEMS AS BELOW:
+#     hosts         : specify a group of remote hosts (default=['127.0.0.1']).
+#     vender        : specify remote device type (default=unknown).
+#     model         : specify remote device model (default=unknown).
+#     connect       : connection protocol to use (default=ssh).
+#     ask_pass      : ask for connection password (default=False).
+#     ask_activate  ：ask for activation password (default=False).
+#     share         : share both connection and activation passwords or not
+#                     (default=False).
+#     remote_port   : connect to this port (default=22).
+#     remote_user   : connect as this user (default=None).
+#
+#
+# Leann Mak <leannmak@139.com>
+###############################################################################
+
+[luffy]
+hosts = ["127.0.0.1", "192.168.182.135"]
+vender = bclinux7
+model = bclinux7
+connect = ssh
+ask_pass = True
+ask_activate = False
+share = True
+remote_user = maiyifan
+remote_port = 22
+
+[chopper]
+hosts = ['192.168.182.14-192.168.182.16']
+vender = bclinux7
+model = bclinux7
+connect = ssh
+ask_pass = True
+ask_activate = True
+remote_user = root

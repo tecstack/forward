@@ -21,96 +21,44 @@ $ cd forward
 $ pip install -r requirements.txt
 $ python setup.py install
 $ forward --help
+$ forward-cross --help
 ```
 
 ## Examples
 
-### 1. Script Sample
+### 1. Forward Console CLI
 
 ```
-$ vi conf/forward_script.py
-def node(nodeInput):
-    # init njInfo
-    njInfo = {
-        'status':True,
-        'errLog':'',
-        'content':{}
-    }
-
-    # node
-    for device in nodeInput['instance']:
-        instance = nodeInput['instance'][device]
-        version = instance.execute('cat /etc/redhat-release')
-        if version['status']:
-            # execute succeed
-            njInfo['content'][device] = version['content']
-        else:
-            njInfo['status'] = False
-            njInfo['errLog'] = '%s%s:%s\r\n' % (njInfo['errLog'], device, version['errLog'])
-    return njInfo
-```
-
-### 2. Calling Methods
-
-Note: Configuration file can be used together with pure CLI,
- which will overwrite configurations in pure CLI. 
-
-#### 2.1 Pure CLI
-
-```
-$ forward -w 4 -s conf/forward_script.py -a {} --loglevel debug
-  -l log/forward.log --no-stdout-log -t txt -o data/forward_out
+$ forward -w 4 -s sample/example.py -a {} --loglevel debug
+  -l sample/forward.log --no-stdout-log -t txt -o sample/forward_out
   -i '["127.0.0.1", "192.168.182.14-192.168.182.16"]' -v bclinux7
   -m bclinux7 --connect ssh -P -A -p 22 -u root -T 2
 ```
 
-#### 2.2 CLI with Configuration File
+### 2. Forward Cross CLI
 
 ```
-$ vi conf/forward_custom.cfg
-[runtime]
-worker = 2
-
-[script]
-script = conf/forward_script.py
-args = {}
-
-[logging]
-loglevel = debug
-logfile = log/forward.log
-#no_std_log = True
-
-[output]
-out = stdout
-#out = txt
-outfile = data/out
-
-[inventory]
-inventory = ['127.0.0.1', '192.168.182.14-192.168.182.16']
-vender = bclinux7
-model = bclinux7
-
-[connection]
-connect = ssh
-ask_pass = True
-ask_activate = True
-remote_user = root
-timeout = 3
-
-$ forward -c conf/forward_custom.cfg
+$ forward-cross -I sample/hosts -C sample/play.cfg
 ```
 
-#### 2.3 Class API
+### 3. Forward Class API
 
 ```
 >>> from forward.api import Forward
+>>> inventory = [
+        dict(ip='127.0.0.1', vender='bclinux7', model='bclinux7',
+             connect='ssh', conpass='111111', actpass='',
+             remote_port=22, remote_user='maiyifan',),
+        dict(ip='192.168.182.14', vender='bclinux7', model='bclinux7',
+             connect='ssh', conpass='111111', actpass='',
+             remote_port=22, remote_user='maiyifan',),
+        dict(ip='192.168.182.16', vender='bclinux7', model='bclinux7',
+             connect='ssh', conpass='111111', actpass='',
+             remote_port=22, remote_user='maiyifan',)]
 >>> forward = Forward(
-        worker=4, script='conf/forward_script.py', args={},
-        loglevel='info', logfile='log/forward.log',
-        no_std_log=True, out='txt', outfile='out/forward_out',
-        inventory=['127.0.0.1', '192.168.182.14', '192.168.182.16'],
-        vender='bclinux7', model='bclinux7', connect='ssh',
-        conpass='111111', actpass='',
-        remote_port=22, remote_user='root', timeout=2)
+        worker=4, script='sample/example.py', args={},
+        loglevel='info', logfile='sample/forward.log',
+        no_std_log=True, out='txt', outfile='sample/forward_out',
+        inventory=inventory, timeout=2)
 >>> result = forward.run()
 ```
