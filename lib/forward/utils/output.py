@@ -31,7 +31,7 @@ class Output:
     def output_stdout(data):
         '''print data to standard output'''
         data = to_string(data)
-        delta = 100
+        delta = 80
         display = Display()
         display.display('\r\nOUTPUT%s' % ('-' * 74))
         for i in range(0, len(data), delta):
