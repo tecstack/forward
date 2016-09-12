@@ -111,7 +111,7 @@ class TestForward(unittest.TestCase):
         passwords = Mock(return_value=('111111', ''))
         with patch.object(CLI, 'ask_passwords', passwords):
             result = mycli.run()
-        self.assertEqual(result['status'], True)
+        self.assertEqual(result['stdout']['status'], True)
         self.assertTrue(os.path.exists(self.test_log))
         self.test_out = '%s.%s' % (self.test_out, 'txt')
         self.assertTrue(os.path.exists(self.test_out))

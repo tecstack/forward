@@ -71,7 +71,7 @@ class TestForward(unittest.TestCase):
             loglevel='INFO', logfile=self.test_log, no_std_log=True,
             out='txt', outfile=self.test_out, inventory=inventory)
         result = forward.run()
-        self.assertEqual(result['status'], True)
+        self.assertEqual(result['stdout']['status'], True)
         self.assertTrue(os.path.exists(self.test_log))
         self.test_out = '%s.%s' % (self.test_out, 'txt')
         self.assertTrue(os.path.exists(self.test_out))
