@@ -40,7 +40,7 @@ class TaskQueueManager(object):
         self.inventory = inventory
         self.logger = logger
         self._success = []
-        self._status = []
+        self._status = {}
 
     def run(self):
         ''' use multi-threads to execute tasks '''
@@ -92,27 +92,27 @@ class TaskQueueManager(object):
                     timeout=self.options.timeout)
             login = instance.login(
                 username=host.remote_user, password=host.conpass)
-            self._status.append({host.ip: {}})
+            self._status[host.ip] = {}
             if login['status']:
                 self.logger.info(
                     '%s: Login Succeed.' % host.ip.ljust(self._just))
                 activate = instance.privilegeMode(
                     secondPassword=host.actpass, deviceType=host.vender)
-                self._status[-1][host.ip]['connect'] = 'ok'
+                self._status[host.ip]['connect'] = 'ok'
                 if activate['status']:
                     self.logger.info(
                         '%s: Enable Succeed.' % host.ip.ljust(self._just))
                     self.logger.debug('Already Connected to %s.' % host.ip)
-                    self._status[-1][host.ip]['activate'] = 'ok'
+                    self._status[host.ip]['activate'] = 'ok'
                     self._success.append(host.ip)
                     return instance, host.ip
                 else:
-                    self._status[-1][host.ip]['activate'] = 'failed'
+                    self._status[host.ip]['activate'] = 'failed'
                     self.logger.warn(
                         '%s: Enable Failed.' % host.ip.ljust(self._just))
             else:
-                self._status[-1][host.ip]['connect'] = 'failed'
-                self._status[-1][host.ip]['activate'] = 'skipped'
+                self._status[host.ip]['connect'] = 'failed'
+                self._status[host.ip]['activate'] = 'skipped'
                 self.logger.warn(
                     '%s: Login Failed.' % host.ip.ljust(self._just))
         except ForwardError:
