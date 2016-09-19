@@ -63,7 +63,7 @@ class TestForward(unittest.TestCase):
         # -i '["127.0.0.1", "192.168.182.14-192.168.182.16"]' -v bclinux7
         # -m bclinux7 --connect ssh -P -A -p 22 -u maiyifan -T 2 -S
         args = [
-            'forward', '-w', '4', '-s', self.test_script, '-a', '{}',
+            'forward', '-w', '4', '-s', self.test_script, '-a', '',
             '--loglevel', 'info', '-l', self.test_log,
             '--no-stdout-log', '-t', 'txt', '-o', self.test_out,
             '-i', '["127.0.0.1", "192.168.182.14-192.168.182.16"]',

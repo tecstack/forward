@@ -27,8 +27,7 @@ class PlayOption(object):
         try:
             self.worker = int(worker)
             self.script = str(script)
-            self.args = {} if not args else (
-                args if isinstance(args, dict) else dict(eval(args)))
+            self.args = args
             self.loglevel = str(loglevel)
             self.logfile = str(logfile)
             self.no_std_log = boolean(no_std_log)

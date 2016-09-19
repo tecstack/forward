@@ -67,7 +67,7 @@ class TestForward(unittest.TestCase):
                  connect='ssh', conpass='111111', actpass='',
                  remote_port=22, remote_user='maiyifan',)]
         forward = Forward(
-            worker=4, script=self.test_script, args={}, timeout=2,
+            worker=4, script=self.test_script, args='', timeout=2,
             loglevel='INFO', logfile=self.test_log, no_std_log=True,
             out='txt', outfile=self.test_out, inventory=inventory)
         result = forward.run()

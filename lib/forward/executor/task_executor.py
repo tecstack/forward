@@ -34,7 +34,7 @@ class TaskExecutor(object):
         try:
             args = {
                 'instance': self.instances,
-                'parameters': self.load_args(self.args)}
+                'parameters': self.args}
             module = imp.load_source('script', self.load_module(self.script))
             ret = module.node(args)
         except ForwardError:
