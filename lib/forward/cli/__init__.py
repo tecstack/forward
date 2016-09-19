@@ -107,8 +107,8 @@ class CLI(object):
                 help='specify node script file path \
                       (default=%s).' % C.DEFAULT_SCRIPT_PATH)
             script_group.add_option(
-                '-a', '--argument', dest="args", default={},
-                type=str, help='specify script arguments (default={}).')
+                '-a', '--argument', dest="args", default=None,
+                type=str, help='specify script arguments (default=None).')
             parser.add_option_group(script_group)
         if log_opts:
             log_group = optparse.OptionGroup(
@@ -152,7 +152,7 @@ class CLI(object):
                 '-i', '--hosts', dest='hosts',
                 default=[list(C.LOCALHOST)[2]],
                 help='specify a group of remote hosts \
-                      (default=[\'%s\']).' % list(C.LOCALHOST)[2])
+                      (default=\'[\'%s\']\').' % list(C.LOCALHOST)[2])
             inventory_group.add_option(
                 '-v', '--device-vender', dest='vender',
                 default=list(C.DEFAULT_DEVICE_VENDERS)[0], type=str,

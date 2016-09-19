@@ -29,7 +29,7 @@ $ forward-cross --help
 ### 1. Forward Console CLI
 
 ```
-$ forward -w 4 -s sample/example.py -a {} --loglevel debug
+$ forward -w 4 -s sample/example.py -a '' --loglevel debug
   -l sample/forward.log --no-stdout-log -t txt -o sample/forward_out
   -i '["127.0.0.1", "192.168.182.14-192.168.182.16"]' -v bclinux7
   -m bclinux7 --connect ssh -P -A -p 22 -u root -T 2
@@ -56,7 +56,7 @@ $ forward-cross -I sample/hosts -C sample/play.cfg
              connect='ssh', conpass='111111', actpass='',
              remote_port=22, remote_user='maiyifan',)]
 >>> forward = Forward(
-        worker=4, script='sample/example.py', args={},
+        worker=4, script='sample/example.py', args='',
         loglevel='info', logfile='sample/forward.log',
         no_std_log=True, out='txt', outfile='sample/forward_out',
         inventory=inventory, timeout=2)
