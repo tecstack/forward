@@ -52,7 +52,7 @@ class BASETELNET(object):
                         self.njInfo['content'] = str(e)
                 return self.njInfo
 
-        @BAN.ban
+        # @BAN.ban
         def execute(self,cmd):
                 self.cleanBuffer()
                 dataPattern = '[\r\n]+([\s\S]*)[\r\n]+' + self.prompt #Spaces will produce special characters and re.escape('show ver') --> show \\ ver
