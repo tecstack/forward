@@ -46,7 +46,7 @@ class BASETELNET(object):
         def logout(self):
                 try:
                         self.channel.close()
-                        print '+logout'
+                        # print '+logout'
                 except Exception,e:
                         self.njInfo['status'] = False
                         self.njInfo['content'] = str(e)

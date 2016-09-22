@@ -19,7 +19,7 @@ class S3300(BASESSHV1):
                 BASESSHV1.__init__(self,*args,**kws)
                 self.moreFlag = re.escape('....press ENTER to next line, Q to quit, other key to next page....')
 
-	@adminPermissionCheck
+	# @adminPermissionCheck
         def _configMode(self):
                 data = {
                         'status':False,

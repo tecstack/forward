@@ -11,7 +11,7 @@ from forward.models_utils.ban import BAN,adminPermissionCheck
 from forward.models.telnet.usgFirewallPolicyAdmin import USGFirewallPolicyAdmin
 class USG1000(BASETELNET,USGFirewallPolicyAdmin):
 
-        @adminPermissionCheck
+        # @adminPermissionCheck
         def _configMode(self,cmd = 'conf term'):
                 self.isConfigMode = False
                 data = {

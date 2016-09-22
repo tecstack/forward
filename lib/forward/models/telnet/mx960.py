@@ -26,7 +26,7 @@ class MX960(BASETELNET):
                         data['errLog'] = str(e)
                 return data
 
-        @adminPermissionCheck
+        # @adminPermissionCheck
         def _configMode(self):							# private method
                 self.isConfigMode = False
                 data = {
