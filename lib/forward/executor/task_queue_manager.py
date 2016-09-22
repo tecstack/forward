@@ -117,6 +117,8 @@ class TaskQueueManager(object):
                     '%s: Login Failed.' % host.ip.ljust(self._just))
         except ForwardError:
             raise
+        except ImportError:
+            raise ForwardError('Unknown Model `%s`.' % host.model)
         except Exception as e:
             self.logger.debug('Cannot Connect to %s.' % host.ip)
             self.logger.error(repr(e))
