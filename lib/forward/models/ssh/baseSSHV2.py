@@ -71,7 +71,6 @@ class BASESSHV2(object):
     def enable(self,enablePassWord):
         pass
 
-    # @BAN.ban
     def execute(self,cmd):
         data = {
             'status':True,
@@ -91,8 +90,7 @@ class BASESSHV2(object):
                 while not re.search(self.prompt,data['content'].split('\n')[-1]):
                     self.getMore(data['content'])
                     data['content'] += self.shell.recv(1024)
-                    # self.progress('.')
-                # self.progress('done\n')
+                self.progress('done\n')
                 # try to extract the return data
                 tmp = re.search(dataPattern,data['content']).group(1)
                 data['content'] = tmp
@@ -199,7 +197,6 @@ class BASESSHV2(object):
     def __del__(self):
         self.logout()
 
-    @adminPermissionCheck
     def _configMode(self,cmd = 'conf term'):
         self.isConfigMode = False
         data={
@@ -323,3 +320,39 @@ class BASESSHV2(object):
     def progress(self,tag='.'):
         sys.stdout.write(tag)
         sys.stdout.flush()
+
+    def getUser(self,command = "show running-config | in username"):
+        data = {
+               "status":False,
+               "content":"",
+               "errLog":""
+        }
+        try:
+                userList=[] # [{"username":"zhang-qichuan","secret":5},{}....]
+                # execute query command
+                info = self.execute(command)
+                if not info["status"]:
+                    raise ForwardError("Error:get user list failed: %s" %info["errLog"])
+                # process data
+                result = info["content"]
+                for line in result.split('\n'):
+                    # Each line
+                    index=0
+                    segments=line.split() # ['username' , 'test-user' , 'secret', '5','$.........']
+                    for segment in segments:
+                        if index <= 1:
+                            index += 1
+                            # Check after second fields username my-username secret/password .....
+                            continue
+                        else:
+                            if segment == "secret" or segment == "password":
+                                userData = {"username":segments[1],"secret":segments[index+1]} # get secret level
+                                userList.append(userData)
+                                break
+                        index += 1
+                data["content"] = userList
+                data["status"] = True
+        except ForwardError,e:
+                data['status'] = False
+                data['errLog'] = str(e)
+        return data

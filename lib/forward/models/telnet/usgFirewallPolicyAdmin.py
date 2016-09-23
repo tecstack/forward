@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 #coding:utf-8
-import sys,re,os
+"""
+-----Introduction-----
+[Core][forward] Device class for USG Firewall function.
+"""
+import re,os,json,time,sys
 from forward.models_utils.forwardError import ForwardError
-
-
 class USGFirewallPolicyAdmin(object):
 	"""USG1000 inherit this class"""
 	def createAddressName(self,addressName = '',description = '',netIP = [],rangeIP = [],hostIP = []):
@@ -68,12 +70,16 @@ class USGFirewallPolicyAdmin(object):
 	def modifyAddressName(self,**kws):
 		return self.createAddressName(**kws)	
 
-	def createServiceName(self,serviceName = "",description = "",protocol="tcp",destPort=[]):
+	#def createServiceName(self,serviceName = "",description = "",protocol="tcp",destPort=[]):
+	def createServiceName(self,serviceName = "",description = "",tcp=False,udp=False,destTCPtPort=[],destUDPPort=[]):
 		"""
+		-tcp or udp		Must choose one of them
 		- param serviceName:	Must provide
 		- param description:	Can be empty
-		- pramam protocol:	tcp/udp
-		- destPort:		["22 23","80 81"]
+		- destUDPPort:		["22 23","80 81"]
+		- destTCPPort:		["22 23","80 81"]
+		eg:	(self,serviceName = "",description = "",tcp=False,udp=True,destTCPtPort=[],destUDPPort=["22 33","44 55"]):
+		eg:	(self,serviceName = "",description = "",tcp=True,udp=False,destTCPtPort=["66 77","88"],destUDPPort=[]):
 		"""
 		njInfo = {
 			"status":False,
@@ -86,11 +92,17 @@ class USGFirewallPolicyAdmin(object):
 			if len(serviceName) == 0:
 				raise ForwardError("Must be specifyied serviceName")
 			# protocol
-			if not  protocol == "tcp" and not protocol=="udp":
-				raise ForwardError("protocol must be as tcp or udp")
-			# destPort
-			if not type(destPort) == type([]):
-				raise ForwardError("destPort must be as list")
+			if  (tcp is False ) and (udp is False):
+				raise ForwardError("select tcp=True/udp=True")
+			# dest-Port
+			if tcp is True:
+				if not type(destTCPPort) == type([]):
+					raise ForwardError("destTCPPort must be as list")
+			elif udp is True:
+				if not type(destUDPPort) == type([]):
+					raise ForwardError("destUDPPort must be as list")
+			else:
+				raise ForwardError("tcp or udp shoud True/False")
 			
 			mode = self._configMode() #enter config mode
 			if not mode["status"]:
@@ -104,11 +116,18 @@ class USGFirewallPolicyAdmin(object):
 			data = self.execute("description {description}".format(description = description))
 			if not data["status"]:
 				raise ForwardError("create description failed: %s"% data["status"])
-			# create destPort
-			for port in destPort:
-				data = self.execute("{protocol} dest {port} source 1 65535".format(protocol = protocol,port = port))
-				if not data["status"]:
-					raise ForwardError("create destPort failed): %s"%data["errLog"])
+			# create tcp port
+			if tcp is True:
+				for port in destTCPPort:
+					data = self.execute("tcp dest {port} source 1 65535".format(port = port))
+					if not data["status"]:
+						raise ForwardError("create destPort failed): %s"%data["errLog"])
+			# create udp port
+			if udp is True:
+				for port in destUDPPort:
+					data = self.execute("udp dest {port} source 1 65535".format(port = port))
+					if not data["status"]:
+						raise ForwardError("create destPort failed): %s"%data["errLog"])
 			# create it succcessed
 			njInfo["status"] = True
 		except Exception,e:

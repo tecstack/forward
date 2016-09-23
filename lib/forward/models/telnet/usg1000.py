@@ -7,11 +7,9 @@
 import sys,re,os
 from forward.models.telnet.baseTELNET import BASETELNET
 from forward.models_utils.forwardError import ForwardError
-from forward.models_utils.ban import BAN,adminPermissionCheck
 from forward.models.telnet.usgFirewallPolicyAdmin import USGFirewallPolicyAdmin
 class USG1000(BASETELNET,USGFirewallPolicyAdmin):
 
-        # @adminPermissionCheck
         def _configMode(self,cmd = 'conf term'):
                 self.isConfigMode = False
                 data = {

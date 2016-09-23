@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #coding:utf8
+#Author: Cheung Kei-Chuen
 import sys,re,os
 from forward.models_utils.forwardError import ForwardError
 class FGFirewallPolicyAdmin(object):
@@ -154,6 +155,7 @@ class FGFirewallPolicyAdmin(object):
                         "errLog":"",
                 }
 		try:
+			protocol=protocol.upper()
 			# parameter check protocol
 			if (not protocol == "TCP") and (not protocol== "UDP"):
 				raise ForwardError("protocol's value must be a TCP or UDP")
