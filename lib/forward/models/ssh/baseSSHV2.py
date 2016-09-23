@@ -90,7 +90,7 @@ class BASESSHV2(object):
                 while not re.search(self.prompt,data['content'].split('\n')[-1]):
                     self.getMore(data['content'])
                     data['content'] += self.shell.recv(1024)
-                self.progress('done\n')
+                # self.progress('done\n')
                 # try to extract the return data
                 tmp = re.search(dataPattern,data['content']).group(1)
                 data['content'] = tmp
