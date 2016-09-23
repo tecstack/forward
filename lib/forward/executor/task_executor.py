@@ -7,8 +7,9 @@
 
 import os
 import imp
+import traceback
 
-from forward.utils.error import ForwardError
+from forward.utils.error import ForwardError, ForwardScriptError
 from forward.utils.path import purepath
 
 __all__ = ['TaskExecutor']
@@ -40,7 +41,8 @@ class TaskExecutor(object):
         except ForwardError:
             raise
         except:
-            raise ForwardError('Script Content Illegal.')
+            raise ForwardScriptError(
+                u'Script Content Illegal.\r\n%s' % traceback.format_exc())
         return ret
 
     @staticmethod

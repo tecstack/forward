@@ -11,3 +11,10 @@ class ForwardError(Exception):
         This is the base class for all errors raised from Forward code.
     '''
     pass
+
+
+class ForwardScriptError(ForwardError):
+    '''
+        This is the user script error.
+    '''
+    pass

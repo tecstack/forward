@@ -21,7 +21,7 @@ import shutil
 import sys
 import traceback
 
-from forward.utils.error import ForwardError
+from forward.utils.error import ForwardError, ForwardScriptError
 from forward.utils.display import Display
 import forward.constants as C
 
@@ -54,17 +54,21 @@ if __name__ == '__main__':
         cli.parse()
         result = cli.run()
 
+    except ForwardScriptError as e:
+        cli.parser.print_help()
+        display.display('\r\nForwardScriptError: %s' % e.message)
+        exit_code = 1
     except ForwardError as e:
         cli.parser.print_help()
-        display.display('ForwardError:%s' % e.message)
+        display.display('\r\nForwardError: %s' % e.message)
         exit_code = 1
     except KeyboardInterrupt:
-        display.display('User Interrupted Execution')
+        display.display('\r\nUser Interrupted Execution')
         exit_code = 99
     except Exception as e:
         have_cli_options = cli is not None and cli.options is not None
-        display.display('Unexpected Exception: %s' % e.message)
-        display.display(u'the full traceback was:\n\n%s' \
+        display.display('\r\nUnexpected Exception: %s' % e.message)
+        display.display(u'the full traceback was:\r\n%s' \
                 % traceback.format_exc())
         exit_code = 250
     finally:
