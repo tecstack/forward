@@ -8,8 +8,8 @@
 import traceback
 from importlib import import_module
 from multiprocessing.dummy import Pool as ThreadPool
-from multiprocessing.dummy import Lock
-lock = Lock()
+# from multiprocessing.dummy import Lock
+# lock = Lock()
 
 from forward import constants as C
 from forward.utils.error import ForwardError
@@ -81,7 +81,7 @@ class TaskQueueManager(object):
         if not host.remote_user:
             raise ForwardError('No Remote User Defined.')
         # use threading lock to ensure globals
-        lock.acquire()
+        # lock.acquire()
         self.logger.debug('Connecting to %s ...' % host.ip)
         try:
             instance = getattr(
@@ -123,8 +123,8 @@ class TaskQueueManager(object):
             self.logger.debug('Cannot Connect to %s.' % host.ip)
             self.logger.error(repr(e))
             self.logger.debug(traceback.format_exc())
-        finally:
-            lock.release()
+        # finally:
+        #     lock.release()
 
     def _get_failed(self):
         ''' get a list of hosts whose task failed execute '''
@@ -142,7 +142,7 @@ class TaskQueueManager(object):
     def cleanup(self):
         ''' clean up resource '''
         self._success = []
-        try:
-            lock.release()
-        except:
-            pass
+        # try:
+        #     lock.release()
+        # except:
+        #     pass
