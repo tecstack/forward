@@ -23,13 +23,12 @@ class deviceClassRg5510(unittest.TestCase):
                                "basePrompt",
                                "prompt",
                                "moreFlag"]
-        """self.baseClassMethod = ["login",
+        self.baseClassMethod = ["login",
                                 "logout",
                                 "execute",
                                 "getMore",
                                 "getPrompt",
-                                "cleanBuffer"]"""
-        self.deviceClassMethod = ["cleanBuffer"]
+                                "cleanBuffer"]
 
     def test_class_parameters(self):
         _dev = getattr(importlib.import_module('forward.devclass.{dev}'.format(dev=self.deviceClassName)),
@@ -38,12 +37,12 @@ class deviceClassRg5510(unittest.TestCase):
             if not hasattr(_dev(1,2,3), parameter):
                 raise IOError('%s not have parameter:' % (self.deviceClassName), parameter)
 
-    """def test_base_class_method(self):
+    def test_base_class_method(self):
         _dev = getattr(importlib.import_module('forward.devclass.{dev}'.format(dev=self.deviceClassName)),
                        self.deviceClassName.upper())
         for method in self.baseClassMethod:
             if not hasattr(_dev(1,2,3), method):
-                raise IOError('%s not have parameter:' % (self.deviceClassName), method)"""
+                raise IOError('%s not have parameter:' % (self.deviceClassName), method)
 
     def test_inherit_check(self):
         # Inherit from BASESSHV2
@@ -51,9 +50,3 @@ class deviceClassRg5510(unittest.TestCase):
                       self.deviceClassName.upper())
         self.assertEquals(cls.__bases__[0], BASERUIJIE)
 
-    def test_device_class_method(self):
-        _dev = getattr(importlib.import_module('forward.devclass.{dev}'.format(dev=self.deviceClassName)),
-                       self.deviceClassName.upper())
-        for method in self.deviceClassMethod:
-            if not hasattr(_dev(1,2,3), method):
-                raise IOError('%s not have parameter:' % (self.deviceClassName), method)

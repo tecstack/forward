@@ -29,8 +29,6 @@ class deviceClassVlb(unittest.TestCase):
                                 "getMore",
                                 "getPrompt",
                                 "cleanBuffer"]
-        self.baseClassMethod = ["zcliMode",
-                                "exitZcli"]
 
     def test_class_parameters(self):
         _dev = getattr(importlib.import_module('forward.devclass.{dev}'.format(dev=self.deviceClassName)),

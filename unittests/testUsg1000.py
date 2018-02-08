@@ -29,14 +29,6 @@ class deviceClassUsg1000(unittest.TestCase):
                                 "getMore",
                                 "getPrompt",
                                 "cleanBuffer"]
-        self.deviceClassMethod = ["_recv",
-                                  "privilegeMode",
-                                  "_commit",
-                                  "addUser",
-                                  "_configMode",
-                                  "_exitConfigMode",
-                                  "changePassword",
-                                  "deleteUser"]
 
     def test_class_parameters(self):
         _dev = getattr(importlib.import_module('forward.devclass.{dev}'.format(dev=self.deviceClassName)),
@@ -58,9 +50,3 @@ class deviceClassUsg1000(unittest.TestCase):
                       self.deviceClassName.upper())
         self.assertEquals(cls.__bases__[0], BASEVENUSTECH)
 
-    def test_device_class_method(self):
-        _dev = getattr(importlib.import_module('forward.devclass.{dev}'.format(dev=self.deviceClassName)),
-                       self.deviceClassName.upper())
-        for method in self.deviceClassMethod:
-            if not hasattr(_dev(1, 2, 3), method):
-                raise IOError('%s not have parameter:' % (self.deviceClassName), method)

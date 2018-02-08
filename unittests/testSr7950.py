@@ -45,7 +45,7 @@ class deviceClassSr7950(unittest.TestCase):
                 raise IOError('%s not have parameter:' % (self.deviceClassName), method)
 
     def test_inherit_check(self):
-        # Inherit from BASETELNET
+        # Inherit from BASEBAER
         cls = getattr(importlib.import_module('forward.devclass.{dev}'.format(dev=self.deviceClassName)),
                       self.deviceClassName.upper())
         self.assertEquals(cls.__bases__[0], BASEBAER)

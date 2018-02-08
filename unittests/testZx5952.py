@@ -45,7 +45,7 @@ class deviceClassZx5952(unittest.TestCase):
                 raise IOError('%s not have parameter:' % (self.deviceClassName), method)
 
     def test_inherit_check(self):
-        # Inherit from BASESSHV2
+        # Inherit from BASEZTE
         cls = getattr(importlib.import_module('forward.devclass.{dev}'.format(dev=self.deviceClassName)),
                       self.deviceClassName.upper())
         self.assertEquals(cls.__bases__[0], BASEZTE)

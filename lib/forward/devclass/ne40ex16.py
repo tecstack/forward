@@ -14,41 +14,6 @@ class NE40EX16(BASEHUAWEI):
     """This is a manufacturer of huawei, so it is integrated with BASEHUAWEI library.
     """
 
-    def _commit(self):
-        """Because the device of this model is different from the other
-        huawei devices in commit  parameters, it is rewritten.
-        """
-        saveCommand = "save"
-        # exitCommand = "return"
-        data = {"status": False,
-                "content": "",
-                "errLog": ""}
-        try:
-            # Check the config mode status.
-            if self.isConfigMode:
-                self._exitConfigMode()
-                # exit config mode
-                self.shell.send('%s\n' % (saveCommand))
-                # save setup to system
-                while not re.search(self.prompt, data['content'].split('\n')[-1]):
-                    data['content'] += self.shell.recv(1024)
-                    # When prompted, reply Y,Search range at last line
-                    if re.search(re.escape('Are you sure to continue?[Y/N]'), data['content'].split('\n')[-1]):
-                        # interact,send y
-                        self.shell.send("y\n")
-                """
-                If the program finds information like ‘success’, etc.
-                in the received information, it indicates that the save configuration is successful.
-                """
-                if re.search(re.escape('Save the configuration successfully'), data['content'], flags=re.IGNORECASE):
-                    data['status'] = True
-            else:
-                raise IOError('Error: The current state is not configuration mode')
-        except Exception, e:
-            data['errLog'] = str(e)
-            data['status'] = False
-        return data
-
     def login(self):
         """Because the device of this model is different from the other
         huawei devices in commit  parameters, it is rewritten.

@@ -33,17 +33,3 @@ class ASA(BASECISCO):
                 buff += self.shell.recv(1024)
             except Exception:
                 raise ForwardError('Receive timeout [%s]' % (buff))
-
-    def addUser(self, username, password):
-        # Overriding methods
-        return BASECISCO.addUser(self,
-                                 username=username,
-                                 password=password,
-                                 addCommand='username {username} password {password}\n')
-
-    def changePassword(self, username, password):
-        # Overriding methods
-        return BASECISCO.addUser(self,
-                                 username=username,
-                                 password=password,
-                                 addCommand='username {username} password {password}\n')
