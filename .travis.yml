@@ -4,8 +4,11 @@ python:
 
 install:
   - pip install -r requirements.txt
+  - python setup.py install
+
 script:
-  - nosetests -v test/ --exe
+  - flake8 ./ --config=protocol/flake8
+  - nosetests -c nosetests.ini
 
 notifications:
   email:
@@ -13,11 +16,6 @@ notifications:
         - azrael-ex@139.com
       on_success: always
       on_failure: always
-
-branches:
-  only:
-    - master
-    - forward
 
 after_success:
 - coveralls
