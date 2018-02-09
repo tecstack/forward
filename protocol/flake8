@@ -1,0 +1,4 @@
+[flake8]
+exclude = unittests,build,tests,migrations,.git,.tox,docs,*egg,env,instance,callback,runScriptAdapter,runShellAdapter
+ignore = E402, E123, F401
+max-line-length = 120

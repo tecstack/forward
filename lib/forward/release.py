@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 #
-# (c) 2016, Leann Mak <leannmak@139.com>
-#
-# This file is part of Forward.
+# (c) 2017, Azrael <azrael-ex@139.com>
 
-__version__ = '1.1.0'
-__author__ = 'C-Ant, Inc.'
+
+__version__ = '3.0.8'
+__author__ = 'Azrael, Cheung Kei-Chuen'
