@@ -1,5 +1,6 @@
 # Forward
   [![Build Status](https://travis-ci.org/tecstack/forward.svg?branch=master)](https://travis-ci.org/tecstack/forward)
+  [![Download Status](https://img.shields.io/badge/download-1024%2Fmonth-green.svg)](https://github.com/tecstack/forward)
 
 ---
 
