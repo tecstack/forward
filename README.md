@@ -1,5 +1,5 @@
 # Forward
-  [![Build Status](http://192.168.182.52:8080/jenkins/job/Forward/job/forward.4.test.after/badge/icon)](http://192.168.182.52:8080/jenkins/job/Forward/job/forward.4.test.after/)
+  [![Build Status](https://travis-ci.org/tecstack/forward.svg?branch=master)](https://travis-ci.org/tecstack/forward)
 
 ---
 
