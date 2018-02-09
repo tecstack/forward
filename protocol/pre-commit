@@ -1,0 +1,14 @@
+#!/bin/sh
+
+#set_env_path
+export PATH=/usr/local/bin:$PATH
+source /Users/Azrael/.bashrc
+
+#flake8_check
+echo ">[run flake8]"
+flake8 ./ --config=protocol/flake8
+result_flake8=$?
+if ((result_flake8 != 0))
+then
+  exit 1
+fi

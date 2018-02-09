@@ -1,0 +1,4 @@
+flake8==2.4.1
+mock==2.0.0
+paramiko==1.16.0
+pexpect>=4.2.0
