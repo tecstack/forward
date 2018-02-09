@@ -8,7 +8,7 @@ install:
 
 script:
   - flake8 ./ --config=protocol/flake8
-  - nosetests -c nosetests.ini
+  - nosetests -v --with-coverage --cover-package=lib/forward
 
 notifications:
   email:
