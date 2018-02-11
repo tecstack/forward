@@ -28,7 +28,7 @@
 * Pull 拉取当前版本
 
   ```Bash
-  git clone http://192.168.182.51/promise/forward.git
+  git clone https://github.com/tecstack/forward.git
   cd forward
   ```
 
