@@ -111,7 +111,7 @@
 * alpha分支对应一个早期的内部测试版本。
 * RC,Releases and Stables are named after the version number plus any kind of fish.
 * The devel branch corresponds to the release actively under development.
-* The alpha branch corresponds to a early release thich is used for In-House test.
+* The alpha branch corresponds to a early release which is used for In-House test.
 
 ---
 
