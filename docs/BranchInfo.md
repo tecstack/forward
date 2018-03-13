@@ -4,4 +4,4 @@
 * &ensp;&ensp;alpha分支对应一个早期的内部测试版本。
 * &ensp;&ensp;RC,Releases and Stables are named after the version number plus any kind of fish.
 * &ensp;&ensp;The devel branch corresponds to the release actively under development.
-* &ensp;&ensp;The alpha branch corresponds to a early release thich is used for In-House test.
+* &ensp;&ensp;The alpha branch corresponds to a early release which is used for In-House test.
