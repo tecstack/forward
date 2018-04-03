@@ -151,45 +151,41 @@ class BASESSHV2(object):
         but need to define whole prompt dict list
         """
         result = {
-            'status': True,
+            'status': False,
             'content': '',
             'errLog': '',
             "state": None
         }
         # Parameters check
-        if (cmd is None) or (not isinstance(prompt, list)) or (not isinstance(timeout, int)):
-            raise ForwardError("""You should pass such a form of argument: \
-CMD = 'Your command', prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt4']}]""")
-        for section in prompt:
-            if not isinstance(section.values(), list):
-                raise ForwardError("""you should pass such a form of argument:\
-prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt4']}]""")
+        parameterFormat = {
+            "success": "regular-expression-success",
+            "error": "regular-expression-error"
+        }
+        if (cmd is None) or (not isinstance(prompt, dict)) or (not isinstance(timeout, int)):
+            raise ForwardError("You should given a parameter for prompt such as: %s" % (str(parameterFormat)))
         try:
+            # send a command
             self.shell.send("{cmd}\r".format(cmd=cmd))
+        except Exception:
+            # break, if faild
+            result["errLog"] = "Forward had sent a command failure."
+            return result
+        while True:
+            self.getMore(result["content"])
             try:
-                while True:
-                    self.getMore(result['content'])
-                    result["content"] += self.shell.recv(1024)
-                    for section in prompt:
-                        # section.values() is : [ [p1,p2,p3] ]
-                        for _prompt in section.values()[0]:
-                            if re.search(_prompt, result["content"].split("\n")[-1]):
-                                result["state"] = section.keys()[0]
-                                break
-                        # Find the specified state type
-                        if not result["state"] is None:
-                            break
-                    # Find the specified state type,exit
-                    if not result["state"] is None:
-                        break
-                result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
-            # If you accept a timeout, cancel SSH
-            except Exception, e:
-                self.logout()
-                raise ForwardError(str(e))
-        except Exception, e:
-            result["errLog"] = str(e)
-            result["status"] = False
+                result["content"] += self.shell.recv(1024)
+            except Exception:
+                result["errLog"] = "Forward had recived data timeout."
+                return result
+            # Mathing specify key
+            for key in prompt:
+                if re.search(prompt[key], result["content"]):
+                    # Found it
+                    result["state"] = key
+                    break
+        # Clearing special characters
+        result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
+        result["status"] = True
         return result
 
     def getPrompt(self):
