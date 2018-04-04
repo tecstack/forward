@@ -143,7 +143,7 @@ class BASESSHV1(object):
                 tmp = re.search(dataPattern, data['content']).group(1)
                 # Delete special characters caused by More split screen.
                 tmp = re.sub("<--- More --->\\r +\\r", "", tmp)
-                tmp = re.sub('(\x00|\x08| ){0,}', "", tmp)
+                tmp = re.sub('(\x00|\x08){0,}', "", tmp)
                 tmp = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", tmp)
                 data['content'] = tmp
             except Exception, e:
@@ -250,71 +250,56 @@ class BASESSHV1(object):
         but need to define whole prompt dict list
         """
         result = {
-            'status': True,
+            'status': False,
             'content': '',
             'errLog': '',
             "state": None
         }
         # Parameters check
-        if (cmd is None) or (not isinstance(prompt, list)) or (not isinstance(timeout, int)):
-            raise ForwardError("""You should pass such a form of argument: \
-CMD = 'Your command', prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt4']}] ,\
-timeout=30""")
-        for section in prompt:
-            if not isinstance(section.values(), list):
-                raise ForwardError("""you should pass such a form of argument:\
-prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt4']}]""")
+        parameterFormat = {
+            "success": "regular-expression-success",
+            "error": "regular-expression-error"
+        }
+        if (cmd is None) or (not isinstance(prompt, dict)) or (not isinstance(timeout, int)):
+            raise ForwardError("You should given a parameter for prompt such as: %s" % (str(parameterFormat)))
         try:
+            # send a command
             self.channel.send("{cmd}\r".format(cmd=cmd))
-            try:
-                info = ''
-                while True:
-                    """ First, the program accepts the return message based on the base prompt, and if program
-                    accept it directly from the specified prompt, there will be many times out of time in the
-                    middle,resulting in reduced efficiency"""
-                    i = self.channel.expect([r'%s' % self.moreFlag, r"%s" % self.basePrompt,
-                                             pexpect.TIMEOUT], timeout=timeout)
-                    if i == 2:
-                        """The host prompt is not finished with the traditional # $ >
-                        and you need to set it like that.
-                        """
-                        raise ForwardError('Error: base prompt receive timeout')
-                    if i == 0:
-                        info += self.channel.before
-                        # Get More then result
-                        tmp = self.newGetMore(prompt, timeout)
-                        info += tmp[0]
-                        result["state"] = tmp[1]
-                        # To complete the receiving
-                        break
-                    else:
-                        # To complete the receiving
-                        info += self.channel.before
-                        # read base prompt
-                        info += self.channel.after
-                        for section in prompt:
-                            # section.values() is : [ [p1,p2,p3] ]
-                            for _prompt in section.values()[0]:
-                                if re.search(_prompt, info.split("\n")[-1]):
-                                    result["state"] = section.keys()[0]
-                                    break
-                            # Find the specified state type
-                            if not result["state"] is None:
-                                break
-                        # Find the specified state type,exit
-                        if not result["state"] is None:
-                            break
-                result['content'] += info
-                # Delete special characters caused by More split screen.
-                result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
-                result["content"] = re.sub('(\x00|\x08| ){0,}', "", result["content"])
-                result["content"] = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", result["content"])
-            except Exception, e:
-                # If program accept a timeout, cancel SSH
-                self.logout()
-                raise ForwardError(str(e))
-        except Exception, e:
-            # Program run failed
-            result["errLog"] = str(e)
-            result["status"] = False
+        except Exception:
+            # break, if faild
+            result["errLog"] = "Forward had sent a command failure."
+            return result
+
+        while True:
+            i = self.channel.expect([r'%s' % self.moreFlag,
+                                     # prompt-1
+                                     r"%s" % prompt.items()[0][1],
+                                     # prompt-2
+                                     r"%s" % prompt.items()[1][1],
+                                     pexpect.TIMEOUT], timeout=timeout)
+            result["content"] += self.channel.before
+            if i == 3:
+                """The host prompt is not finished with the traditional # $ >
+                and you need to set it like that.
+                """
+                result["errLog"] = '[Forward Error]: receive timeout,prompt is invalid.'
+                return result
+            if i == 1:
+                # Find the prompt-1
+                result["state"] = prompt.items()[0][0]
+                break
+            if i == 2:
+                # Find the prompt-2
+                result["state"] = prompt.items()[1][0]
+                break
+            if i == 0:
+                # Get More then result
+                self.channel.send(" ")
+        result["status"] = True
+        # Replenish prompt
+        result["content"] += self.channel.after
+        # Delete special characters caused by More split screen.
+        result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
+        result["content"] = re.sub('(\x00|\x08){0,}', "", result["content"])
+        result["content"] = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", result["content"])
         return result

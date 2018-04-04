@@ -124,7 +124,7 @@ class BASETELNET(object):
                     tmp = re.search(dataPattern, data['content']).group(1)
                     # Delete special characters caused by More split screen.
                     tmp = re.sub("<--- More --->\\r +\\r", "", tmp)
-                    tmp = re.sub('(\x00|\x08| ){0,}', "", tmp)
+                    tmp = re.sub('(\x00|\x08){0,}', "", tmp)
                     tmp = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", tmp)
                     data['content'] = tmp
                     data['status'] = True
@@ -221,59 +221,49 @@ class BASETELNET(object):
         but need to define whole prompt dict list
         """
         result = {
-            'status': True,
+            'status': False,
             'content': '',
             'errLog': '',
             "state": None
         }
         # Parameters check
-        if (cmd is None) or (not isinstance(prompt, list)) or (not isinstance(timeout, int)):
-            raise ForwardError("""You should pass such a form of argument: \
-CMD = 'Your command', prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt4']}] ,\
-timeout=30""")
-        for section in prompt:
-            if not isinstance(section.values(), list):
-                raise ForwardError("""you should pass such a form of argument:\
-prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt4']}]""")
+        parameterFormat = {
+            "success": "regular-expression-success",
+            "error": "regular-expression-error"
+        }
+        if (cmd is None) or (not isinstance(prompt, dict)) or (not isinstance(timeout, int)):
+            raise ForwardError("You should given a parameter for prompt such as: %s" % (str(parameterFormat)))
         try:
+            # send a command
             self.channel.write("{cmd}\r".format(cmd=cmd))
-            try:
-                info = ''
-                while True:
-                    """ First, the program accepts the return message based on the base prompt, and if you accept
-                    it directly from the specified prompt, there will be many times out of time in the middle,
-                    resulting in reduced efficiency"""
-                    i = self.channel.expect([r'%s' % self.moreFlag, r"%s" % self.basePrompt], timeout=timeout)
-                    info += i[-1]
-                    if i[0] == 0:
-                        tmp = self.newGetMore(prompt, timeout)
-                        info += tmp[0]
-                        result["state"] = tmp[1]
-                        break
-                    elif i[0] == -1:
-                        raise ForwardError('Error: receive timeout ')
-                    else:
-                        for section in prompt:
-                            # section.values() is : [ [p1,p2,p3] ]
-                            for _prompt in section.values()[0]:
-                                if re.search(_prompt, info.split("\n")[-1]):
-                                    result["state"] = section.keys()[0]
-                                    break
-                            # Find the specified state type
-                            if not result["state"] is None:
-                                break
-                        # Find the specified state type,exit
-                        if not result["state"] is None:
-                            break
-                result['content'] += info
-                result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
-                result["content"] = re.sub('(\x00|\x08| ){0,}', "", result["content"])
-                result["content"] = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", result["content"])
-            # If you accept a timeout, cancel SSH
-            except Exception, e:
-                self.logout()
-                raise ForwardError(str(e))
-        except Exception, e:
-            result["errLog"] = str(e)
-            result["status"] = False
+        except Exception:
+            # break, if faild
+            result["errLog"] = "Forward had sent a command failure."
+            return result
+        while True:
+            i = self.channel.expect([r'%s' % self.moreFlag,
+                                     # prompt-1
+                                     r"%s" % prompt.items()[0][1],
+                                     # prompt-2
+                                     r"%s" % prompt.items()[1][1]], timeout=timeout)
+            result["content"] += i[-1]
+            if i[0] == 0:
+                # Get more
+                self.channel.write(" ".format(cmd=cmd))
+            elif i[0] == 1:
+                # Find the prompt-1
+                result["state"] = prompt.items()[0][0]
+                break
+            elif i[0] == 2:
+                # Find the prompt-2
+                result["state"] = prompt.items()[1][0]
+                break
+            elif i[0] == -1:
+                # Timeout
+                result["errLog"] = '[Forward Error]: receive timeout,prompt is invalid.'
+                return result
+        result["state"] = True
+        result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
+        result["content"] = re.sub('(\x00|\x08){0,}', " ", result["content"])
+        result["content"] = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", result["content"])
         return result
