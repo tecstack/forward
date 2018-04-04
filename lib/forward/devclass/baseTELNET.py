@@ -124,8 +124,8 @@ class BASETELNET(object):
                     tmp = re.search(dataPattern, data['content']).group(1)
                     # Delete special characters caused by More split screen.
                     tmp = re.sub("<--- More --->\\r +\\r", "", tmp)
-                    tmp = re.sub("--More(CTRL+Cbreak)--", "", tmp)
                     tmp = re.sub('(\x00|\x08| ){0,}', "", tmp)
+                    tmp = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", tmp)
                     data['content'] = tmp
                     data['status'] = True
                 except Exception, e:
@@ -267,6 +267,8 @@ prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt
                             break
                 result['content'] += info
                 result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
+                result["content"] = re.sub('(\x00|\x08| ){0,}', "", result["content"])
+                result["content"] = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", result["content"])
             # If you accept a timeout, cancel SSH
             except Exception, e:
                 self.logout()

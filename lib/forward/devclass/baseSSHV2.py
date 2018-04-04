@@ -134,8 +134,8 @@ class BASESSHV2(object):
                 tmp = re.search(resultPattern, result['content']).group(1)
                 # Delete special characters caused by More split screen.
                 tmp = re.sub("<--- More --->\\r +\\r", "", tmp)
-                tmp = re.sub("--More(CTRL+Cbreak)--", "", tmp)
                 tmp = re.sub('(\x00|\x08| ){0,}', "", tmp)
+                tmp = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", tmp)
                 result['content'] = tmp
             except Exception as e:
                 # pattern not match
@@ -187,6 +187,8 @@ class BASESSHV2(object):
                     break
         # Clearing special characters
         result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
+        result["content"] = re.sub('(\x00|\x08| ){0,}', "", result["content"])
+        result["content"] = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", result["content"])
         result["status"] = True
         return result
 
