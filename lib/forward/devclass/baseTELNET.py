@@ -124,6 +124,8 @@ class BASETELNET(object):
                     tmp = re.search(dataPattern, data['content']).group(1)
                     # Delete special characters caused by More split screen.
                     tmp = re.sub("<--- More --->\\r +\\r", "", tmp)
+                    tmp = re.sub("--More(CTRL+Cbreak)--", "", tmp)
+                    tmp = re.sub('(\x00|\x08| ){0,}', "", tmp)
                     data['content'] = tmp
                     data['status'] = True
                 except Exception, e:

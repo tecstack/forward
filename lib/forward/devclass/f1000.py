@@ -12,4 +12,10 @@ from forward.devclass.baseDepp import BASEDEPP
 class F1000(BASEDEPP):
     """This is a manufacturer of depp, it is integrated with BASEDEPP library.
     """
-    pass
+    def getMore(self, bufferData):
+        """Automatically get more echo infos by sending a blank symbol
+        """
+        # if check buffer data has 'more' flag, at last line.
+        # if re.search(self.moreFlag, bufferData.split('\n')[-1]):
+        # can't used to \n and ' \r' ,because product enter character
+        self.shell.send(' ')
