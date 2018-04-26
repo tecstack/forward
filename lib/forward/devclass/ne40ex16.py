@@ -25,27 +25,32 @@ class NE40EX16(BASEHUAWEI):
         sshChannel = sshv2(self.ip, self.username, self.password, self.timeout, self.port)
         if sshChannel['status']:
             # Login succeed, init shell
+            njInfo['status'] = True
+            self.channel = sshChannel['content']
+            tmpBuffer = ''
             try:
-                njInfo['status'] = True
-                self.channel = sshChannel['content']
                 # resize virtual console window size to 10000*10000
                 self.shell = self.channel.invoke_shell(width=1000, height=1000)
-                tmpBuffer = ''
-                while not re.search(self.basePrompt, tmpBuffer.split('\n')[-1]):
-                    tmpBuffer += self.shell.recv(1024)
-                    # When prompted, reply N
-                    if re.search('\[Y/N\]:', tmpBuffer):
-                        self.shell.send('N\n')
-                # set session timeout
-                self.shell.settimeout(self.timeout)
-                # Flag login status is True.
-                self.isLogin = True
-                # Get host prompt.
-                self.getPrompt()
-                njInfo["status"] = True
             except Exception as e:
                 njInfo['status'] = False
                 njInfo['errLog'] = str(e)
+                return njInfo
+            while not re.search(self.basePrompt, tmpBuffer.split('\n')[-1]):
+                try:
+                    tmpBuffer += self.shell.recv(1024)
+                except Exception, e:
+                    njInfo["errLog"] = str(e)
+                    return njInfo
+                # When prompted, reply N
+                if re.search('\[Y/N\]:', tmpBuffer):
+                    self.shell.send('N\n')
+            # set session timeout
+            self.shell.settimeout(self.timeout)
+            # Flag login status is True.
+            self.isLogin = True
+            # Get host prompt.
+            self.getPrompt()
+            njInfo["status"] = True
         else:
             # Login failed
             njInfo['errLog'] = sshChannel['errLog']

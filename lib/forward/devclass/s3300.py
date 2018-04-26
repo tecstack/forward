@@ -30,22 +30,19 @@ line, Q to quit, other key to next page....')
                 'content': '',
                 'errLog': ''}
         # If the received message contains the host prompt, stop accepting.
-        i = self.channel.expect([r"%s" % _prompt, pexpect.TIMEOUT], timeout=self.timeout)
+        i = self.channel.expect([r"%s" % _prompt, pexpect.TIMEOUT],
+                                timeout=self.timeout)
         result = ''
-        try:
-            if i == 0:
-                # Get result.
-                result = self.channel.before
-                data['status'] = True
-            elif i == 2:
-                raise ForwardError('Error: receive timeout')
-            else:
-                """If the program does not receive the message correctly,
-                and does not timeout, the program runs failed.
-                """
-                data['errLog'] = self.channel.before
-            data['content'] = result
-        except ForwardError, e:
-            data['errLog'] = str(e)
-            data['status'] = False
+        if i == 0:
+            # Get result.
+            result = self.channel.before
+            data['status'] = True
+        elif i == 2:
+            data["errLog"] = 'Error: receive timeout'
+        else:
+            """If the program does not receive the message correctly,
+            and does not timeout, the program runs failed.
+            """
+            data['errLog'] = self.channel.before
+        data['content'] = result
         return data

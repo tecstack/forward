@@ -21,14 +21,12 @@ class USG1000(BASEVENUSTECH):
                 "errLog": ""}
         # If the received message contains the host prompt, stop receiving.
         i = self.channel.expect([r"%s" % _prompt], timeout=self.timeout)
-        try:
-            if i[0] == -1:
-                # The supplied host prompt is incorrect, resulting in the receive message timeout.
-                raise ForwardError('Error: receive timeout')
+        if i[0] == -1:
+            # The supplied host prompt is incorrect, resulting in the receive message timeout.
+            data["errLog"] = 'Error: receive timeout'
+        else:
             # Successed.
             data['status'] = True
             # Get result.
             data['content'] = i[-1]
-        except ForwardError, e:
-            data['errLog'] = str(e)
         return data

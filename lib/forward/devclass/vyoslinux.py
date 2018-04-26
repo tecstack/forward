@@ -45,28 +45,30 @@ class VYOSLINUX(BCLINUX7):
                             character1_3=re.escape('\x1b[?1h\x1b=\r\r\x1b[K\x1b[?1l\x1b>'),
                             character1_4=re.escape('\x1b[m\r\n\x1b[m\r\n \x1b[m\r\n\r\x1b[K\x1b[?1l\x1b>'),
                             character2=self.prompt)
-            try:
-                while not re.search(self.prompt, result['content'].split('\n')[-1]):
-                    # Get more.
-                    self.getMore(result['content'])
-                    # Get result.
-                    result['content'] += self.shell.recv(1024)
-                # try to extract the return data
+            while not re.search(self.prompt, result['content'].split('\n')[-1]):
+                # Get more.
+                self.getMore(result['content'])
+                # Get result.
                 try:
-                    # Intercepting the results of the command execution.
-                    tmp = re.search(resultPattern, result['content']).group(1)
-                except Exception:
-                    # In cases where special characters are not included,
-                    # the original character characteristics should be used
-                    # Intercepting the results of the command execution.
-                    tmp = re.search(resultPatternOld, result['content']).group(1)
-                result['content'] = tmp
-                result['status'] = True
-            except Exception as e:
-                # pattern not match
-                result['status'] = False
-                result['content'] = result['content']
-                result['errLog'] = str(e)
+                    result['content'] += self.shell.recv(1024)
+                except Exception as e:
+                    # pattern not match
+                    result['status'] = False
+                    result['content'] = result['content']
+                    result['errLog'] = str(e)
+                    return result
+            # try to extract the return data
+            # Intercepting the results of the command execution.
+            tmp = re.search(resultPattern, result['content'])
+            if tmp:
+                tmp = tmp.group(1)
+            else:
+                # In cases where special characters are not included,
+                # the original character characteristics should be used
+                # Intercepting the results of the command execution.
+                tmp = re.search(resultPatternOld, result['content']).group(1)
+            result['content'] = tmp
+            result['status'] = True
         else:
             # not login
             result['status'] = False

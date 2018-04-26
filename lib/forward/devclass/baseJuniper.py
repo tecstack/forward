@@ -19,13 +19,13 @@ class BASEJUNIPER(BASETELNET):
                 "content": "",
                 "errLog": ""}
         # If the host prompt is received, the message is stopped.
-        i = self.channel.expect([r"%s" % _prompt], timeout=self.timeout)
-        try:
-            if i[0] == -1:
-                raise ForwardError('Error: receive timeout')
+        i = self.channel.expect([r"%s" % _prompt],
+                                timeout=self.timeout)
+
+        if i[0] == -1:
+            data["errLog"] = 'Error: receive timeout'
+        else:
             data['status'] = True
             # Get result
             data['content'] = i[-1]
-        except ForwardError, e:
-            data['errLog'] = str(e)
         return data
