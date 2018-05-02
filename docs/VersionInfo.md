@@ -1,4 +1,8 @@
 ## Version Update Record 版本更新记录
+### V3.1.0
+1. 简化command方法调用格式，详见[自定义指令 command](/docs/advance/command.md)。
+2. 修复优化了部分核心代码。
+
 ### V3.0.8
 1. 新增sshv1和telnet通道标准类的command命令模式。
 

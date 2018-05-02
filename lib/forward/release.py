@@ -4,5 +4,5 @@
 # (c) 2017, Azrael <azrael-ex@139.com>
 
 
-__version__ = '3.0.8'
+__version__ = '3.1.0'
 __author__ = 'Azrael, Cheung Kei-Chuen'
