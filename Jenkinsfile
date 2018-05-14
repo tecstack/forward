@@ -26,6 +26,7 @@ pipeline {
                 sh '''
                     #flake8_check
                     echo ">[run flake8]"
+                    cd $WORKSPACE
                     flake8 ./ --config=protocol/flake8
                     result_flake8=$?
                     echo ">[run nosetest]"
@@ -47,6 +48,7 @@ pipeline {
                 sh '''
                     #setuptools
                     echo ">[build & install]"
+                    cd $WORKSPACE
                     python setup.py install
                 '''
             }
@@ -55,6 +57,7 @@ pipeline {
             steps {
                 sh '''
                     echo ">[run regression testing]"
+                    cd $WORKSPACE
                     echo "Null, Waiting for add..."
                 '''
             }
