@@ -25,9 +25,9 @@ pipeline {
             steps {
                 sh '''
                     #flake8_check
+                    pyenv activate forward
                     echo ">[run flake8]"
-                    cd $WORKSPACE
-                    flake8 ./ --config=$WORKSPACE/protocol/flake8
+                    flake8 ./ --config=protocol/flake8
                     result_flake8=$?
                     echo ">[run nosetest]"
                     nosetests -c nosetests.ini
@@ -47,8 +47,8 @@ pipeline {
             steps {
                 sh '''
                     #setuptools
+                    pyenv activate forward
                     echo ">[build & install]"
-                    cd $WORKSPACE
                     python setup.py install
                 '''
             }
@@ -56,8 +56,8 @@ pipeline {
         stage('pre.regression') {
             steps {
                 sh '''
+                    pyenv activate forward
                     echo ">[run regression testing]"
-                    cd $WORKSPACE
                     echo "Null, Waiting for add..."
                 '''
             }
