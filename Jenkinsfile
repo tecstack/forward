@@ -25,6 +25,7 @@ pipeline {
             steps {
                 sh '''
                     #flake8_check
+                    source ~/.bash_profile>/dev/null 2>&1
                     pyenv activate forward
                     echo ">[run flake8]"
                     flake8 ./ --config=protocol/flake8
@@ -47,6 +48,7 @@ pipeline {
             steps {
                 sh '''
                     #setuptools
+                    source ~/.bash_profile>/dev/null 2>&1
                     pyenv activate forward
                     echo ">[build & install]"
                     python setup.py install
@@ -56,6 +58,7 @@ pipeline {
         stage('pre.regression') {
             steps {
                 sh '''
+                    source ~/.bash_profile>/dev/null 2>&1
                     pyenv activate forward
                     echo ">[run regression testing]"
                     echo "Null, Waiting for add..."
