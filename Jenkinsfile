@@ -27,7 +27,7 @@ pipeline {
                     #flake8_check
                     echo ">[run flake8]"
                     cd $WORKSPACE
-                    flake8 ./ --config=protocol/flake8
+                    flake8 ./ --config=$WORKSPACE/protocol/flake8
                     result_flake8=$?
                     echo ">[run nosetest]"
                     nosetests -c nosetests.ini
