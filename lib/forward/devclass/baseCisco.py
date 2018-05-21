@@ -126,5 +126,5 @@ class BASECISCO(BASESSHV2):
             result = self.commit()
             return result
         else:
-            result["errLog"] = "‘add user’ was failed: %s" % data["content"]
+            result["errLog"] = "'add user' was failed: %s" % data["content"]
         return result
