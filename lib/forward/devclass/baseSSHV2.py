@@ -46,6 +46,7 @@ class BASESSHV2(object):
         self.basePrompt = r'(>|#|\]|\$|\)) *$'
         self.prompt = ''
         self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+'
+        self.mode = 1
 
         """
         - parameter ip: device's ip
@@ -54,6 +55,12 @@ class BASESSHV2(object):
         - parameter channel: storage device connection channel session
         - parameter shell: paramiko shell, used to send(cmd) and recv(result)
         - parameter prompt: [ex][wangzhe@cloudlab100 ~]$
+        - parameter mode : The mode using a digital type of code,
+                           1 normal mode,
+                           2 privileged mode,
+                           3 configuration mode,
+                           4 other mode,
+                           and to define the figures show that the custom mode, such as interface mode and etc.
         """
 
     def __del__(self):
