@@ -153,7 +153,7 @@ class BASECISCO(BASESSHV2):
             "errLog": ""
         }
         # Assembling command
-        cmd = "username {username} password {password}\n".format(username=username, password=password)
+        cmd = "username {username} password {password}".format(username=username, password=password)
 
         # Switch to privilege mode.
         switch = self.privilegeMode()
@@ -177,3 +177,39 @@ class BASECISCO(BASESSHV2):
         else:
             result["errLog"] = "%s" % data["content"]
         return result
+
+    def deleteUser(self, username):
+    	"""remove a user on the device.
+        """
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # Assembling command
+        cmd = "no username {username} ".format(username=username)
+        # Switch to privilege mode.
+        switch = self.privilegeMode()
+        if not switch["status"]:
+            # Switch failure.
+            return switch
+        # Switch to configure-mode.
+        switch = self.configMode()
+        if not switch["status"]:
+            # Switch failed.
+            return switch
+        # Run a command
+        data = self.command(cmd, prompt={"success": self.basePrompt})
+        # Check status
+        if re.search("% Invalid|ERROR:", data["content"]):
+            result["errLog"] = "%s" % data["content"]
+            return result
+        if data["state"] == "success":
+            result = self.commit()
+            return result
+        else:
+            result["errLog"] = "%s" % data["content"]
+        return result
+
+    def changePassword(self, username, password):
+    	return self.addUser(username, password)
