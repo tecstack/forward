@@ -213,3 +213,48 @@ class BASECISCO(BASESSHV2):
 
     def changePassword(self, username, password):
         return self.addUser(username, password)
+
+    def getUserList(self, username=None):
+    	"""Get all user from  the device.
+        resunt format:
+        {
+            "username-1":{"username":"username-1","level"   :15},
+            "username-2":{"username":"username-2","level"   :14}
+        }
+        """
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        # Assembling command
+        if username is None or re.search("^ *$", username):
+            cmd = "show running-config | include username"
+        else:
+            cmd = "show running-config | include username {username}".format(username=username)
+        # Switch to privilege mode.
+        switch = self.privilegeMode()
+        if not switch["status"]:
+            # Switch failure.
+            return switch
+        # Run a command
+        data = self.command(cmd, prompt={"success": self.basePrompt})
+        # Check status
+        if re.search("% Invalid|ERROR:", data["content"]):
+            result["errLog"] = "%s" % data["content"]
+            return result
+        if data["state"] is None:
+            # The command was not executed correctly
+            result["errLog"] = "%s" % data["content"]
+            return result
+        # Seasrch user
+        tmp = re.findall("username.*", data["content"])
+        for _line in tmp:
+            line = _line.split()
+            try:
+                _username = line[1]
+            except IndexError:
+                continue
+            result["content"][_username] = {"username": _username, "level": 0}
+        result["status"] = True
+        return result
