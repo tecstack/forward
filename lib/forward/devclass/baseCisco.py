@@ -212,4 +212,4 @@ class BASECISCO(BASESSHV2):
         return result
 
     def changePassword(self, username, password):
-    	return self.addUser(username, password)
+        return self.addUser(username, password)
