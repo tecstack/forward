@@ -42,6 +42,10 @@ class BASECISCO(BASESSHV2):
             result["errLog"] = "The mode level of the current device is too high or too low,\
                                 please enter from privilege-mode or interface-mode before switching."
             return result
+        if self.mode == 3:
+            # The device is currently in configure-mode ,so there is no required to switch.
+            result["status"] = True
+            return result
         # Demotion,If device currently mode  is interface-mode, just need to execute `exit`.
         if self.mode == 4:
             exitResult = self.command("exit", prompt={"success": self.basePrompt})
@@ -53,10 +57,6 @@ class BASECISCO(BASESSHV2):
                 self.mode = 3
                 result["status"] = True
                 return result
-        if self.mode == 3:
-            # The device is currently in configure-mode ,so there is no required to switch.
-            result["status"] = True
-            return result
         # If value of the mode is 2,start switching to configure-mode.
         sendConfig = self.command("config term", prompt={"success": self.basePrompt})
         if sendConfig["state"] == "success":
@@ -64,7 +64,7 @@ class BASECISCO(BASESSHV2):
             result["status"] = True
             self.mode = 3
             return result
-        elif sendEnable["state"] is None:
+        elif sendConfig["state"] is None:
             result["errLog"] = "Unknow error."
             return result
 
@@ -154,18 +154,17 @@ class BASECISCO(BASESSHV2):
         }
         # Assembling command
         cmd = "username {username} password {password}\n".format(username=username, password=password)
-        # If current mode is configure-mode,there is no need to switch.
-        if not self.mode == 3:
-            # Switch to privilege mode.
-            switch = self.privilegeMode()
-            if not switch["status"]:
-                # Switch failure.
-                return switch
-            # Switch to configure-mode.
-            switch = self.configMode()
-            if not switch["status"]:
-                # Switch failed.
-                return switch
+
+        # Switch to privilege mode.
+        switch = self.privilegeMode()
+        if not switch["status"]:
+            # Switch failure.
+            return switch
+        # Switch to configure-mode.
+        switch = self.configMode()
+        if not switch["status"]:
+            # Switch failed.
+            return switch
         # Run a command
         data = self.command(cmd, prompt={"success": self.basePrompt})
         # Check status
