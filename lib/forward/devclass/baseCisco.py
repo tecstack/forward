@@ -30,6 +30,44 @@ class BASECISCO(BASESSHV2):
     """This is a manufacturer of cisco, using the
     SSHV2 version of the protocol, so it is integrated with BASESSHV2 library.
     """
+    def configMode(self):
+        # Switch to privilege mode.
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # Get the current position Before switch to configure-mode.
+        if (not self.mode == 2) and (not self.mode == 3) and (not self.mode == 4):
+            result["errLog"] = "The mode level of the current device is too high or too low,\
+                                please enter from privilege-mode or interface-mode before switching."
+            return result
+        # Demotion,If device currently mode  is interface-mode, just need to execute `exit`.
+        if self.mode == 4:
+            exitResult = self.command("exit", prompt={"success": self.basePrompt})
+            if not exitResult["state"] == "success":
+                result["errLog"] = "Demoted from interface-mode to privilege-mode failed."
+                return result
+            else:
+                # Switch is successful.
+                self.mode = 3
+                result["status"] = True
+                return result
+        if self.mode == 3:
+            # The device is currently in configure-mode ,so there is no required to switch.
+            result["status"] = True
+            return result
+        # If value of the mode is 2,start switching to configure-mode.
+        sendConfig = self.command("config term", prompt={"success": self.basePrompt})
+        if sendConfig["state"] == "success":
+            # switch is successful.
+            result["status"] = True
+            self.mode = 3
+            return result
+        elif sendEnable["state"] is None:
+            result["errLog"] = "Unknow error."
+            return result
+
     def privilegeMode(self):
         # Switch to privilege mode.
         result = {
@@ -40,7 +78,7 @@ class BASECISCO(BASESSHV2):
         # Get the current position Before switch to privileged mode.
         if (not self.mode == 1) and (not self.mode == 2) and (not self.mode == 3):
             result["errLog"] = "The mode level of the current device is too high,\
-                                please reduce to configuration-mode and then switch."
+                                please enter from user-mode or configuration-mode before switching."
             return result
         # Demotion,If device currently mode  is config-mode, just need to execute `end`.
         if self.mode == 3:
@@ -57,7 +95,7 @@ class BASECISCO(BASESSHV2):
             # The device is currently in privilege-mode ,so there is no required to switch.
             result["status"] = True
             return result
-        # Start switching.
+        # Start switching to privilege-mode.
         sendEnable = self.command("enable", prompt={"password": "[pP]assword.*", "noPassword": self.basePrompt})
         if sendEnable["state"] == "noPassword":
             # The device not required a password,thus switch is successful.
@@ -73,9 +111,10 @@ class BASECISCO(BASESSHV2):
         if sendPassword["state"] == "password":
             # Password error,switch is failed.
             result["errLog"] = "Password of the privilege mode is wrong."
+            return result
         elif sendPassword["state"] == "noPassword":
             # switch is successful.
-            result["sttus"] = True
+            result["status"] = True
             self.mode = 2
             return result
         else:
@@ -94,7 +133,7 @@ class BASECISCO(BASESSHV2):
             # Switch failure.
             return result
         # Excute a command.
-        data = self.command("write", prompt={"success": self.prompt})
+        data = self.command("write", prompt={"success": self.basePrompt})
         if data["state"] is None:
             result["errLog"] = "Excute a command is failed, Info: %s" % data["content"]
             return result
@@ -114,17 +153,28 @@ class BASECISCO(BASESSHV2):
             "errLog": ""
         }
         # Assembling command
-        cmd = "username {username} password {password}\n"
-        # Switch to privilege mode.
-        result = self.privilegeMode()
-        if not result["status"]:
-            # Switch failure.
+        cmd = "username {username} password {password}\n".format(username=username, password=password)
+        # If current mode is configure-mode,there is no need to switch.
+        if not self.mode == 3:
+            # Switch to privilege mode.
+            switch = self.privilegeMode()
+            if not switch["status"]:
+                # Switch failure.
+                return switch
+            # Switch to configure-mode.
+            switch = self.configMode()
+            if not switch["status"]:
+                # Switch failed.
+                return switch
+        # Run a command
+        data = self.command(cmd, prompt={"success": self.basePrompt})
+        # Check status
+        if re.search("% Invalid|ERROR:", data["content"]):
+            result["errLog"] = "%s" % data["content"]
             return result
-        # Excute a command
-        data = self.command(cmd, prompt={"success": self.prompt})
-        if data["sate"] == "success":
+        if data["state"] == "success":
             result = self.commit()
             return result
         else:
-            result["errLog"] = "'add user' was failed: %s" % data["content"]
+            result["errLog"] = "%s" % data["content"]
         return result

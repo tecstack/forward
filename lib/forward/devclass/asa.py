@@ -45,5 +45,8 @@ class ASA(BASECISCO):
             try:
                 # Cumulative return result
                 buff += self.shell.recv(1024)
+                # Remove the \x charactor
+                buff += re.sub("\x07", "", buff)
             except Exception:
+                print buff.split("asdfasdf")
                 raise ForwardError('Receive timeout [%s]' % (buff))
