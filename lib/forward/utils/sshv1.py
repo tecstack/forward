@@ -18,7 +18,6 @@
 """
 -----Introduction-----
 [Core][forward] Function for sshv1, by using pexpect module.
-Author: Cheung Kei-Chuen,Wangzhe
 """
 import os
 import sys
