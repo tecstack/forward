@@ -1,3 +1,4 @@
+# coding:utf-8
 # (c) 2015-2018, Wang Zhe <azrael-ex@139.com>, Zhang Qi Chuan <zhangqc@fits.com.cn>
 #
 # This file is part of Ansible
@@ -14,13 +15,11 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 """
 -----Introduction-----
 [Core][forward] Function for sshv1, by using pexpect module.
-Author: Cheung Kei-Chuen,Wang Zhe
+Author: Cheung Kei-Chuen,Wangzhe
 """
-
 import os
 import sys
 import re
@@ -34,9 +33,10 @@ def checkPassWord(ssh, password, P=False):
               "errLog": ""}
     # througt SSH chanel determine whether there is interaction password prompt
     if not P:
-        ssh.expect([r"[Pp]assword", ".*"])
+        ssh.expect([r"[Pp]assword:", ".*"])
     ssh.send(password + '\n')
-    p = ssh.expect([r"[Pp]assword", r"(>|#|\]|\$) *$"])
+    # Multiple identical characters may appear
+    p = ssh.expect([r"[Pp]assword:", r"(>|#|\]|\$){1,}.*$"])
     if p == 0:
         njInfo['errLog'] = "Username or Password wrong"
         # if expect characters is password,then the account password is wrong
@@ -66,9 +66,9 @@ class NJSSHV1Wraper(pexpect.spawn):
                            'errLog': ""}
 
     def login(self, password=None):
-        pexpect.spawn.__init__(self, 'ssh -p %d %s@%s' % (self.port, self.username, self.ip))
+        pexpect.spawn.__init__(self, 'ssh -1 -p %d %s@%s' % (self.port, self.username, self.ip))
         self.setwinsize(1000, 1000)
-        i = self.expect([r'[Pp]assword',
+        i = self.expect([r'[Pp]assword:',
                         'Are you sure you want to continue connecting (yes/no)?',
                          'Connection refused', pexpect.TIMEOUT], self.timeout)
         if i == 0:
