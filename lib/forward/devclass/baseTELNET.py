@@ -1,24 +1,12 @@
-# (c) 2015-2018, Wang Zhe <azrael-ex@139.com>, Zhang Qi Chuan <zhangqc@fits.com.cn>
+#!/usr/bin/evn python
+# coding:utf-8
 #
-# This file is part of Ansible
-#
-# Forward is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Forward is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# (c) 2017, Azrael <azrael-ex@139.com>
 
 """
 -----Introduction-----
 [Core][forward] Base device class for telnet method, by using telnetlib module.
-Author: Wang Zhe, Cheung Kei-Chuen
+Author: Azrael, Cheung Kei-Chuen
 """
 import re
 from forward.utils.telnet import telnet
@@ -42,9 +30,12 @@ class BASETELNET(object):
 
         self.channel = ''
         self.shell = ''
-        self.basePrompt = r'(>|#|\]|\$|\)) *$'
+        # self.basePrompt = r'(>|#|\]|\$|\)) *$'
+        # Multiple identical characters may appear
+        self.basePrompt = r"(>|#|\]|\$){1,}.*$"
         self.prompt = ''
         self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+'
+        self.mode = 1
 
         """
         - parameter ip: device's ip
@@ -136,10 +127,8 @@ class BASETELNET(object):
                     tmp = re.search(dataPattern, data['content']).group(1)
                     # Delete special characters caused by More split screen.
                     tmp = re.sub("<--- More --->\\r +\\r", "", tmp)
-                    # remove the More charactor
-                    tmp = re.sub(' \-\-More\(CTRL\+C break\)\-\- (\x00|\x08){0,} +(\x00|\x08){0,}', "", tmp)
-                    # remove the space key
-                    tmp = re.sub("(\x08)+ +", "", tmp)
+                    tmp = re.sub('(\x00|\x08){0,}', "", tmp)
+                    tmp = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", tmp)
                     data['content'] = tmp
                     data['status'] = True
                 except Exception, e:
@@ -219,7 +208,14 @@ class BASETELNET(object):
         # [ex]'[localhost@labstill019~]'
         # self.prompt=self.prompt[1:-1]
         # [ex]'\\[localhost\\@labstill019\\~\\]$'
-        self.prompt = re.escape(i[-1].split('\n')[-1])
+        self.prompt = i[-1].split('\n')[-1]
+        if re.search("> ?$", self.prompt):
+            # If last character of host prompt of the device ens in '>', the command line of device in gneral mode.
+            self.mode = 1
+        elif re.search("(#|\]) ?$", self.prompt):
+            # If last character of host prompt of the device ens in '#', the command line of device in enable mode.
+            self.mode = 2
+        self.prompt = re.escape(self.prompt)
         return self.prompt
 
     def cleanBuffer(self):

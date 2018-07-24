@@ -1,24 +1,12 @@
-# (c) 2015-2018, Wang Zhe <azrael-ex@139.com>, Zhang Qi Chuan <zhangqc@fits.com.cn>
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
 #
-# This file is part of Ansible
-#
-# Forward is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Forward is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# (c) 2017, Azrael <azrael-ex@139.com>
 
 """
 -----Introduction-----
 [Core][forward] Base device class for sshv2 method, by using paramiko module.
-Author: Wang Zhe, Cheung Kei-Chuen
+Author: Azrael, Cheung Kei-Chuen
 """
 
 import re
@@ -43,7 +31,9 @@ class BASESSHV2(object):
 
         self.channel = ''
         self.shell = ''
-        self.basePrompt = r'(>|#|\]|\$|\)) *$'
+        # self.basePrompt = r'(>|#|\]|\$|\)) *$'
+        # Multiple identical characters may appear
+        self.basePrompt = r"(>|#|\]|\$){1,}.*$"
         self.prompt = ''
         self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+'
         self.mode = 1
@@ -55,12 +45,6 @@ class BASESSHV2(object):
         - parameter channel: storage device connection channel session
         - parameter shell: paramiko shell, used to send(cmd) and recv(result)
         - parameter prompt: [ex][wangzhe@cloudlab100 ~]$
-        - parameter mode : The mode using a digital type of code,
-                           1 normal mode,
-                           2 privileged mode,
-                           3 configuration mode,
-                           4 other mode,
-                           and to define the figures show that the custom mode, such as interface mode and etc.
         """
 
     def __del__(self):
@@ -195,11 +179,13 @@ class BASESSHV2(object):
             return result
         isBreak = False
         while True:
+            # Remove special characters.
+            result["content"] = re.sub("", "", result["content"])
             self.getMore(result["content"])
             try:
                 result["content"] += self.shell.recv(1024)
-            except Exception:
-                result["errLog"] = "Forward had recived data timeout."
+            except Exception, e:
+                result["errLog"] = "Forward had recived data timeout. [%s]" % str(e)
                 return result
             # Mathing specify key
             for key in prompt:
@@ -241,6 +227,14 @@ class BASESSHV2(object):
                 # [ex]'[localhost@labstill019~]'
                 # self.prompt=self.prompt[1:-1]
                 # [ex]'\\[localhost\\@labstill019\\~\\]$'
+                if re.search("> ?$", self.prompt):
+                    # If last character of host prompt of the device ens in '>',
+                    # the command line of device in gneral mode.
+                    self.mode = 1
+                elif re.search("(#|\]) ?$", self.prompt):
+                    # If last character of host prompt of the device ens in '#',
+                    # the command line of device in enable mode.
+                    self.mode = 2
                 self.prompt = re.escape(self.prompt)
                 return self.prompt
             else:

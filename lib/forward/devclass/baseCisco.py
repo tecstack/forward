@@ -1,24 +1,12 @@
-# (c) 2015-2018, Wang Zhe <azrael-ex@139.com>, Zhang Qi Chuan <zhangqc@fits.com.cn>
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
 #
-# This file is part of Ansible
-#
-# Forward is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Forward is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# (c) 2017, Azrael <azrael-ex@139.com>
 
 """
 -----Introduction-----
 [Core][forward] Base device class for cisco basic device method, by using paramiko module.
-Author: Cheung Kei-Chuen, Wang Zhe
+Author: Cheung Kei-Chuen, Wangzhe
 """
 
 import re
@@ -30,6 +18,29 @@ class BASECISCO(BASESSHV2):
     """This is a manufacturer of cisco, using the
     SSHV2 version of the protocol, so it is integrated with BASESSHV2 library.
     """
+    def commit(self):
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # Switch to privilege-mode.
+        result = self.privilegeMode()
+        if not result["status"]:
+            # Switch failure.
+            return result
+        # Excute a command.
+        data = self.command("copy running-config  startup-config", prompt={"success": "# ?$"})
+        if data["state"] is None:
+            result["errLog"] = "Excute a command is failed, Info: %s" % data["content"]
+            return result
+        # Checking key words.
+        if re.search("(\[OK\])|(Copy complete)|(successfully)", data["content"]):
+            result['status'] = True
+        else:
+            result["errLog"] = "The save command has been run, but the result failed.Info:%s" % data["content"]
+        return result
+
     def configMode(self):
         # Switch to privilege mode.
         result = {
@@ -38,35 +49,28 @@ class BASECISCO(BASESSHV2):
             "errLog": ""
         }
         # Get the current position Before switch to configure-mode.
-        if (not self.mode == 2) and (not self.mode == 3) and (not self.mode == 4):
-            result["errLog"] = "The mode level of the current device is too high or too low,\
-                                please enter from privilege-mode or interface-mode before switching."
-            return result
         if self.mode == 3:
             # The device is currently in configure-mode ,so there is no required to switch.
             result["status"] = True
             return result
-        # Demotion,If device currently mode  is interface-mode, just need to execute `exit`.
-        if self.mode == 4:
-            exitResult = self.command("exit", prompt={"success": self.basePrompt})
-            if not exitResult["state"] == "success":
-                result["errLog"] = "Demoted from interface-mode to privilege-mode failed."
-                return result
-            else:
-                # Switch is successful.
-                self.mode = 3
+        else:
+            # Demotion,If device currently mode  is interface-mode, just need to execute `exit`.
+            _result = self.privilegeMode()
+            if _result["status"] is True:
+                # "enter to privilege-mode failed."
                 result["status"] = True
                 return result
-        # If value of the mode is 2,start switching to configure-mode.
-        sendConfig = self.command("config term", prompt={"success": self.basePrompt})
-        if sendConfig["state"] == "success":
-            # switch is successful.
-            result["status"] = True
-            self.mode = 3
-            return result
-        elif sendConfig["state"] is None:
-            result["errLog"] = "Unknow error."
-            return result
+            else:
+                # If value of the mode is 2,start switching to configure-mode.
+                sendConfig = self.command("config term", prompt={"success": "\(config\)# ?$"})
+                if sendConfig["state"] == "success":
+                    # switch to config-mode was successful.
+                    result["status"] = True
+                    self.mode = 3
+                    return result
+                elif sendConfig["state"] is None:
+                    result["errLog"] = sendConfig["errLog"]
+                    return result
 
     def privilegeMode(self):
         # Switch to privilege mode.
@@ -76,13 +80,9 @@ class BASECISCO(BASESSHV2):
             "errLog": ""
         }
         # Get the current position Before switch to privileged mode.
-        if (not self.mode == 1) and (not self.mode == 2) and (not self.mode == 3):
-            result["errLog"] = "The mode level of the current device is too high,\
-                                please enter from user-mode or configuration-mode before switching."
-            return result
-        # Demotion,If device currently mode  is config-mode, just need to execute `end`.
-        if self.mode == 3:
-            exitResult = self.command("end", prompt={"success": self.basePrompt})
+        # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
+        if self.mode > 2:
+            exitResult = self.command("end", prompt={"success": "# ?$"})
             if not exitResult["state"] == "success":
                 result["errLog"] = "Demoted from configuration-mode to privilege-mode failed."
                 return result
@@ -91,10 +91,11 @@ class BASECISCO(BASESSHV2):
                 self.mode = 2
                 result["status"] = True
                 return result
-        if self.mode == 2:
+        elif self.mode == 2:
             # The device is currently in privilege-mode ,so there is no required to switch.
             result["status"] = True
             return result
+        # else, command line of the device is in general-mode.
         # Start switching to privilege-mode.
         sendEnable = self.command("enable", prompt={"password": "[pP]assword.*", "noPassword": self.basePrompt})
         if sendEnable["state"] == "noPassword":
@@ -118,31 +119,310 @@ class BASECISCO(BASESSHV2):
             self.mode = 2
             return result
         else:
-            result["errLog"] = "Unknow error."
+            result["errLog"] = "Unknown error."
             return result
 
-    def commit(self):
-        result = {
-            "status": False,
-            "content": "",
-            "errLog": ""
+    def showNtp(self):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
         }
-        # Switch to privilege-mode.
-        result = self.privilegeMode()
-        if not result["status"]:
-            # Switch failure.
-            return result
-        # Excute a command.
-        data = self.command("write", prompt={"success": self.basePrompt})
-        if data["state"] is None:
-            result["errLog"] = "Excute a command is failed, Info: %s" % data["content"]
-            return result
-        # Checking key words.
-        if re.search("(\[OK\])|(Copy complete)|(successfully)", data["content"]):
-            result['status'] = True
+        cmd = "show run ntp"
+        prompt = {
+            "success": "ntp server[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.findall("ntp server ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
+                             result["content"])
+            if tmp:
+                njInfo["content"] = tmp
+            njInfo["status"] = True
         else:
-            result["errLog"] = "The save command has been run, but the result failed.Info:%s" % data["content"]
-        return result
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showLog(self):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = '''show running-config  |  i log'''
+        prompt = {
+            "success": "log[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.findall("loggin server ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
+                             result["content"], flags=re.IGNORECASE)
+            if tmp:
+                njInfo["content"] = tmp
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showSnmp(self):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = '''show run | i  "snmp-server host"'''
+        prompt = {
+            "success": "snmp-server[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.findall("snmp-server host ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
+                             result["content"], flags=re.IGNORECASE)
+            if tmp:
+                njInfo["content"] = tmp
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showVersion(self):
+        njInfo = {
+            'status': False,
+            'content': "",
+            'errLog': ''
+        }
+        cmd = "show version"
+        prompt = {
+            "success": "[vV]ersion[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.search("(software|system).*version(.*)", result["content"], flags=re.IGNORECASE)
+            if tmp.lastindex == 2:
+                njInfo["content"] = tmp.group(2).strip()
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showVlan(self):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = "show vlan"
+        prompt = {
+            "success": "VLAN Name[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        """
+        2206 VLAN2206                         active    Po12, Po13, Eth1/3, Eth1/2/1
+                                              Eth1/2/2, Eth1/2/3, Eth1/2/4
+        2207 VLAN2207                         active    Po12, Po13, Eth1/3, Eth1/2/1
+                                              Eth1/2/2, Eth1/2/3, Eth1/2/4
+
+        LAN Type         Vlan-mode
+        ---- -----        ----------
+        1    enet         CE
+        """
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            currentSection = "vlanName"
+            isContinueLine = False
+            for _interfaceInfo in result["content"].split("\r\n"):
+                if re.search("\-\-\-\-", _interfaceInfo):
+                    continue
+                if re.search("^[0-9]", _interfaceInfo) and currentSection == "vlanName":
+                    isContinueLine = True
+                    # Get the line of vlan.
+                    lineInfo = {
+                        "id": "",
+                        "description": "",
+                        "status": "",
+                        "interface": [],
+                        "type": "",
+                    }
+                    tmp = re.search("([0-9]+)\s+(\S+)\s+([a-z]+)\s+(.*)", _interfaceInfo)
+                    if tmp:
+                        lineInfo["id"] = tmp.group(1)
+                        lineInfo["description"] = tmp.group(2)
+                        lineInfo["status"] = tmp.group(3)
+                        if tmp.lastindex == 4:
+                                lineInfo["interface"] = tmp.group(4).split(", ")
+                        njInfo["content"].append(lineInfo)
+                    continue
+                elif isContinueLine is True and not re.search("VLAN Type",
+                                                              _interfaceInfo) and currentSection == "vlanName":
+                    for _interface in _interfaceInfo.split(","):
+
+                        lineInfo = njInfo["content"].pop()
+                        lineInfo["interface"].append(_interface.strip())
+                        njInfo["content"].append(lineInfo)
+                    continue
+                else:
+                    isContinueLine = False
+                if re.search("VLAN Type", _interfaceInfo):
+                    currentSection = "vlanType"
+                    continue
+                if currentSection == "vlanType":
+                    if re.search("^[0-9]", _interfaceInfo):
+                        tmp = re.search("([0-9]+) ([a-z]+)", _interfaceInfo)
+                        if tmp:
+                            vlanID = tmp.group(1)
+                            vlanType = tmp.group(2)
+                            i = 0
+                            for _vlan in njInfo["content"]:
+                                if vlanID == _vlan["id"]:
+                                    njInfo["content"][i]["type"] = vlanType
+                                i += 1
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showRoute(self):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = "show routing"
+        prompt = {
+            "success": "via[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            for _interfaceInfo in result["content"].split("\r\n"):
+                # record the route table.
+                if re.search("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]{1,2}", _interfaceInfo):
+                    '''try:
+                        """Store the previously acquired routing information
+                        before processing the new routing information"""
+                        njInfo["content"].append(lineInfo)
+                    except Exception:
+                        pass'''
+                    lineInfo = {}
+                    """lineInfo = {
+                        "net": "",
+                        "mask": "",
+                        "via": "",
+                        "metric": "",
+                        "via": [],
+                    }"""
+                    # Get net of the route.
+                    lineInfo["net"] = _interfaceInfo.split("/")[0]
+                    # Get mask of net of the route.
+                    lineInfo["mask"] = _interfaceInfo.split("/")[1].split(",")[0]
+                    njInfo["content"].append(lineInfo)
+                elif re.search("\*via [0-9]", _interfaceInfo):
+                    lineInfo = njInfo["content"].pop()
+                    lineInfo["via"] = re.search("\*via (.*?),", _interfaceInfo).group(1)
+                    lineInfo["interface"] = _interfaceInfo.split(",")[1].strip()
+                    lineInfo["type"] = re.search("(direct|ospf|static|local)", _interfaceInfo).group(1).strip()
+                    njInfo["content"].append(lineInfo)
+            # save the last record.
+            try:
+                njInfo["content"].append(lineInfo)
+            except Exception:
+                pass
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showInterface(self):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = "show interface"
+        prompt = {
+            "success": "is (up|down)[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            i = 0
+            for _interfaceInfo in result["content"].split("\r\n\r\n"):
+                i += 1
+                lineInfo = {"interfaceName": "",
+                            "members": [],
+                            "lineState": "",
+                            "adminState": "",
+                            "description": "",
+                            "speed": "",
+                            "type": "",
+                            "inputRate": "",
+                            "outputRate": "",
+                            "crc": "",
+                            "linkFlap": "",
+                            }
+                # Get name of the interface
+                if i == 0:
+                    _interfaceInfo = _interfaceInfo.split("\r\r\n")[1]
+                    tmp = re.search("(.*) is", _interfaceInfo)
+                    if tmp:
+                        lineInfo["interfaceName"] = tmp.group(1)
+                        njInfo["content"].append(lineInfo)
+                    continue
+                else:
+                    tmp = re.search("(.*?) is", _interfaceInfo)
+                    if tmp:
+                        lineInfo["interfaceName"] = tmp.group(1)
+                    else:
+                        continue
+                    tmp = re.search("admin state is (.*)", _interfaceInfo)
+                    if tmp:
+                        lineInfo["adminState"] = tmp.group(1).strip()
+                    # MTU
+                    tmp = re.search("MTU ([0-9]+)", _interfaceInfo)
+                    if tmp:
+                        lineInfo["mtu"] = tmp.group(1)
+                    # description
+                    tmp = re.search("Description: (.*)", _interfaceInfo)
+                    if tmp:
+                        lineInfo["description"] = tmp.group(1).strip()
+                    # duplex
+                    tmp = re.search("([a-z]+)\-duplex", _interfaceInfo)
+                    if tmp:
+                        lineInfo["duplex"] = tmp.group(1)
+                    # Speed.
+                    tmp = re.search("\-duplex, (.*),?", _interfaceInfo)
+                    if tmp:
+                        lineInfo["speed"] = tmp.group(1)
+                    # ip.
+                    tmp = re.search("Internet Address is (.*)", _interfaceInfo)
+                    if tmp:
+                        lineInfo["ip"] = tmp.group(1).split("/")[0]
+                    # mac.
+                    tmp = re.search(", address: ([\S]+)", _interfaceInfo)
+                    if tmp:
+                        lineInfo["mac"] = tmp.group(1)
+                    # Last link flapped
+                    tmp = re.search("Last link flapped (.*)", _interfaceInfo)
+                    if tmp:
+                        lineInfo["linkFlap"] = tmp.group(1).strip()
+                    # Inpute rate.
+                    tmp = re.search("300 seconds input rate (.*)", _interfaceInfo)
+                    if tmp:
+                        lineInfo["inputRate"] = tmp.group(1).strip()
+                    # Output rate.
+                    tmp = re.search("300 seconds ouput rate (.*)", _interfaceInfo)
+                    if tmp:
+                        lineInfo["outputRate"] = tmp.group(1).strip()
+
+                    njInfo["content"].append(lineInfo)
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
 
     def addUser(self, username, password):
         """Increating a user on the device.
@@ -179,7 +459,7 @@ class BASECISCO(BASESSHV2):
         return result
 
     def deleteUser(self, username):
-    	"""remove a user on the device.
+        """remove a user on the device.
         """
         result = {
             "status": False,
@@ -215,7 +495,7 @@ class BASECISCO(BASESSHV2):
         return self.addUser(username, password)
 
     def getUserList(self, username=None):
-    	"""Get all user from  the device.
+        """Get all user from  the device.
         resunt format:
         {
             "username-1":{"username":"username-1","level"   :15},

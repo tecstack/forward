@@ -1,26 +1,13 @@
-# (c) 2015-2018, Wang Zhe <azrael-ex@139.com>, Zhang Qi Chuan <zhangqc@fits.com.cn>
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
 #
-# This file is part of Ansible
-#
-# Forward is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Forward is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# (c) 2017, Azrael <azrael-ex@139.com>
 
 """
 -----Introduction-----
 [Core][forward] Device class for bclinux7.
 Author: Cheung Kei-Chuen
 """
-
 import re
 from forward.devclass.bclinux7 import BCLINUX7
 
@@ -58,30 +45,28 @@ class VYOSLINUX(BCLINUX7):
                             character1_3=re.escape('\x1b[?1h\x1b=\r\r\x1b[K\x1b[?1l\x1b>'),
                             character1_4=re.escape('\x1b[m\r\n\x1b[m\r\n \x1b[m\r\n\r\x1b[K\x1b[?1l\x1b>'),
                             character2=self.prompt)
-            while not re.search(self.prompt, result['content'].split('\n')[-1]):
-                # Get more.
-                self.getMore(result['content'])
-                # Get result.
-                try:
+            try:
+                while not re.search(self.prompt, result['content'].split('\n')[-1]):
+                    # Get more.
+                    self.getMore(result['content'])
+                    # Get result.
                     result['content'] += self.shell.recv(1024)
-                except Exception as e:
-                    # pattern not match
-                    result['status'] = False
-                    result['content'] = result['content']
-                    result['errLog'] = str(e)
-                    return result
-            # try to extract the return data
-            # Intercepting the results of the command execution.
-            tmp = re.search(resultPattern, result['content'])
-            if tmp:
-                tmp = tmp.group(1)
-            else:
-                # In cases where special characters are not included,
-                # the original character characteristics should be used
-                # Intercepting the results of the command execution.
-                tmp = re.search(resultPatternOld, result['content']).group(1)
-            result['content'] = tmp
-            result['status'] = True
+                # try to extract the return data
+                try:
+                    # Intercepting the results of the command execution.
+                    tmp = re.search(resultPattern, result['content']).group(1)
+                except Exception:
+                    # In cases where special characters are not included,
+                    # the original character characteristics should be used
+                    # Intercepting the results of the command execution.
+                    tmp = re.search(resultPatternOld, result['content']).group(1)
+                result['content'] = tmp
+                result['status'] = True
+            except Exception as e:
+                # pattern not match
+                result['status'] = False
+                result['content'] = result['content']
+                result['errLog'] = str(e)
         else:
             # not login
             result['status'] = False
