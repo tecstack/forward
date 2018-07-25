@@ -47,7 +47,7 @@ class BASECISCO(BASESSHV2):
                             prompt={"success": "Copy complete[\s\S]+[\r\n]+\S+# ?$"})
         if data["state"] is None:
             result["errLog"] = "Failed save configuration, \
-                               Info: [{content}] , [{errLog}]".format(content=data["content"], errLog=data["errLog"])
+                               Info: [{content}] , [{errLog}]".format(content=data["content"],errLog=data["errLog"])
         else:
             result["content"] = "The configuration was saved successfully."
             result["status"] = True
