@@ -46,7 +46,7 @@ class BASEHUAWEI(BASESSHV2):
                            prompt={"success": "Are you sure to continue\?\[Y/N\] ?$",
                                    "error": "Error:Incomplete command[\s\S]+"})
         if tmp["state"] == "success":
-            continueCommandResult = self.command("Y", prompt={"success": "successfully[\s\S]+[\r\n]+\S+> ?$"})
+            continueCommandResult = self.command("Y", prompt={"success": "[\r\n]+\S+> ?$"})
             if continueCommandResult["state"] == "success":
                 # Successfully.
                 result["status"] = True
