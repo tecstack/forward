@@ -29,6 +29,115 @@ class BASEFENGHUO(BASESSHV2):
     """This is a manufacturer of fenghuo, using the
     SSHV2 version of the protocol, so it is integrated with BASESSHV2 library.
     """
+    def commit(self):
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # Switch to privilege-mode.
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            # Switch failure.
+            return tmp
+        # Excute a command.
+        tmp = self.command("write file",
+                           prompt={"success": "Are you sure\?\(y/n\) \[y\] ?$",
+                                   "error": "Unknown command[\s\S]+"})
+        if tmp["state"] == "success":
+            continueCommandResult = self.command("y", prompt={"success": "\[OK\][\s\S]+[\r\n]+\S+# ?$"})
+            if continueCommandResult["state"] == "success":
+                # Successfully.
+                result["status"] = True
+            else:
+                # Failed.
+                result["errLog"] = "Failed save configuration,\
+                                   relate-information: [{content}]".format(content=continueCommandResult["content"])
+                result["status"] = False
+        elif tmp["state"] == "error":
+            result["errLog"] = "The command failed to execute.info: [{content}]".format(content=tmp["content"])
+        else:
+            result["errLog"] = "Failed save configuration, \
+                               Info: [{content}] , [{errLog}]".format(content=tmp["content"], errLog=tmp["errLog"])
+            result["content"] = "The configuration was saved successfully."
+            result["status"] = True
+        return result
+
+    def configMode(self):
+        # Switch to privilege mode.
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # Program need to go from privileged mode to configuration mode anyway,Becauseof
+        # you might be in interface mode, but you don't have a marks value of the mode
+        _result = self.privilegeMode()
+        if _result["status"] is False:
+            # "enter to privilege-mode failed."
+            return _result
+        else:
+            # If value of the mode is 2,start switching to configure-mode.
+            sendConfig = self.command("config", prompt={"success": "[\r\n]+\S+\(config\)# ?$"})
+            if sendConfig["state"] == "success":
+                # switch to config-mode was successful.
+                result["status"] = True
+                self.mode = 3
+                return result
+            elif sendConfig["state"] is None:
+                result["errLog"] = sendConfig["errLog"]
+                return result
+
+    def privilegeMode(self):
+        # Switch to privilege mode.
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # Get the current position Before switch to privileged mode.
+        # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
+        if self.mode > 2:
+            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+# ?$"})
+            if not exitResult["state"] == "success":
+                result["errLog"] = "Demoted from configuration-mode to privilege-mode failed."
+                return result
+            else:
+                # Switch is successful.
+                self.mode = 2
+                result["status"] = True
+                return result
+        elif self.mode == 2:
+            # The device is currently in privilege-mode ,so there is no required to switch.
+            result["status"] = True
+            return result
+        # else, command line of the device is in general-mode.
+        # Start switching to privilege-mode.
+        sendEnable = self.command("enable", prompt={"password": "[pP]assword.*", "noPassword": "[\r\n]+\S+# ?$"})
+        if sendEnable["state"] == "noPassword":
+            # The device not required a password,thus switch is successful.
+            result["status"] = True
+            self.mode = 2
+            return result
+        elif sendEnable["state"] is None:
+            result["errLog"] = "Unknow error."
+            return result
+        # If device required a password,then send a password to device.
+        sendPassword = self.command(self.privilegePw, prompt={"password": "[pP]assword.*",
+                                                              "noPassword": "[\r\n]+\S+# ?$"})
+        if sendPassword["state"] == "password":
+            # Password error,switch is failed.
+            result["errLog"] = "Password of the privilege mode is wrong."
+            return result
+        elif sendPassword["state"] == "noPassword":
+            # switch is successful.
+            result["status"] = True
+            self.mode = 2
+            return result
+        else:
+            result["errLog"] = "Unknown error."
+            return result
+
     def showNtp(self):
         njInfo = {
             'status': False,
@@ -269,178 +378,3 @@ class BASEFENGHUO(BASESSHV2):
                 info["errLog"] = tmp["content"]
                 break
         return info
-
-    def privilegeMode(self):
-        """Used to switch from normal mode to privileged mode for command line mode.
-        Does not apply to other modes to switch to privileged mode.
-        """
-        self.privilegeModeCommand = 'enable'
-        result = {
-            'status': True,
-            'content': '',
-            'errLog': ''
-        }
-        self.cleanBuffer()
-        if self.isLogin and (len(self.privilegePw) > 0):
-            """This can only be performed when the device
-            has been successfully logged in and the privilege mode password is specified."""
-            # (login succeed status) and (self.privilegePw exist)
-            self.cleanBuffer()
-            self.shell.send('%s\n' % (self.privilegeModeCommand))
-            enableResult = ''
-            while True:
-                """
-                etc:
-                [admin@NFJD-PSC-MGMT-COREVM60 ~]$ super
-                [admin@NFJD-PSC-MGMT-COREVM60 ~]$
-
-                or
-
-                [admin@NFJD-PSC-MGMT-COREVM60 ~]$ super
-                 Password:
-                """
-                """
-                    fg3950: enable command result : 'enable\r\r\nUnknown action 0\r\n'
-                """
-                # need password
-                passwordChar = """%s[\r\n]+ *[pP]assword""" % self.privilegeModeCommand
-                promptChar = """{command}[\r\n]+[\s\S]*{basePrompt}""".format(
-                    command=self.privilegeModeCommand,
-                    basePrompt=self.basePrompt
-                )
-
-                # Second layers of judgment, Privileged command  char 'super/enable'  must be received.
-                # otherwise recv continue... important!
-                if re.search(passwordChar, enableResult):
-                    # if received 'password'
-                    break
-                # no password
-                elif re.search(promptChar, enableResult):
-                    # if no password
-                    break
-                else:
-                    # not finished,continue
-                    enableResult += self.shell.recv(1024)
-
-            if re.search('assword', enableResult):
-                # need password
-                self.shell.send("%s\n" % self.privilegePw)
-                result = ''
-                while not re.search(self.basePrompt, result) and (not re.search('assword|denied|Denied', result)):
-                    result += self.shell.recv(1024)
-                if re.search('assword|denied|Denied', result):
-                    # When send the self.privilegePw, once again encountered a password hint password wrong.
-                    result['status'] = False
-                    result['errLog'] = '[Switch Mode Failed]: Password incorrect'
-                elif re.search(self.basePrompt, result):
-                    # Switch mode succeed
-                    self.getPrompt()
-                    result['status'] = True
-
-            # Check the error information in advance
-            elif re.search('\%|Invalid|\^', enableResult):
-                # bad enable command
-                result['status'] = False
-                result['errLog'] = '[Switch Mode Failed]: Privileged mode command incorrect-A'
-            elif re.search(self.basePrompt, enableResult):
-                # Switch mode succeed, don't need password
-                self.getPrompt()
-                result['status'] = True
-            else:
-                result['stauts'] = False
-                result['errLog'] = '[Switch Mode Failed]: Unknown device status'
-
-        elif not self.isLogin:
-            # login failed
-            result['status'] = False
-            result['errLog'] = '[Switch Mode Failed]: Not login yet'
-
-        elif len(self.privilegePw) == 0:
-            # self.privilegePw dosen't exist, do nothing
-            pass
-        return result
-
-    def _commit(self, saveCommand='write file', exitCommand='quit'):
-        """To save the configuration information of the device,
-        it should be confirmed that the device is under the Config Mode before use.
-        """
-        result = {
-            "status": False,
-            "content": "",
-            "errLog": ""
-        }
-        try:
-            if self.isConfigMode:
-                self._exitConfigMode(exitCommand)
-                # save setup to system
-                self.shell.send('%s\n' % (saveCommand))
-                while not re.search(self.prompt, result['content'].split('\n')[-1]):
-                    result['content'] += self.shell.recv(1024)
-                    # When prompted, reply Y,Search range at last line
-                    if re.search(re.escape("Are you sure?(y/n) [y]"), result['content'].split('\n')[-1]):
-                        self.shell.send("y\n")
-                        continue
-                """
-                If the program finds information like ‘success’, ‘OK’, ‘copy complete’, etc.
-                in the received information, it indicates that the save configuration is successful.
-                """
-                if re.search('(\[OK\])|(Copy complete)|(successfully)', result['content'], flags=re.IGNORECASE):
-                    result['status'] = True
-                # Clean buffer
-                self.cleanBuffer()
-            else:
-                raise ForwardError('[Commit Config Error]: The current state is not configuration mode')
-        except ForwardError, e:
-            result['errLog'] = str(e)
-            result['status'] = False
-        return result
-
-    def _configMode(self, cmd='configure'):
-        """Used to switch from privileged mode to config mode for command line mode.
-        Does not apply to other modes to switch to config mode.
-        """
-        # Flag isCOnfigMode is False
-        self.isConfigMode = False
-        result = {
-            "status": False,
-            "content": "",
-            "errLog": ""
-        }
-        self.cleanBuffer()
-        self.shell.send("%s\n" % (cmd))
-        while not re.search(self.basePrompt, result['content'].split('\n')[-1]):
-            result['content'] += self.shell.recv(1024)
-        # release host prompt
-        self.getPrompt()
-        # Flag isCOnfigMode is True
-        self.isConfigMode = True
-        result['status'] = True
-        return result
-
-    def _exitConfigMode(self, cmd='quit'):
-        """Exit from configuration mode to privileged mode.
-        """
-        result = {
-            "status": False,
-            "content": "",
-            "errLog": ""
-        }
-        try:
-            # Check current status
-            if self.isConfigMode:
-                self.shell.send("%s\n" % (cmd))
-                """Exit from configuration mode to privileged mode.
-                """
-                while not re.search(self.basePrompt, result['content'].split('\n')[-1]):
-                    result['content'] += self.shell.recv(1024)
-                # Flag isCOnfigMode is False
-                self.isConfigMode = False
-                result["status"] = True
-            else:
-                raise ForwardError('Error: The current state is not configuration mode')
-        except ForwardError, e:
-            result["status"] = False
-            result['errLog'] = str(e)
-        # release host prompt
-        self.getPrompt()
-        return result

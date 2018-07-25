@@ -35,7 +35,7 @@ class BASERUIJIE(BASESSHV1):
         the basic prompt for the device is overwritten here.
         """
         BASESSHV1.__init__(self, *args, **kws)
-        self.basePrompt = r'(>|#.*#|\]|\$|\)) *$'
+        self.basePrompt = r'(>|#|).*(>|#|) ?$'
 
     def showNtp(self):
         njInfo = {
@@ -45,7 +45,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = '''show run |  include  ntp'''
         prompt = {
-            "success": "[\s\S]+(>|#|\$){1,}$",
+            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$).*(#|>|\]|\$) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)

@@ -184,6 +184,9 @@ class BASESSHV2(object):
         }
         if (cmd is None) or (not isinstance(prompt, dict)) or (not isinstance(timeout, int)):
             raise ForwardError("You should given a parameter for prompt such as: %s" % (str(parameterFormat)))
+        # Clean buffer data.
+        while self.shell.recv_ready():
+            self.shell.recv(1024)
         try:
             # send a command
             self.shell.send("{cmd}\r".format(cmd=cmd))

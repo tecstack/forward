@@ -47,7 +47,7 @@ class BASESSHV1(object):
         self.shell = ''
         # self.basePrompt = r'(>|#|\]|\$|\)) *$'
         # Multiple identical characters may appear
-        self.basePrompt = r"(>|#|\]|\$){1,}.*$"
+        self.basePrompt = r"(>|#|\]|\$).*(>|#|\]|\$) ?$"
         self.prompt = ''
         self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+'
         self.mode = 1
@@ -263,7 +263,7 @@ class BASESSHV1(object):
             """When after switching mode, the prompt will change, it should be based
             on basePrompt to check and at last line
             """
-            return self.channel.expect(self.prompt, timeout=self.timeout)
+            return self.channel.expect(self.basePrompt, timeout=self.timeout)
         except pexpect.TIMEOUT:
             # No legacy data.
             return ''

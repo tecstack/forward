@@ -60,29 +60,24 @@ class BASECISCO(BASESSHV2):
             "content": "",
             "errLog": ""
         }
-        # Get the current position Before switch to configure-mode.
-        if self.mode == 3:
-            # The device is currently in configure-mode ,so there is no required to switch.
-            result["status"] = True
+        # Program need to go from privileged mode to configuration mode anyway,Becauseof
+        # you might be in interface mode, but you don't have a marks value of the mode
+        _result = self.privilegeMode()
+        if _result["status"] is False:
+            # "enter to privilege-mode failed."
+            result["status"] = False
             return result
         else:
-            # Demotion,If device currently mode  is interface-mode, just need to execute `exit`.
-            _result = self.privilegeMode()
-            if _result["status"] is True:
-                # "enter to privilege-mode failed."
+            # If value of the mode is 2,start switching to configure-mode.
+            sendConfig = self.command("config term", prompt={"success": "[\r\n]+\S+\(config\)# ?$"})
+            if sendConfig["state"] == "success":
+                # switch to config-mode was successful.
                 result["status"] = True
+                self.mode = 3
                 return result
-            else:
-                # If value of the mode is 2,start switching to configure-mode.
-                sendConfig = self.command("config term", prompt={"success": "[\r\n]+\S+\(config\)# ?$"})
-                if sendConfig["state"] == "success":
-                    # switch to config-mode was successful.
-                    result["status"] = True
-                    self.mode = 3
-                    return result
-                elif sendConfig["state"] is None:
-                    result["errLog"] = sendConfig["errLog"]
-                    return result
+            elif sendConfig["state"] is None:
+                result["errLog"] = sendConfig["errLog"]
+                return result
 
     def privilegeMode(self):
         # Switch to privilege mode.
@@ -109,19 +104,18 @@ class BASECISCO(BASESSHV2):
             return result
         # else, command line of the device is in general-mode.
         # Start switching to privilege-mode.
-        sendEnable = self.command("enable", prompt={"password": "[pP]assword.*", "noPassword": self.basePrompt})
+        sendEnable = self.command("enable", prompt={"password": "[pP]assword.*", "noPassword": "[\r\n]+\S+# ?$"})
         if sendEnable["state"] == "noPassword":
             # The device not required a password,thus switch is successful.
-            result["statue"] = True
+            result["status"] = True
             self.mode = 2
-
             return result
         elif sendEnable["state"] is None:
             result["errLog"] = "Unknow error."
             return result
         # If device required a password,then send a password to device.
         sendPassword = self.command(self.privilegePw, prompt={"password": "[pP]assword.*",
-                                                              "noPassword": self.basePrompt})
+                                                              "noPassword": "[\r\n]+\S+# ?$"})
         if sendPassword["state"] == "password":
             # Password error,switch is failed.
             result["errLog"] = "Password of the privilege mode is wrong."
