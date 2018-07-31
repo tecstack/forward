@@ -47,7 +47,7 @@ class BASESSHV1(object):
         self.shell = ''
         # self.basePrompt = r'(>|#|\]|\$|\)) *$'
         # Multiple identical characters may appear
-        self.basePrompt = r"(>|#|\]|\$).*(>|#|\]|\$) ?$"
+        self.basePrompt = r"(>|#|\]|\$) ?$"
         self.prompt = ''
         self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+'
         self.mode = 1
@@ -233,6 +233,7 @@ class BASESSHV1(object):
         """
         if self.isLogin:
             # login status True
+            self.cleanBuffer()
             self.channel.send('\n')
             """The host base prompt is the end of the received flag, and if the data is
             not received at the set time, the timeout is exceeded.
@@ -244,7 +245,7 @@ class BASESSHV1(object):
             # [ex]'[localhost@labstill019~]'
             # self.prompt=self.prompt[1:-1]
             # [ex]'\\[localhost\\@labstill019\\~\\]$'
-            self.prompt = self.channel.before.split('\n')[-1] + self.basePrompt
+            self.prompt = self.channel.before.split('\n')[-1] + self.channel.after
         else:
             raise ForwardError('[Get Prompt Error]: %s: Not login yet.' % self.ip)
         if re.search("> ?$", self.prompt):

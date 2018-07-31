@@ -35,7 +35,85 @@ class BASERUIJIE(BASESSHV1):
         the basic prompt for the device is overwritten here.
         """
         BASESSHV1.__init__(self, *args, **kws)
-        self.basePrompt = r'(>|#|).*(>|#|) ?$'
+        self.basePrompt = r'(>|#).*(>|#) ?$'
+
+    def configMode(self):
+        # Switch to privilege mode.
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # Program need to go from privileged mode to configuration mode anyway,Becauseof
+        # you might be in interface mode, but you don't have a marks value of the mode
+        _result = self.privilegeMode()
+        if _result["status"] is False:
+            # "enter to privilege-mode failed."
+            result["status"] = False
+            return result
+        else:
+            # If value of the mode is 2,start switching to configure-mode.
+            sendConfig = self.command("config term", prompt={"success": "[\r\n]+\S+\(config\)# ?$", "error": "(#|>)"})
+            if sendConfig["state"] == "success":
+                # switch to config-mode was successful.
+                result["status"] = True
+                self.mode = 3
+                return result
+            elif sendConfig["state"] is None:
+                result["errLog"] = sendConfig["errLog"]
+                return result
+
+    def privilegeMode(self):
+        # Switch to privilege mode.
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # Get the current position Before switch to privileged mode.
+        # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
+        if self.mode > 2:
+            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+(#|>|\]|\$).*(#|>|\]|\$) ?$",
+                                                     "error": "(#|>)"})
+            if not exitResult["state"] == "success":
+                result["errLog"] = "Demoted from configuration-mode to privilege-mode failed."
+                return result
+            else:
+                # Switch is successful.
+                self.mode = 2
+                result["status"] = True
+                return result
+        elif self.mode == 2:
+            # The device is currently in privilege-mode ,so there is no required to switch.
+            result["status"] = True
+            return result
+        # else, command line of the device is in general-mode.
+        # Start switching to privilege-mode.
+        sendEnable = self.command("enable", prompt={"password": "[pP]assword.*",
+                                                    "noPassword": "[\r\n]+\S+(#|>|\]|\$).*(#|>|\]|\$) ?$"})
+        if sendEnable["state"] == "noPassword":
+            # The device not required a password,thus switch is successful.
+            result["status"] = True
+            self.mode = 2
+            return result
+        elif sendEnable["state"] is None:
+            result["errLog"] = "Unknow error."
+            return result
+        # If device required a password,then send a password to device.
+        sendPassword = self.command(self.privilegePw, prompt={"password": "[pP]assword.*",
+                                                              "noPassword": "[\r\n]+\S+(#|>|\]|\$).*(#|>|\]|\$) ?$"})
+        if sendPassword["state"] == "password":
+            # Password error,switch is failed.
+            result["errLog"] = "Password of the privilege mode is wrong."
+            return result
+        elif sendPassword["state"] == "noPassword":
+            # switch is successful.
+            result["status"] = True
+            self.mode = 2
+            return result
+        else:
+            result["errLog"] = "Unknown error."
+            return result
 
     def showNtp(self):
         njInfo = {
