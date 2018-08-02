@@ -37,6 +37,29 @@ class BASERUIJIE(BASESSHV1):
         BASESSHV1.__init__(self, *args, **kws)
         self.basePrompt = r'(>|#).*(>|#) ?$'
 
+    def commit(self):
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # Switch to privilege-mode.
+        result = self.privilegeMode()
+        if not result["status"]:
+            # Switch failure.
+            return result
+        # Excute a command.
+        data = self.command("write",
+                            prompt={"success": "\[OK\][\s\S]+[\r\n]+\S+(>|#).*(>|#) ?$",
+                                    "error": "Unknown command[\s\S]+[\r\n]+\S+(>|#).*(>|#) ?$"})
+        if data["state"] == "success":
+            result["content"] = "The configuration was saved successfully."
+            result["status"] = True
+        else:
+            result["errLog"] = "Failed save configuration, \
+                               Info: [{content}] , [{errLog}]".format(content=data["content"], errLog=data["errLog"])
+        return result
+
     def configMode(self):
         # Switch to privilege mode.
         result = {
@@ -53,13 +76,15 @@ class BASERUIJIE(BASESSHV1):
             return result
         else:
             # If value of the mode is 2,start switching to configure-mode.
-            sendConfig = self.command("config term", prompt={"success": "[\r\n]+\S+\(config\)# ?$", "error": "(#|>)"})
+            sendConfig = self.command("config term",
+                                      prompt={"success": "[\r\n]+\S+\(config\)# ?$",
+                                              "error": "Unknown command[\s\S]+[\r\n]+\S+(>|#).*(>|#) ?$"})
             if sendConfig["state"] == "success":
                 # switch to config-mode was successful.
                 result["status"] = True
                 self.mode = 3
                 return result
-            elif sendConfig["state"] is None:
+            else:
                 result["errLog"] = sendConfig["errLog"]
                 return result
 
