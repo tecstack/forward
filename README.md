@@ -55,15 +55,20 @@
   from forward import Forward
 
   new = Forward()
+
+  # 分别传入IP地址、设备型号、登录账户、登录密码
   new.addTargets(['192.168.113.1-192.168.113.2'], 'n7018', 'username', 'password')
   instances = new.getInstances()
 
+  # 获取实例
   cisco1 = instances['192.168.113.1']
   cisco2 = instances['192.168.113.2']
 
+  # 执行show version命令
   result1 = cisco1.execute('show version')
   result2 = cisco2.execute('show version')
 
+  # 查看命令结果
   if result1['status']:
       print '[%s] OS version info: %s' % ('cisco1', result1['content'])
   if result2['status']:
@@ -79,7 +84,7 @@
 
 * [初始化 Initialize](/docs/advance/initialize.md)
 * [预登陆 PreLogin](/docs/advance/prelogin.md)
-* [自定义指令 command](/docs/advance/command.md)
+* [自定义指令(适合开发者) command](/docs/advance/command.md)
 
 ---
 
