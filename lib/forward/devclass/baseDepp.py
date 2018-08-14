@@ -81,7 +81,7 @@ class BASEDEPP(BASESSHV2):
         }
         cmd = "show ip route"
         prompt = {
-            "success": "Codes[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -139,7 +139,7 @@ class BASEDEPP(BASESSHV2):
         }
         cmd = "show interface"
         prompt = {
-            "success": "Virtual machine support[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)

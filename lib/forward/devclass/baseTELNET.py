@@ -45,7 +45,7 @@ class BASETELNET(object):
         self.shell = ''
         # self.basePrompt = r'(>|#|\]|\$|\)) *$'
         # Multiple identical characters may appear
-        self.basePrompt = r"(>|#|\]|\$){1,}.*$"
+        self.basePrompt = r"(>|#|\]|\$) *$"
         self.prompt = ''
         self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+'
         self.mode = 1
@@ -113,7 +113,7 @@ class BASETELNET(object):
         """execute a command line, only suitable for the scene when
         the prompt is equal before and after execution
         """
-        dataPattern = '[\r\n]+([\s\S]*)[\r\n]+' + self.prompt
+        dataPattern = re.compile('[\r\n]+([\s\S]*)[\r\n]+' + self.prompt)
         # Spaces will produce special characters and re.escape('show ver') --> show \\ ver
         data = {'status': False,
                 'content': '',
@@ -243,12 +243,18 @@ class BASETELNET(object):
         """execute a command line, powerful and suitable for any scene,
         but need to define whole prompt dict list
         """
+        # regx compile
+        _promptKey = prompt.keys()
+        for key in _promptKey:
+            prompt[key] = re.compile(prompt[key])
         result = {
             'status': False,
             'content': '',
             'errLog': '',
             "state": None
         }
+        if self.isLogin is False:
+            result['errLog'] = '[Execute Error]: device not login.'
         # Parameters check
         parameterFormat = {
             "success": "regular-expression-success",

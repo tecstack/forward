@@ -127,7 +127,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "display current-configuration | i log"
         prompt = {
-            "success": "loghost[\s\S]+[\r\n]+\S+(>|\]) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -170,7 +170,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "dis current-configuration | i ntp"
         prompt = {
-            "success": "ntp-service[\s\S]+[\r\n]+\S+(>|\]) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -192,7 +192,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "dis current-configuration | i snmp"
         prompt = {
-            "success": "snmp-agent[\s\S]+[\r\n]+\S+(>|\]) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -213,7 +213,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "display  vlan"
         prompt = {
-            "success": "VID  Status[\s\S]+[\r\n]+\S+(>|\]) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -279,7 +279,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "display  ip routing-table"
         prompt = {
-            "success": "Routing[\s\S]+[\r\n]+\S+(>|\]) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -312,7 +312,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "display interface"
         prompt = {
-            "success": "Output[\s\S]+[\r\n]+\S+(>|\]) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -399,36 +399,3 @@ class BASEHUAWEI(BASESSHV2):
         else:
             njInfo["errLog"] = result["errLog"]
         return njInfo
-
-    def _commit(self, saveCommand='save', exitCommand='return'):
-        """To save the configuration information of the device,
-        it should be confirmed that the device is under the Config Mode before use.
-        """
-        result = {
-            "status": False,
-            "content": "",
-            "errLog": ""
-        }
-        try:
-            if self.isConfigMode:
-                # Exit from configuration mode to privileged mode.
-                self._exitConfigMode(exitCommand)
-                # save setup to system
-                self.shell.send('%s\n' % (saveCommand))
-                while not re.search(self.prompt, result['content'].split('\n')[-1]):
-                    result['content'] += self.shell.recv(1024)
-                    # When prompted, reply Y,Search range at last line
-                    if re.search(re.escape("Are you sure to continue?[Y/N]"), result["content"].split("\n")[-1]):
-                        self.shell.send("Y\n")
-                """
-                If the program finds information like ‘success’, ‘OK’, ‘copy complete’, etc.
-                in the received information, it indicates that the save configuration is successful.
-                """
-                if re.search('(\[OK\])|(Copy complete)|(successfully)', result['content'], flags=re.IGNORECASE):
-                    result['status'] = True
-            else:
-                raise ForwardError('[Commit Config Error]: The current state is not configuration mode')
-        except ForwardError, e:
-            result['errLog'] = str(e)
-            result['status'] = False
-        return result

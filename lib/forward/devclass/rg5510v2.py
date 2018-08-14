@@ -18,17 +18,11 @@
 
 """
 -----Introduction-----
-[Core][forward] Device class for rg5510.
+[Core][forward] Device class for rg5510-sshv1.
 """
-from forward.devclass.baseRuijie import BASERUIJIE
+from forward.devclass.baseRuijieV2 import BASERUIJIE
 
 
-class RG5510(BASERUIJIE):
-    """This is a manufacturer of ruijie, so it is integrated with BASERUIJIE library.
-    """
-    def __init__(self, *args, **kws):
-        """Since the device's host prompt is different from BASESSHV2,
-        the basic prompt for the device is overwritten here.
-        """
-        BASERUIJIE.__init__(self, *args, **kws)
-        self.basePrompt = r'(>|#.*#|\]|\$|\)) *$'
+class RG5510V2(BASERUIJIE):
+
+    pass

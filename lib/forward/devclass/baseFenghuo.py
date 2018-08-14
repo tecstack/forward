@@ -146,7 +146,7 @@ class BASEFENGHUO(BASESSHV2):
         }
         cmd = "show running-config  include  substring   ntp"
         prompt = {
-            "success": "ntp[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -167,7 +167,7 @@ class BASEFENGHUO(BASESSHV2):
         }
         cmd = "show running-config  include  substring   snmp"
         prompt = {
-            "success": "trap-server[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -209,7 +209,7 @@ class BASEFENGHUO(BASESSHV2):
         }
         cmd = "show running-config  include  substring  syslog"
         prompt = {
-            "success": "syslog server[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -231,7 +231,7 @@ class BASEFENGHUO(BASESSHV2):
         }
         cmd = "show vlan"
         prompt = {
-            "success": "vlans is[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -277,7 +277,7 @@ class BASEFENGHUO(BASESSHV2):
         }
         cmd = "show ip route"
         prompt = {
-            "success": "Gateway[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -314,7 +314,7 @@ class BASEFENGHUO(BASESSHV2):
         }
         cmd = "show interface"
         prompt = {
-            "success": "up/down[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)

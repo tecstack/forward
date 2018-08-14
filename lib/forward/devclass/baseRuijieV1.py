@@ -35,7 +35,7 @@ class BASERUIJIE(BASESSHV1):
         the basic prompt for the device is overwritten here.
         """
         BASESSHV1.__init__(self, *args, **kws)
-        self.basePrompt = r'(>|#).*(>|#) ?$'
+        self.basePrompt = r'(>|#) *$'
 
     def commit(self):
         result = {
@@ -50,7 +50,7 @@ class BASERUIJIE(BASESSHV1):
             return result
         # Excute a command.
         data = self.command("write",
-                            prompt={"success": "\[OK\][\s\S]+[\r\n]+\S+(>|#).*(>|#) ?$",
+                            prompt={"success": "\[OK\][\s\S]+[\r\n]+\S+(>|#) ?$",
                                     "error": "Unknown command[\s\S]+[\r\n]+\S+(>|#).*(>|#) ?$"})
         if data["state"] == "success":
             result["content"] = "The configuration was saved successfully."
@@ -78,7 +78,7 @@ class BASERUIJIE(BASESSHV1):
             # If value of the mode is 2,start switching to configure-mode.
             sendConfig = self.command("config term",
                                       prompt={"success": "[\r\n]+\S+\(config\)# ?$",
-                                              "error": "Unknown command[\s\S]+[\r\n]+\S+(>|#).*(>|#) ?$"})
+                                              "error": "Unknown command[\s\S]+[\r\n]+\S+(>|#) ?$"})
             if sendConfig["state"] == "success":
                 # switch to config-mode was successful.
                 result["status"] = True
@@ -98,7 +98,7 @@ class BASERUIJIE(BASESSHV1):
         # Get the current position Before switch to privileged mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
         if self.mode > 2:
-            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+(#|>|\]|\$).*(#|>|\]|\$) ?$",
+            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+(#|>|\]) ?$",
                                                      "error": "(#|>)"})
             if not exitResult["state"] == "success":
                 result["errLog"] = "Demoted from configuration-mode to privilege-mode failed."
@@ -115,7 +115,7 @@ class BASERUIJIE(BASESSHV1):
         # else, command line of the device is in general-mode.
         # Start switching to privilege-mode.
         sendEnable = self.command("enable", prompt={"password": "[pP]assword.*",
-                                                    "noPassword": "[\r\n]+\S+(#|>|\]|\$).*(#|>|\]|\$) ?$"})
+                                                    "noPassword": "[\r\n]+\S+(#|>|\]|\$) ?$"})
         if sendEnable["state"] == "noPassword":
             # The device not required a password,thus switch is successful.
             result["status"] = True
@@ -126,7 +126,7 @@ class BASERUIJIE(BASESSHV1):
             return result
         # If device required a password,then send a password to device.
         sendPassword = self.command(self.privilegePw, prompt={"password": "[pP]assword.*",
-                                                              "noPassword": "[\r\n]+\S+(#|>|\]|\$).*(#|>|\]|\$) ?$"})
+                                                              "noPassword": "[\r\n]+\S+(#|>|\]|\$) ?$"})
         if sendPassword["state"] == "password":
             # Password error,switch is failed.
             result["errLog"] = "Password of the privilege mode is wrong."
@@ -148,7 +148,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = '''show run |  include  ntp'''
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$).*(#|>|\]|\$) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -260,7 +260,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = "show ip route"
         prompt = {
-            "success": "[\s\S]+(>|#|\$){1,}$",
+            "success": "[\s\S]+(>|#|\$) *$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -319,8 +319,8 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = "show interface"
         prompt = {
-            "success": "Index\(dec\):[\s\S]+#.*#\$ ?$",
-            "error": "Unrecognized[\s\S]+",
+            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "error": "Unrecognized[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
         }
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":

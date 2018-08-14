@@ -47,7 +47,7 @@ class BASESSHV2(object):
         self.shell = ''
         # self.basePrompt = r'(>|#|\]|\$|\)) *$'
         # Multiple identical characters may appear
-        self.basePrompt = r"(>|#|\]|\$){1,}.*$"
+        self.basePrompt = "(>|#|\]|\$) *$"
         self.prompt = ''
         self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+'
         self.mode = 1
@@ -142,7 +142,7 @@ class BASESSHV2(object):
             # [ex] when send('ls\r'),get 'ls\r\nroot base etc \r\n[wangzhe@cloudlab100 ~]$ '
             # [ex] data should be 'root base etc '
             self.shell.send(cmd + "\r")
-            resultPattern = '[\r\n]+([\s\S]*)[\r\n]+' + self.prompt
+            resultPattern = re.compile('[\r\n]+([\s\S]*)[\r\n]+' + self.prompt)
             try:
                 while not re.search(self.prompt, result['content'].split('\n')[-1]):
                     self.getMore(result['content'])
@@ -171,12 +171,20 @@ class BASESSHV2(object):
         """execute a command line, powerful and suitable for any scene,
         but need to define whole prompt dict list
         """
+        # regx compile
+        _promptKey = prompt.keys()
+        for key in _promptKey:
+            prompt[key] = re.compile(prompt[key])
+        # Setting timeout.
+        self.shell.settimeout(timeout)
         result = {
             'status': False,
             'content': '',
             'errLog': '',
             "state": None
         }
+        if self.isLogin is False:
+            result['errLog'] = '[Execute Error]: device not login.'
         # Parameters check
         parameterFormat = {
             "success": "regular-expression-success",
@@ -192,7 +200,7 @@ class BASESSHV2(object):
             self.shell.send("{cmd}\r".format(cmd=cmd))
         except Exception:
             # break, if faild
-            result["errLog"] = "Forward had sent a command failure."
+            result["errLog"] = "Forward has sent a command failure."
             return result
         isBreak = False
         while True:
