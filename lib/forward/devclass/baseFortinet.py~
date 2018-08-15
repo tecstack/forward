@@ -189,11 +189,13 @@ class BASEFORTINET(BASESSHV2):
         if result["state"] == "success":
             interfacesFullInfo = re.split("next", result["content"])
             for _interfaceInfo in interfacesFullInfo:
-                lineInfo = {"id": "",
-                            "description": "",
-                            "status": "",
-                            "interface": [],
-                            "type": ""}
+                lineInfo = {
+                        "id": "",
+                        "description": "",
+                        "status": "",
+                        "interface": [],
+                        "type": "",
+                }
                 # Get name of the interface.
                 tmp = re.search('set vlanid (\d+)', _interfaceInfo)
                 if tmp:
@@ -212,7 +214,7 @@ class BASEFORTINET(BASESSHV2):
                 # Get interface.
                 tmp = re.search('set interface "(.*)"', _interfaceInfo)
                 if tmp:
-                    lineInfo["interface"] = re.split(",| ", tmp.group(1).strip('"'))
+                    lineInfo["interface"] = re.split(",| ", tmp.group(1).strip())
                 # Get type.
                 tmp = re.search('set mode ([A-Za-z]+)', _interfaceInfo)
                 if tmp:

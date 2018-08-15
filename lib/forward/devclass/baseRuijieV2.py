@@ -146,7 +146,7 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = '''show run |  include  ntp'''
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\r\n]+\S+.+(#|>|\]|\$) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -211,7 +211,7 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = "show  vlan"
         prompt = {
-            "success": "[\s\S]+(>|#|\$){1,}$",
+            "success": "[\r\n]+\S+.+(>|#|\$) *$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
