@@ -175,8 +175,6 @@ class BASESSHV2(object):
         _promptKey = prompt.keys()
         for key in _promptKey:
             prompt[key] = re.compile(prompt[key])
-        # Setting timeout.
-        self.shell.settimeout(timeout)
         result = {
             'status': False,
             'content': '',
@@ -185,6 +183,9 @@ class BASESSHV2(object):
         }
         if self.isLogin is False:
             result['errLog'] = '[Execute Error]: device not login.'
+            return result
+        # Setting timeout.
+        self.shell.settimeout(timeout)
         # Parameters check
         parameterFormat = {
             "success": "regular-expression-success",

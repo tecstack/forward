@@ -362,6 +362,7 @@ class BASECISCO(BASESSHV2):
                 lineInfo = {"interfaceName": "",
                             "members": [],
                             "lineState": "",
+                            "interfaceState": "",
                             "adminState": "",
                             "description": "",
                             "speed": "",
@@ -370,6 +371,7 @@ class BASECISCO(BASESSHV2):
                             "outputRate": "",
                             "crc": "",
                             "linkFlap": "",
+                            "mtu": "",
                             }
                 # Get name of the interface
                 if i == 0:

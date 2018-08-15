@@ -317,8 +317,8 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
-            "error": "Unrecognized[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\r\n]+[\S]+.*(#|>|\]|\$) ?$",
+            "error": "Unrecognized[\s\S]+[\r\n]+[\S]+.*(#|>|\]|\$) ?$",
         }
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
@@ -330,9 +330,50 @@ class BASERUIJIE(BASESSHV2):
                             "type": "",
                             "inputRate": "",
                             "outputRate": "",
+                            "ip": "",
+                            "lineState": "",
+                            "adminState": "",
+                            "mtu": "",
+                            "duplex": "",
+                            "description": "",
                             "crc": ""}
                 # Get name of the interface.
-                lineInfo['interfaceName'] = _interfaceInfo.split("\r")[0].strip(" ")
+                lineInfo['interfaceName'] = re.search("(.*) ========================", _interfaceInfo).group(1)
+                tmp = re.search("\d+(/\d+)? is (.*), line protocol", _interfaceInfo)
+                if tmp:
+                    if tmp.lastindex == 1:
+                        lineInfo["interfaceState"] = tmp.group(1).strip()
+                    else:
+                        lineInfo["interfaceState"] = tmp.group(2).strip()
+                tmp = re.search("Interface address is:(.*)", _interfaceInfo)
+                if tmp:
+                    lineInfo["ip"] = tmp.group(1).strip()
+                tmp = re.search("line protocol is (.*)", _interfaceInfo)
+                if tmp:
+                    lineInfo["lineState"] = tmp.group(1).strip()
+                tmp = re.search("MTU (\d+)", _interfaceInfo)
+                if tmp:
+                    lineInfo["mtu"] = tmp.group(1).strip()
+                tmp = re.search("Port-type: (.*)", _interfaceInfo)
+                if tmp:
+                    lineInfo["type"] = tmp.group(1).strip()
+                tmp = re.search("input rate (\d+)", _interfaceInfo)
+                if tmp:
+                    lineInfo["inputRate"] = tmp.group(1).strip()
+                tmp = re.search("output rate (\d+)", _interfaceInfo)
+                if tmp:
+                    lineInfo["outputRate"] = tmp.group(1).strip()
+                tmp = re.search("duplex is (.*)", _interfaceInfo)
+                if tmp:
+                    lineInfo["duplex"] = tmp.group(1).strip()
+                tmp = re.search("Description: (.*)", _interfaceInfo)
+                if tmp:
+                    lineInfo["description"] = tmp.group(1).strip()
+                tmp = re.search("oper speed is (.*)", _interfaceInfo)
+                if tmp:
+                    lineInfo["speed"] = tmp.group(1).strip()
+                njInfo["content"].append(lineInfo)
+            njInfo["status"] = True
         else:
             njInfo["errLog"] = result["errLog"]
         return njInfo
