@@ -288,7 +288,10 @@ class BASEFENGHUO(BASESSHV2):
                         "net": "",
                         "mask": "",
                         "metric": "",
-                        "via": [],
+                        "type": "",
+                        "description": "",
+                        "interface": "",
+                        "via": "",
                     }
                     tmp = re.search("([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/([0-9]{1,2})\s+\
                                      ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\s+([0-9]+/[0-9]+)\s+\
@@ -296,7 +299,7 @@ class BASEFENGHUO(BASESSHV2):
                     if tmp:
                         lineInfo["net"] = tmp.group(1)
                         lineInfo["mask"] = tmp.group(2)
-                        lineInfo["via"] = {"via": tmp.group(3)},
+                        lineInfo["via"] = tmp.group(3)
                         lineInfo["metric"] = tmp.group(4)
                         lineInfo["interface"] = tmp.group(5)
                         lineInfo["type"] = tmp.group(6)

@@ -289,15 +289,18 @@ class BASEHUAWEI(BASESSHV2):
                 lineInfo = {"net": "",
                             "mask": "",
                             "metric": "",
-                            "via": [{"type": "", "via": "", "interface": ""}]}
+                            "description": "",
+                            "type": "",
+                            "interface": "",
+                            "via": ""}
                 tmp = re.search("([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/([0-9]{1,2})\s+(\S+)\s+\
                                  \S+\s+\S+\s+\S+\s+([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\s+(\S+)", _interfaceInfo)
                 if tmp:
                     lineInfo["net"] = tmp.group(1)
                     lineInfo["mask"] = tmp.group(2)
-                    lineInfo["via"][0]["type"] = tmp.group(3)
-                    lineInfo["via"][0]["via"] = tmp.group(4)
-                    lineInfo["via"][0]["interface"] = tmp.group(5)
+                    lineInfo["type"] = tmp.group(3)
+                    lineInfo["via"] = tmp.group(4)
+                    lineInfo["interface"] = tmp.group(5)
                     njInfo["content"].append(lineInfo)
             njInfo["status"] = True
         else:

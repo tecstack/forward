@@ -314,14 +314,14 @@ class BASECISCO(BASESSHV2):
                         njInfo["content"].append(lineInfo)
                     except Exception:
                         pass'''
-                    lineInfo = {}
-                    """lineInfo = {
+                    lineInfo = {
                         "net": "",
                         "mask": "",
                         "via": "",
                         "metric": "",
-                        "via": [],
-                    }"""
+                        "type": "",
+                        "via": "",
+                    }
                     # Get net of the route.
                     lineInfo["net"] = _interfaceInfo.split("/")[0]
                     # Get mask of net of the route.
@@ -331,7 +331,7 @@ class BASECISCO(BASESSHV2):
                     lineInfo = njInfo["content"].pop()
                     lineInfo["via"] = re.search("\*via (.*?),", _interfaceInfo).group(1)
                     lineInfo["interface"] = _interfaceInfo.split(",")[1].strip()
-                    lineInfo["type"] = re.search("(direct|ospf|static|local)", _interfaceInfo).group(1).strip()
+                    lineInfo["type"] = _interfaceInfo.split()[-1]
                     njInfo["content"].append(lineInfo)
             # save the last record.
             try:

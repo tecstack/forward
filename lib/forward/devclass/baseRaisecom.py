@@ -291,14 +291,15 @@ class BASERAISECOM(BASESSHV2):
                         njInfo["content"].append(lineInfo)
                     except Exception:
                         pass'''
-                    lineInfo = {}
-                    """lineInfo = {
+                    lineInfo = {
                         "net": "",
                         "mask": "",
-                        "via": "",
                         "metric": "",
-                        "via": [],
-                    }"""
+                        "type": "",
+                        "description": "",
+                        "interface": "",
+                        "via": "",
+                    }
                     # Get net of the route.
                     lineInfo["net"] = _interfaceInfo.split()[2]
                     # Get mask of net of the route.

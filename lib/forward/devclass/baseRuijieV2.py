@@ -268,8 +268,10 @@ class BASERUIJIE(BASESSHV2):
                     "net": "",
                     "mask": "",
                     "metric": "",
-                    "via": [{"interface": "", "via": "", "type": ""}],
-                    # "via": [],
+                    "type": "",
+                    "description": "",
+                    "interface": "",
+                    "via": "",
                 }
                 tmp = re.search("([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/([0-9]{1,2})", _interfaceInfo)
                 if tmp:
@@ -277,7 +279,7 @@ class BASERUIJIE(BASESSHV2):
                     lineInfo["mask"] = tmp.group(2)
                     via = re.search("via ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)", _interfaceInfo)
                     if via:
-                        lineInfo["via"][0]["via"] = via.group(1)
+                        lineInfo["via"] = via.group(1)
                     # Match the route table
                     tmp = re.search("([A-Za-z0-9])\*? +([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/([0-9]{1,2})", _interfaceInfo)
                     if tmp:
@@ -302,7 +304,7 @@ class BASERUIJIE(BASESSHV2):
                             _type = "fib"
                     else:
                         _type = "default"
-                    lineInfo["via"][0]["type"] = _type
+                    lineInfo["type"] = _type
                     njInfo["content"].append(lineInfo)
             njInfo["status"] = True
         else:
