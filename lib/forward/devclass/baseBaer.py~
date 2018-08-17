@@ -98,10 +98,10 @@ class BASEBAER(BASESSHV2):
             "errLog": ""
         }
         result = self.command("show router  route-table", prompt={"success": "[\r\n]+\S+.+# ?$",
-                                                                  "eror": "Bad command[\s\S]+"})
+                                                      "eror": "Bad command[\s\S]+"})
         """
         Dest Prefix[Flags]                            Type    Proto     Age        Pref
-        Next Hop[Interface Name]                                    Metric
+        Next Hop[Interface Name]                                    Metric   
         -------------------------------------------------------------------------------
         0.0.0.0/0                                     Remote  OSPF(10)  28d14h34m  190
             10.32.2.2                                                    102
@@ -130,8 +130,8 @@ class BASEBAER(BASESSHV2):
                     lineInfo["net"] = tmp.group(1)
                     lineInfo["mask"] = tmp.group(2)
                     lineInfo["type"] = tmp.group(3)
-                    # Get via and metric of routing from next line.
-                    tmp = re.search("(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s+(\d+)", allLine[i + 1])
+                    # Get via and metric of routing,data from next line.
+                    tmp = re.search("(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s+(\d+)", allLine[i+1])
                     if tmp:
                         lineInfo["via"] = tmp.group(1)
                         lineInfo["metric"] = tmp.group(2)
