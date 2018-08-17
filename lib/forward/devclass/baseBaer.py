@@ -94,7 +94,7 @@ class BASEBAER(BASESSHV2):
         # Switch to config mode.
         njInfo = {
             "status": False,
-            "content": "",
+            "content": [],
             "errLog": ""
         }
         result = self.command("show router  route-table", prompt={"success": "[\r\n]+\S+.+# ?$",
@@ -131,9 +131,9 @@ class BASEBAER(BASESSHV2):
                     lineInfo["mask"] = tmp.group(2)
                     lineInfo["type"] = tmp.group(3)
                     # Get via and metric of routing from next line.
-                    tmp = re.search("(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s+(\d+)", allLine[i + 1])
+                    tmp = re.search("([\s\S]+)(\d+)", allLine[i + 1])
                     if tmp:
-                        lineInfo["via"] = tmp.group(1)
+                        lineInfo["via"] = tmp.group(1).split()[0].strip("()")
                         lineInfo["metric"] = tmp.group(2)
                         njInfo["content"].append(lineInfo)
                     else:

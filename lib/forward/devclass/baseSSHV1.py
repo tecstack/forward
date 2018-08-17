@@ -49,7 +49,7 @@ class BASESSHV1(object):
         # Multiple identical characters may appear
         self.basePrompt = r"(>|#|\]|\$) *$"
         self.prompt = ''
-        self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+'
+        self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+|\(Q to quit\)'
         self.mode = 1
 
         """
