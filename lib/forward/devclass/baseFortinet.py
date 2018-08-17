@@ -147,7 +147,7 @@ class BASEFORTINET(BASESSHV2):
         }
         cmd = "show full-configuration  system interface"
         prompt = {
-            "success": "[\r\n]+[\S]+.*(#|>) ?$",
+            "success": "[\r\n]+\S+.*(#|>) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -249,7 +249,7 @@ class BASEFORTINET(BASESSHV2):
         }
         cmd = "show full-configuration  system interface"
         prompt = {
-            "success": "[\r\n]+[\S]+.*(#|>) ?$",
+            "success": "[\r\n]+\S+.*(#|>) ?$",
             "error": "Unrecognized[\s\S]",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -319,7 +319,7 @@ class BASEFORTINET(BASESSHV2):
         }
         cmd = "get router  info routing-table  all"
         prompt = {
-            "success": "[\r\n]+[\S]+.+(#|>) ?$",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Unrecognized[\s\S]+[\r\n]+[\S]+.+(#|>) ?$",
         }
         result = self.command(cmd=cmd, prompt=prompt)

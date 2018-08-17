@@ -49,7 +49,7 @@ class BASERUIJIE(BASESSHV2):
         # Excute a command.
         data = self.command("write",
                             prompt={"success": "\[OK\][\s\S]+[\r\n]+\S+(>|#) ?$",
-                                    "error": "Unknown command[\s\S]+[\r\n]+\S+(>|#).*(>|#) ?$"})
+                                    "error": "Unknown command[\s\S]+[\r\n]+\S+.+(>|#).*(>|#) ?$"})
         if data["state"] == "success":
             result["content"] = "The configuration was saved successfully."
             result["status"] = True
@@ -75,8 +75,8 @@ class BASERUIJIE(BASESSHV2):
         else:
             # If value of the mode is 2,start switching to configure-mode.
             sendConfig = self.command("config term",
-                                      prompt={"success": "[\r\n]+\S+\(config\)# ?$",
-                                              "error": "Unknown command[\s\S]+[\r\n]+\S+(>|#) ?$"})
+                                      prompt={"success": "[\r\n]+\S+.+\(config\)# ?$",
+                                              "error": "Unknown command[\s\S]+[\r\n]+\S+.+(>|#) ?$"})
             if sendConfig["state"] == "success":
                 # switch to config-mode was successful.
                 result["status"] = True
@@ -96,7 +96,7 @@ class BASERUIJIE(BASESSHV2):
         # Get the current position Before switch to privileged mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
         if self.mode > 2:
-            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+(#|>|\]) ?$",
+            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+.+(#|>|\]) ?$",
                                                      "error": "(#|>)"})
             if not exitResult["state"] == "success":
                 result["errLog"] = "Demoted from configuration-mode to privilege-mode failed."
@@ -146,7 +146,7 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = '''show run |  include  ntp'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]|\$) ?$",
+            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -168,7 +168,7 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = '''show run |  include  snmp'''
         prompt = {
-            "success": "[\s\S]+(>|#|\$){1,}$",
+            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -190,7 +190,7 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = "show  version"
         prompt = {
-            "success": "[\s\S]+(>|#|\$){1,}$",
+            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -258,7 +258,7 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = "show ip route"
         prompt = {
-            "success": "[\s\S]+(>|#|\$) *$",
+            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -319,8 +319,8 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\r\n]+[\S]+.*(#|>|\]|\$) ?$",
-            "error": "Unrecognized[\s\S]+[\r\n]+[\S]+.*(#|>|\]|\$) ?$",
+            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":

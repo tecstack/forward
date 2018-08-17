@@ -137,7 +137,7 @@ class BASECISCO(BASESSHV2):
         }
         cmd = "show run ntp"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>) ?$",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -159,7 +159,7 @@ class BASECISCO(BASESSHV2):
         }
         cmd = '''show running-config  |  i log'''
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>) ?$",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -181,7 +181,7 @@ class BASECISCO(BASESSHV2):
         }
         cmd = '''show run | i  "snmp-server host"'''
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>) ?$",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -224,7 +224,7 @@ class BASECISCO(BASESSHV2):
         }
         cmd = "show vlan"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>) ?$",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         """
@@ -300,7 +300,7 @@ class BASECISCO(BASESSHV2):
         }
         cmd = "show routing"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>) ?$",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -351,7 +351,7 @@ class BASECISCO(BASESSHV2):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>) ?$",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)

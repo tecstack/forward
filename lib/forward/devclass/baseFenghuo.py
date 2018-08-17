@@ -78,7 +78,7 @@ class BASEFENGHUO(BASESSHV2):
             return _result
         else:
             # If value of the mode is 2,start switching to configure-mode.
-            sendConfig = self.command("config", prompt={"success": "[\r\n]+\S+\(config\)# ?$"})
+            sendConfig = self.command("config", prompt={"success": "[\r\n]+\S+.+\(config\)# ?$"})
             if sendConfig["state"] == "success":
                 # switch to config-mode was successful.
                 result["status"] = True
@@ -98,7 +98,7 @@ class BASEFENGHUO(BASESSHV2):
         # Get the current position Before switch to privileged mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
         if self.mode > 2:
-            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+# ?$"})
+            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+.+# ?$"})
             if not exitResult["state"] == "success":
                 result["errLog"] = "Demoted from configuration-mode to privilege-mode failed."
                 return result
@@ -113,7 +113,7 @@ class BASEFENGHUO(BASESSHV2):
             return result
         # else, command line of the device is in general-mode.
         # Start switching to privilege-mode.
-        sendEnable = self.command("enable", prompt={"password": "[pP]assword.*", "noPassword": "[\r\n]+\S+# ?$"})
+        sendEnable = self.command("enable", prompt={"password": "[pP]assword.*", "noPassword": "[\r\n]+\S+.+# ?$"})
         if sendEnable["state"] == "noPassword":
             # The device not required a password,thus switch is successful.
             result["status"] = True
@@ -124,7 +124,7 @@ class BASEFENGHUO(BASESSHV2):
             return result
         # If device required a password,then send a password to device.
         sendPassword = self.command(self.privilegePw, prompt={"password": "[pP]assword.*",
-                                                              "noPassword": "[\r\n]+\S+# ?$"})
+                                                              "noPassword": "[\r\n]+\S+.+# ?$"})
         if sendPassword["state"] == "password":
             # Password error,switch is failed.
             result["errLog"] = "Password of the privilege mode is wrong."
@@ -146,7 +146,7 @@ class BASEFENGHUO(BASESSHV2):
         }
         cmd = "show running-config  include  substring   ntp"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\r\n]+\S+.+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -167,7 +167,7 @@ class BASEFENGHUO(BASESSHV2):
         }
         cmd = "show running-config  include  substring   snmp"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -209,7 +209,7 @@ class BASEFENGHUO(BASESSHV2):
         }
         cmd = "show running-config  include  substring  syslog"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\r\n]+\S+.+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -231,7 +231,7 @@ class BASEFENGHUO(BASESSHV2):
         }
         cmd = "show vlan"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\r\n]+\S+.+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -277,7 +277,7 @@ class BASEFENGHUO(BASESSHV2):
         }
         cmd = "show ip route"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\r\n]+\S+.+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -317,7 +317,7 @@ class BASEFENGHUO(BASESSHV2):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "[\r\n]+\S+.+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)

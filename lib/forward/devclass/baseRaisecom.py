@@ -67,7 +67,7 @@ class BASERAISECOM(BASESSHV2):
             return result
         else:
             # If value of the mode is 2,start switching to configure-mode.
-            sendConfig = self.command("config term", prompt={"success": "[\r\n]+\S+\(config\)# ?$"})
+            sendConfig = self.command("config term", prompt={"success": "[\r\n]+\S+.+\(config\)# ?$"})
             if sendConfig["state"] == "success":
                 # switch to config-mode was successful.
                 result["status"] = True
@@ -87,7 +87,7 @@ class BASERAISECOM(BASESSHV2):
         # Get the current position Before switch to privileged mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
         if self.mode > 2:
-            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+# ?$"})
+            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+.+# ?$"})
             if not exitResult["state"] == "success":
                 result["errLog"] = "Demoted from configuration-mode to privilege-mode failed."
                 return result
@@ -135,7 +135,7 @@ class BASERAISECOM(BASESSHV2):
         }
         cmd = "show running-config  | include  ntp"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>) ?$",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -157,7 +157,7 @@ class BASERAISECOM(BASESSHV2):
         }
         cmd = '''show running-config  | include log'''
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>) ?$",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -179,7 +179,7 @@ class BASERAISECOM(BASESSHV2):
         }
         cmd = '''show run | include  "snmp-server host"'''
         prompt = {
-            "success": "[\s\S]+[\r\n]+.+(#|>) ?$",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -222,7 +222,7 @@ class BASERAISECOM(BASESSHV2):
         }
         cmd = "show vlan"
         prompt = {
-            "success": "[\s\S]+[\r\n]+.+(#|>) ?$",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Error input[\s\S]+",
         }
         """
@@ -277,7 +277,7 @@ class BASERAISECOM(BASESSHV2):
         }
         cmd = "show running-config  | include  route"
         prompt = {
-            "success": "[\s\S]+[\r\n]+.+(#|>) ?$",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Error input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -319,7 +319,7 @@ class BASERAISECOM(BASESSHV2):
         }
         cmd = "show running-config |  include interface"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(#|>) ?$",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Error input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)

@@ -46,7 +46,7 @@ class BASEHUAWEI(BASESSHV2):
                            prompt={"success": "Are you sure to continue\?\[Y/N\] ?$",
                                    "error": "Error:Incomplete command[\s\S]+"})
         if tmp["state"] == "success":
-            continueCommandResult = self.command("Y", prompt={"success": "successfully[\s\S]+[\r\n]+\S+> ?$"})
+            continueCommandResult = self.command("Y", prompt={"success": "successfully[\s\S]+[\r\n]+\S+.+> ?$"})
             if continueCommandResult["state"] == "success":
                 # Successfully.
                 result["status"] = True
@@ -73,7 +73,7 @@ class BASEHUAWEI(BASESSHV2):
         # Get the current position before switch to general mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
         if self.mode > 1:
-            tmp = self.command("return", prompt={"success": "[\r\n]+\S+> ?$"})
+            tmp = self.command("return", prompt={"success": "[\r\n]+\S+.+> ?$"})
             if tmp["state"] == "success":
                 result["status"] = True
                 self.mode = 1
@@ -105,7 +105,8 @@ class BASEHUAWEI(BASESSHV2):
             return result
         # else, command line of the device is in general-mode.
         # Start switching to privilege-mode.
-        sendEnableResult = self.command("system-view", prompt={"success": "[\r\n]+\S+\] ?$", "error": "[\r\n]+\S+> ?$"})
+        sendEnableResult = self.command("system-view", prompt={"success": "[\r\n]+\S+.+\] ?$",
+                                                               "error": "[\r\n]+\S+.+> ?$"})
         if sendEnableResult["state"] == "success":
             # The device not required a password,thus switch is successful.
             result["status"] = True
@@ -127,7 +128,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "display current-configuration | i log"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(>|\]) ?$",
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -170,7 +171,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "dis current-configuration | i ntp"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(>|\]) ?$",
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -192,7 +193,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "dis current-configuration | i snmp"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(>|\]) ?$",
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -213,7 +214,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "display  vlan"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(>|\]) ?$",
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -279,7 +280,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "display  ip routing-table"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(>|\]) ?$",
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -315,7 +316,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "display interface"
         prompt = {
-            "success": "[\s\S]+[\r\n]+\S+(>|\]) ?$",
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
