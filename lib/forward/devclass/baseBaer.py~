@@ -76,6 +76,7 @@ class BASEBAER(BASESSHV2):
             "content": "",
             "errLog": ""
         }
+
         result = self.command("show version", prompt={"success": "[\r\n]+\S+.+# ?$",
                                                       "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":

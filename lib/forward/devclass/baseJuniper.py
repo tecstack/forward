@@ -46,69 +46,6 @@ class BASEJUNIPER(BASETELNET):
             data['errLog'] = str(e)
         return data
 
-    def _configMode(self):
-        """Used to switch from privileged mode to config mode for command line mode.
-        Does not apply to other modes to switch to config mode.
-        """
-        # Flag isCOnfigMode is False
-        self.isConfigMode = False
-        data = {"status": False,
-                "content": "",
-                "errLog": ""}
-        self.cleanBuffer()
-        self.channel.write("configure\n")
-        # Get result
-        data = self._recv(self.basePrompt)
-        if data['status']:
-            self.isConfigMode = True
-        self.getPrompt()
-        return data
-
-    def _exitConfigMode(self):
-        """Exit from configuration mode to privileged mode.
-        """
-        data = {"status": False,
-                "content": "",
-                "errLog": ""}
-        try:
-            # Check current status
-            if self.isConfigMode:
-                self.channel.write("exit\n")
-                # Get result
-                data = self._recv(self.basePrompt)
-                if data['status']:
-                    self.isConfigMode = False
-            else:
-                raise ForwardError('Error: The current state is not configuration mode')
-        except ForwardError, e:
-            data['errLog'] = str(e)
-        self.getPrompt()
-        return data
-
-    def _commit(self):
-        """To save the configuration information of the device,
-        it should be confirmed that the device is under the Config Mode before use.
-        """
-        data = {"status": False,
-                "content": "",
-                "errLog": ""}
-        try:
-            # Check status
-            if self.isConfigMode:
-                self.channel.write('commit\n')
-                result = self._recv(self.prompt)
-                # If the success character is found, it is successful.
-                if re.search('succeeds', result['content'], flags=re.IGNORECASE):
-                    data['status'] = True
-                else:
-                    data['content'] = result['content']
-            else:
-                raise ForwardError('Error: The current state is not configuration mode')
-        except ForwardError, e:
-                data['errLog'] = str(e)
-                data['status'] = False
-        return data
-
     def addUser(self, username, password, admin=False):
         """Create a user on the device.
         """

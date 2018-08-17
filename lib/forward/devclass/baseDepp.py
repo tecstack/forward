@@ -35,10 +35,10 @@ class BASEDEPP(BASESSHV2):
             'content': [],
             'errLog': ''
         }
-        cmd = "show run"
+        cmd = "show run | include target-host"
         prompt = {
             # Problems caused by special characters cannot be added with host prompt
-            "success": "end",
+            "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -60,7 +60,7 @@ class BASEDEPP(BASESSHV2):
         }
         cmd = "show version"
         prompt = {
-            "success": "Software Release[\s\S]+[\r\n]+\S+(#|>|\]|\$) ?$",
+            "success": "Software Release[\s\S]+[\r\n]+\S+(#|>) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -200,10 +200,8 @@ class BASEDEPP(BASESSHV2):
         # if check buffer data has 'more' flag, at last line.
         # if re.search(self.moreFlag, bufferData.split('\n')[-1]):
         # can't used to \n and ' \r' ,because produce extra enter character
-        self.shell.send(' ')
-        # if re.search(self.moreFlag, bufferData.split('\n')[-1]):
-        #    # can't used to \n and ' \r' ,because product enter character
-        #   self.shell.send(' ')
+        if re.search(self.moreFlag, bufferData.split('\n')[-1]):
+            self.shell.send(' ')
 
     def updateIPObject(self, name, oldName, ip=None, vsysName="PublicSystem",
                        applyTime=None):
