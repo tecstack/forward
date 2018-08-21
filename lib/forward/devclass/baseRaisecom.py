@@ -334,11 +334,13 @@ class BASERAISECOM(BASESSHV2):
                             "description": "",
                             "speed": "",
                             "type": "",
+                            "duplex": "",
                             "inputRate": "",
                             "outputRate": "",
                             "crc": "",
                             "linkFlap": "",
-                            }
+                            "mtu": "",
+                            "ip": ""}
                 # Get name of the interface
                 tmp = re.search("interface port ([0-9]+)", _interfaceInfo)
                 if not tmp:

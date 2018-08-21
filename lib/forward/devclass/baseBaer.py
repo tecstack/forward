@@ -143,3 +143,202 @@ class BASEBAER(BASESSHV2):
         else:
             njInfo["errLog"] = result["errLog"]
         return njInfo
+
+    def showInterface(self):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = "show port detail"
+        result = self.command(cmd, prompt={"success": "[\r\n]+\S+.+# ?$",
+                                           "eror": "Bad command[\s\S]+"})
+        if result["state"] == "success":
+            reg = "Description        :[\s\S]+?========================================"
+            allLine = re.findall(reg, result["content"])
+            for _interfaceInfo in allLine:
+                lineInfo = {"interfaceName": "",
+                            "members": [],
+                            "lineState": "",
+                            "adminState": "",
+                            "description": "",
+                            "speed": "",
+                            "type": "",
+                            "duplex": "",
+                            "inputRate": "",
+                            "outputRate": "",
+                            "crc": "",
+                            "linkFlap": "",
+                            "mtu": "",
+                            "mac": "",
+                            "ip": ""}
+                # Get name of the interface
+                tmp = re.search("Interface          : (\S+)", _interfaceInfo)
+                if tmp:
+                    lineInfo["interfaceName"] = tmp.group(1)
+                else:
+                    continue
+                # Get description of the interface.
+                tmp = re.search("Description        : (.*)", _interfaceInfo)
+                if tmp:
+                    lineInfo["description"] = tmp .group(1).strip()
+                # Get speed of the interface.
+                tmp = re.search("Oper Speed       : (.*)", _interfaceInfo)
+                if tmp:
+                    lineInfo["speed"] = tmp.group(1).strip()
+                # Get adminState of the interface.
+                tmp = re.search("Admin State        : ([a-zA-Z]+)", _interfaceInfo)
+                if tmp:
+                    lineInfo["adminState"] = tmp.group(1)
+                # Get duplex of the interface.
+                tmp = re.search("Oper Duplex      : ([a-zA-Z]+)", _interfaceInfo)
+                if tmp:
+                    lineInfo["duplex"] = tmp.group(1)
+                # Get state of the interface.
+                tmp = re.search("Oper State         : ([a-zA-Z]+)", _interfaceInfo)
+                if tmp:
+                    lineInfo["interfaceState"] = tmp.group(1)
+                # Get mtu of the interface.
+                tmp = re.search("MTU              : (\d+)", _interfaceInfo)
+                if tmp:
+                    lineInfo["mtu"] = tmp.group(1)
+                # Get Egress of the interface.
+                tmp = re.search("Egress Rate        : (\S+)", _interfaceInfo)
+                if tmp:
+                    lineInfo["outputRate"] = tmp.group(1)
+                # Get Igress of the interface.
+                tmp = re.search("Ingress Rate     : (\S+)", _interfaceInfo)
+                if tmp:
+                    lineInfo["inputRate"] = tmp.group(1)
+                # Get mac of the interface.
+                tmp = re.search("Hardware Address   : (.*)", _interfaceInfo)
+                if tmp:
+                    lineInfo["mac"] = tmp.group(1).strip()
+                njInfo["content"].append(lineInfo)
+            # Get type of interface.
+            result = self.command("show port", prompt={"success": "[\r\n]+\S+.+# ?$",
+                                  "eror": "Bad command[\s\S]+"})
+            if result["state"] == "success":
+                i = 0
+                """
+                5/2/nat-in-ip Up    Yes  Up                   - accs qinq vport
+                5/2/nat-out-ip
+                              Up    Yes  Up                   - accs qinq vport   <----convert to a row
+                5/2/nat-in-l2 Up    Yes  Up                   - netw dotq vport
+                """
+                # Convert to a row.
+                content = re.sub("\r\n\s+\S+$", " ", result["content"])
+                for line in njInfo["content"]:
+                    # Match interfaceName from njInfo["content"]
+                    interfaceName = line["interfaceName"]
+                    tmp = re.search("%s.*" % interfaceName, content)
+                    """
+                    Port          Admin Link Port    Cfg  Oper LAG/ Port Port Port   C/QS/S/XFP/
+                    Id            State      State   MTU  MTU  Bndl Mode Encp Type   MDIMDX
+                    4/1/1         Up    Yes  Up      9192 9192   22 netw null xlgige 40GBASE-SR4
+                    4/1/1         Up    Yes  Up      9192 9192   22 netw null xlgige
+                    4/1/1         Up    Yes  Up                  22 netw null xlgige
+                    """
+                    if tmp:
+                        # Get type of interface.
+                        key = tmp.group().split()
+                        # Port type in the penultimate first or second field
+                        if len(key) == 11:
+                            njInfo["content"][i]["type"] = key[9]
+                        else:
+                            njInfo["content"][i]["type"] = key[-1]
+                    i += 1
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showSnmp(self):
+        # Switch to config mode.
+        njInfo = {
+            "status": False,
+            "content": [{"ip": "",
+                         "port": ""}],
+            "errLog": ""
+        }
+        result = self.command("show log snmp-trap-group", prompt={"success": "[\r\n]+\S+.+# ?$",
+                                                                  "eror": "Bad command[\s\S]+"})
+        if result["state"] == "success":
+            tmp = re.findall("\d+\.\d+\.\d+\.\d+:\d+", result["content"])
+            """
+            90        172.21.31.103:162
+            90        172.21.31.103:16222
+            """
+            if tmp.__len__() > 0:
+                njInfo["content"] = [{"ip": group.split(":")[0], "port": group.split(":")[-1]} for group in tmp]
+                njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showLog(self):
+        # Switch to config mode.
+        njInfo = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        result = self.command("show log  syslog", prompt={"success": "[\r\n]+\S+.+# ?$",
+                                                          "eror": "Bad command[\s\S]+"})
+        if result["state"] == "success":
+            tmp = re.findall("[\r\n]+\d+\s+(\d+\.\d+\.\d+\.\d+)\s+\d+", result["content"])
+            """
+            1      172.21.11.109                                   514         warning
+            """
+            if tmp.__len__() > 0:
+                njInfo["content"] = tmp
+                njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showNtp(self):
+        # Switch to config mode.
+        njInfo = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        result = self.command("show system ntp", prompt={"success": "[\r\n]+\S+.+# ?$",
+                                                         "eror": "Bad command[\s\S]+"})
+        if result["state"] == "success":
+            tmp = re.findall("\d+\.\d+\.\d+\.\d+", result["content"])
+            """
+            Clock Source       : 172.20.152.1
+            """
+            if tmp.__len__() > 0:
+                njInfo["content"] = tmp
+                njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showVlan(self):
+        # Get list of vlans.
+        njInfo = {
+            "status": False,
+            "content": [],
+            "errLog": ""
+        }
+        result = self.command("show service sap-using", prompt={"success": "[\r\n]+\S+.+# ?$",
+                                                                "eror": "Bad command[\s\S]+"})
+        if result["state"] == "success":
+            for line in result["content"].split("\r\n"):
+                lineInfo = {"id": "",
+                            "description": "",
+                            "status": "",
+                            "interface": [],
+                            "type": ""}
+                tmp = re.search(":(\d+)\s+", line)
+                if tmp:
+                    lineInfo["id"] = tmp.group(1)
+
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo

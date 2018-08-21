@@ -73,6 +73,60 @@ class BASEDEPP(BASESSHV2):
             njInfo["errLog"] = result["errLog"]
         return njInfo
 
+    def showVlan(self):
+        # Get software version of device.
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = "show vlan"
+        prompt = {
+            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "error": "Unknown command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.search("The VLANs include:[\r\n]+.*\d+[\r\n]", result["content"])
+            allVlan = []
+            if tmp:
+                data = tmp.group()
+                _vlan = re.findall("(\d+\-?\d*)", data)
+                # ["1","2003-2009","2333",.....]
+                for vlanGroup in _vlan:
+                    # Converts a value to a numberic type
+                    line = [int(x) for x in vlanGroup.split("-")]
+                    if len(line) == 1:
+                        # [1] --> [1,2]
+                        line.append(line[0] + 1)
+                    else:
+                        line[-1] += 1
+                    # --> [1,2003,2004,2005......]
+                    allVlan.extend(range(*line))
+                # Get more info.
+            for vlanId in allVlan:
+                result = self.command("show vlan {vlanId}".format(vlanId=vlanId), prompt=prompt)
+                lineInfo = {"id": "",
+                            "description": "",
+                            "status": "",
+                            "interface": [],
+                            "type": ""}
+                if result["state"] == "success":
+                    lineInfo["id"] = vlanId
+                    # Get type of vlan.
+                    tmp = re.search("VLAN Type: (\S+)", result["content"])
+                    if tmp:
+                        lineInfo["type"] = tmp.group(1)
+                    # Get description of vlan.
+                    tmp = re.search("Description:(.*)", result["content"])
+                    if tmp:
+                        lineInfo["description"] = tmp.group(1).strip()
+                    njInfo["content"].append(lineInfo)
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
     def showRoute(self):
         njInfo = {
             'status': False,
@@ -149,13 +203,20 @@ class BASEDEPP(BASESSHV2):
         if result["state"] == "success":
             interfacesFullInfo = re.split("[\r\n]{0,}Interface", result["content"])[1::]
             for _interfaceInfo in interfacesFullInfo:
-                lineInfo = {"members": [],
-                            "interfaceState": "",
+                lineInfo = {"interfaceName": "",
+                            "members": [],
+                            "lineState": "",
+                            "adminState": "",
+                            "description": "",
                             "speed": "",
                             "type": "",
+                            "duplex": "",
                             "inputRate": "",
                             "outputRate": "",
-                            "crc": ""}
+                            "crc": "",
+                            "linkFlap": "",
+                            "mtu": "",
+                            }
                 # Get name of the interface.
                 lineInfo['interfaceName'] = _interfaceInfo.split("\r")[0].strip(" ")
                 # Get admin state of the interface and remove extra character.

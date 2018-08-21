@@ -326,19 +326,20 @@ class BASERUIJIE(BASESSHV2):
         if result["state"] == "success":
             interfacesFullInfo = re.split("========================== ", result["content"])[1::]
             for _interfaceInfo in interfacesFullInfo:
-                lineInfo = {"members": [],
-                            "interfaceState": "",
-                            "speed": "",
-                            "type": "",
-                            "inputRate": "",
-                            "outputRate": "",
-                            "ip": "",
+                lineInfo = {"interfaceName": "",
+                            "members": [],
                             "lineState": "",
                             "adminState": "",
-                            "mtu": "",
-                            "duplex": "",
                             "description": "",
-                            "crc": ""}
+                            "speed": "",
+                            "type": "",
+                            "duplex": "",
+                            "inputRate": "",
+                            "outputRate": "",
+                            "crc": "",
+                            "linkFlap": "",
+                            "mtu": "",
+                            "ip": ""}
                 # Get name of the interface.
                 lineInfo['interfaceName'] = re.search("(.*) ========================", _interfaceInfo).group(1)
                 tmp = re.search("\d+(/\d+)? is (.*), line protocol", _interfaceInfo)

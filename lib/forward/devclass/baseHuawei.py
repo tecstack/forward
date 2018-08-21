@@ -324,13 +324,27 @@ class BASEHUAWEI(BASESSHV2):
             interfacesFullInfo = re.findall(".*current state[\s\S]+?Output bandwidth utilization :.*",
                                             result["content"])
             for _interfaceInfo in interfacesFullInfo:
-                lineInfo = {"members": [], "adminState": ""}
+                lineInfo = {"interfaceName": "",
+                            "members": [],
+                            "lineState": "",
+                            "adminState": "",
+                            "description": "",
+                            "speed": "",
+                            "type": "",
+                            "duplex": "",
+                            "inputRate": "",
+                            "outputRate": "",
+                            "crc": "",
+                            "linkFlap": "",
+                            "mtu": "",
+                            "mac": "",
+                            "ip": ""}
                 # Get name of the interface.
-                lineInfo['interfaceName'] = re.search("(.*) current state", _interfaceInfo).group(1)
+                lineInfo['interfaceName'] = re.search("(.*)current state", _interfaceInfo).group(1)
                 # Get state of the interface and remove extra character.
-                lineInfo['interfaceState'] = re.search("current state : (.*)", _interfaceInfo).group(1).strip()
+                lineInfo['interfaceState'] = re.search("current state :(.*)", _interfaceInfo).group(1).strip()
                 # Get state of line protocol of the interface and remove extra character.
-                lineInfo['lineState'] = re.search("Line protocol current state : (.*)", _interfaceInfo).group(1).strip()
+                lineInfo['lineState'] = re.search("Line protocol current state :(.*)", _interfaceInfo).group(1).strip()
                 # Get description of the interface.
                 lineInfo['description'] = re.search("Description:(.*)", _interfaceInfo).group(1).strip()
                 # Get MUT of the interface.
@@ -346,7 +360,7 @@ class BASEHUAWEI(BASESSHV2):
                 else:
                     lineInfo["speed"] = ""
                 # Get duplex of the interface.
-                tmp = re.search("Duplex: ([A-Z]+)", _interfaceInfo)
+                tmp = re.search("([a-z]+)\-duplex", _interfaceInfo)
                 if tmp:
                     lineInfo["duplex"] = tmp.group(1)
                 else:
@@ -364,32 +378,20 @@ class BASEHUAWEI(BASESSHV2):
                 else:
                     lineInfo["mac"] = ""
                 # Get port type of the interface.
-                tmpPortType = re.search("Physical is (.*)", _interfaceInfo)
+                tmpPortType = re.search("Physical is (\S+)", _interfaceInfo)
                 if tmpPortType:
-                    lineInfo["type"] = tmpPortType.group(1).strip()
+                    lineInfo["type"] = tmpPortType.group(1).strip().strip(",")
                 else:
                     lineInfo["type"] = ""
-                # Last physical down time
-                tmpDownTime = re.search("Last physical down time : (.*)", _interfaceInfo)
-                if tmpDownTime:
-                    lineInfo["downTime"] = tmpDownTime.group(1).strip()
-                else:
-                    lineInfo["downTime"] = ""
-                # Last physical up time
-                tmpUpTime = re.search("Last physical up time : (.*)", _interfaceInfo)
-                if tmpUpTime:
-                    lineInfo["upTime"] = tmpUpTime.group(1).strip()
-                else:
-                    lineInfo["upTime"] = ""
                 # Last 300 seconds input rate
                 tmp = re.search("Last 300 seconds input rate (.*)", _interfaceInfo)
                 if tmp:
-                    lineInfo["inputRate"] = tmp.group(1)
+                    lineInfo["inputRate"] = tmp.group(1).strip()
                 else:
                     lineInfo["inputRate"] = ""
                 tmp = re.search("Last 300 seconds output rate (.*)", _interfaceInfo)
                 if tmp:
-                    lineInfo["outputRate"] = tmp.group(1)
+                    lineInfo["outputRate"] = tmp.group(1).strip()
                 else:
                     lineInfo["outputRate"] = ""
                 # CRC:

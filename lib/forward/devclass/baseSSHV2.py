@@ -151,6 +151,7 @@ class BASESSHV2(object):
                 tmp = re.search(resultPattern, result['content']).group(1)
                 # Delete special characters caused by More split screen.
                 tmp = re.sub("<--- More --->\\r +\\r", "", tmp)
+                tmp = re.sub(" *---- More ----\x1b\[42D                                          \x1b\[42D", "", tmp)
                 # remove the More charactor
                 tmp = re.sub(' \-\-More\(CTRL\+C break\)\-\- (\x00|\x08){0,} +(\x00|\x08){0,}', "", tmp)
                 # remove the space key
@@ -209,7 +210,7 @@ class BASESSHV2(object):
             result["content"] = re.sub("", "", result["content"])
             self.getMore(result["content"])
             try:
-                result["content"] += self.shell.recv(1024)
+                result["content"] += self.shell.recv(204800)
             except Exception, e:
                 result["errLog"] = "Forward had recived data timeout. [%s]" % str(e)
                 return result
@@ -224,6 +225,9 @@ class BASESSHV2(object):
             if isBreak is True:
                 break
         # Clearing special characters
+        result["content"] = re.sub(" *---- More ----\x1b\[42D                                          \x1b\[42D",
+                                   "",
+                                   result["content"])
         result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
         # remove the More charactor
         result["content"] = re.sub(' \-\-More\(CTRL\+C break\)\-\- (\x00|\x08){0,} +(\x00|\x08){0,}', "",
