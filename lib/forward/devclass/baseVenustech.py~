@@ -146,3 +146,4 @@ class BASEVENUSTECH(BASETELNET):
         else:
             njInfo["errLog"] = result["errLog"]
         return njInfo
+

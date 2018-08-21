@@ -244,9 +244,12 @@ class BASETELNET(object):
         but need to define whole prompt dict list
         """
         # regx compile
+        """
         _promptKey = prompt.keys()
         for key in _promptKey:
             prompt[key] = re.compile(prompt[key])
+        In Telnet, regular expressions cannot be compiled
+        """
         result = {
             'status': False,
             'content': '',
@@ -291,7 +294,6 @@ class BASETELNET(object):
                 # Timeout
                 result["errLog"] = '[Forward Error]: receive timeout,prompt is invalid.'
                 return result
-        result["state"] = True
         result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
         # remove the More charactor
         result["content"] = re.sub(' \-\-More\(CTRL\+C break\)\-\- (\x00|\x08){0,} +(\x00|\x08){0,}', "",

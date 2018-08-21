@@ -26,4 +26,12 @@ from forward.devclass.baseDepp import BASEDEPP
 class F1000(BASEDEPP):
     """This is a manufacturer of depp, it is integrated with BASEDEPP library.
     """
-    pass
+    def showLog(self):
+        # Firewall has no syslog configuration
+        njInfo = {
+            "status": False,
+            "content": [],
+            "errLog": ""
+        }
+        njInfo["status"] = True
+        return njInfo

@@ -29,6 +29,42 @@ class BASEDEPP(BASESSHV2):
     """This is a manufacturer of depp, using the
     SSHV2 version of the protocol, so it is integrated with BASESSHV2 library.
     """
+    def showNtp(self):
+        njInfo = {
+            "status": False,
+            "content": [],
+            "errLog": ""
+        }
+        cmd = "show running-config  | include  ntp"
+        prompt = {
+            # Problems caused by special characters cannot be added with host prompt
+            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "error": "Unknown command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            # Gets the row with NTP configuration information.
+            tmp = re.findall("ntp client master-slave-server.*", result["content"])
+            # ntp client master-slave-server ip1 ip2 ip3
+            if tmp:
+                # Separate IP addresses
+                tmp = re.findall("([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})", tmp.group())
+                njInfo["content"] = tmp
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showLog(self):
+        # Firewall has no syslog configuration
+        njInfo = {
+            "status": False,
+            "content": [],
+            "errLog": ""
+        }
+        njInfo["status"] = True
+        return njInfo
+
     def showSnmp(self):
         njInfo = {
             'status': False,

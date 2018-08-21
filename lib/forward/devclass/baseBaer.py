@@ -277,7 +277,6 @@ class BASEBAER(BASESSHV2):
         return njInfo
 
     def showLog(self):
-        # Switch to config mode.
         njInfo = {
             "status": False,
             "content": "",
@@ -325,8 +324,8 @@ class BASEBAER(BASESSHV2):
             "content": [],
             "errLog": ""
         }
-        result = self.command("show service sap-using", prompt={"success": "[\r\n]+\S+.+# ?$",
-                                                                "eror": "Bad command[\s\S]+"})
+        result = self.command("show service sap-using description", prompt={"success": "[\r\n]+\S+.+# ?$",
+                                                                            "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             for line in result["content"].split("\r\n"):
                 lineInfo = {"id": "",
@@ -334,10 +333,20 @@ class BASEBAER(BASESSHV2):
                             "status": "",
                             "interface": [],
                             "type": ""}
-                tmp = re.search(":(\d+)\s+", line)
+                tmp = re.search("^(\S+):(\d+)\s+\S+\s+(\S+)\s+\S+\s+(.*)", line)
+                """
+                lag-24                             100          Up   Up   (Not Specified)
+                lag-31:221                         1000         Up   Up   (Not Specified)
+                1/2/6                              1001         Up   Up   (Not Specified)
+                lag-31:9                           2000         Up   Up   (Not Specified)
+                """
                 if tmp:
-                    lineInfo["id"] = tmp.group(1)
-
+                    lineInfo["interface"] = [tmp.group(1)]
+                    lineInfo["id"] = tmp.group(2)
+                    lineInfo["status"] = tmp.group(3)
+                    # Remove the '(' and ')'
+                    lineInfo["description"] = tmp.group(4).strip("()")
+                    njInfo["content"].append(lineInfo)
             njInfo["status"] = True
         else:
             njInfo["errLog"] = result["errLog"]

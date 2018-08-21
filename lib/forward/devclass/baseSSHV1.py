@@ -274,9 +274,11 @@ class BASESSHV1(object):
         but need to define whole prompt dict list
         """
         # regx compile
-        _promptKey = prompt.keys()
+        """_promptKey = prompt.keys()
         for key in _promptKey:
             prompt[key] = re.compile(prompt[key])
+        In SSHV1, regular expressions cannot be compiled
+        """
         result = {
             'status': False,
             'content': '',
