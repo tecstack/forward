@@ -128,7 +128,7 @@ class BASESSHV1(object):
         # Remove legacy data from the SSH before executing the command.
         self.cleanBuffer()
         # dataPattern = re.escape(cmd)+'.*\r\n([\s\S]*)\r\n'+self.prompt
-        dataPattern = re.compile('[\r\n]+([\s\S]*)[\r\n]+')
+        dataPattern = '[\r\n]+([\s\S]*)[\r\n]+'
         # SSHV1 pexpect not have self.prompt end
         data = {'status': False,
                 'content': '',

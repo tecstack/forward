@@ -38,8 +38,7 @@ class BASEVENUSTECH(BASETELNET):
         # Get the current position Before switch to privileged mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
         if self.mode > 2:
-            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+# ?$",
-                                                     "error": "Unknown command[\s\S]+"})
+            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+# ?$"})
             if not exitResult["state"] == "success":
                 result["errLog"] = "Demoted from configuration-mode to privilege-mode failed."
                 return result
@@ -92,9 +91,7 @@ class BASEVENUSTECH(BASETELNET):
             return result
         # Excute a command.
         data = self.command("write file",
-                            prompt={"success": "current[\s\S]+[\r\n]+\S+# ?$",
-                                    "error": "Unknown command[\s\S]+"})
-
+                            prompt={"success": "current[\s\S]+[\r\n]+\S+# ?$"})
         if data["state"] is None:
             result["errLog"] = "Failed save configuration, \
                                Info: [{content}] , [{errLog}]".format(content=data["content"], errLog=data["errLog"])
@@ -119,7 +116,7 @@ class BASEVENUSTECH(BASETELNET):
             return result
         else:
             # If value of the mode is 2,start switching to configure-mode.
-            sendConfig = self.command("config term", prompt={"success": "[\r\n]+\S+\(config\)# ?$",
+            sendConfig = self.command("config term", prompt={"success": "[\r\n]+\S+\(config\)# ?$"
                                                              "error": "Unknown command[\s\S]+"})
             if sendConfig["state"] == "success":
                 # switch to config-mode was successful.
