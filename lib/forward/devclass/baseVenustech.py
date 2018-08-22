@@ -92,12 +92,14 @@ class BASEVENUSTECH(BASETELNET):
             return result
         # Excute a command.
         data = self.command("write file",
-                            prompt={"success": "current[\s\S]+[\r\n]+\S+# ?$",
-                                    "error": "Unknown command[\s\S]+"})
+                            prompt={"success": "Current[\s\S]+[\r\n]+\S+# ?$",
+                                    "error": "Unknow error.[\s\S]+"})
 
         if data["state"] is None:
             result["errLog"] = "Failed save configuration, \
                                Info: [{content}] , [{errLog}]".format(content=data["content"], errLog=data["errLog"])
+        elif data["state"] == "error":
+            result["content"] = data["content"]
         else:
             result["content"] = "The configuration was saved successfully.[%s]" % data["content"]
             result["status"] = True
