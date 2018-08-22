@@ -27,7 +27,7 @@ from forward.utils.forwardError import ForwardError
 class USG1000(BASEVENUSTECH):
     """This is a manufacturer of venustech, so it is integrated with BASEVENUSTECH library.
     """
-    def showVlan():
+    def showVlan(self):
         # No VLAN information for the model equipment.
         data = {"status": False,
                 "content": [],
