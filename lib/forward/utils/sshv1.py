@@ -65,9 +65,9 @@ class NJSSHV1Wraper(pexpect.spawn):
                            'errLog': ""}
 
     def login(self, password=None):
-        pexpect.spawn.__init__(self, 'ssh -1 -p %d %s@%s' % (self.port, self.username, self.ip))
+        pexpect.spawn.__init__(self, 'ssh -p %d %s@%s' % (self.port, self.username, self.ip))
         self.setwinsize(1000, 1000)
-        i = self.expect([r'[Pp]assword:',
+        i = self.expect([r'[Pp]assword.*:.*',
                         'Are you sure you want to continue connecting (yes/no)?',
                          'Connection refused', pexpect.TIMEOUT], self.timeout)
         if i == 0:

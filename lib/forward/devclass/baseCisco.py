@@ -54,7 +54,7 @@ class BASECISCO(BASESSHV2):
         return result
 
     def configMode(self):
-        # Switch to privilege mode.
+        # Switch to config mode.
         result = {
             "status": False,
             "content": "",

@@ -93,7 +93,7 @@ class BASEVENUSTECH(BASETELNET):
         # Excute a command.
         data = self.command("write file",
                             prompt={"success": "Current[\s\S]+[\r\n]+\S+# ?$",
-                                    "error": "Unknow error.[\s\S]+"})
+                                    "error": "Unknow[\s\S]+"})
 
         if data["state"] is None:
             result["errLog"] = "Failed save configuration, \

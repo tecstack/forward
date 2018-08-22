@@ -37,25 +37,6 @@ class S3300(BASEMAIPU):
         self.moreFlag = re.escape('....press ENTER to next \
 line, Q to quit, other key to next page....')
 
-    def _configMode(self):
-        """Used to switch from privileged mode to config mode for command line mode.
-        Does not apply to other modes to switch to config mode.
-        """
-        data = {'status': False,
-                'content': '',
-                'errLog': ''}
-        # Flag config mode is False.
-        self.isConfigMode = False
-        # Clean buffer.
-        self.cleanBuffer()
-        self.channel.send('conf term\n')
-        # Get result.
-        data = self._recv(self.basePrompt)
-        self.getPrompt()
-        if data['content']:
-            self.isConfigMode = True
-        return data
-
     def _recv(self, _prompt):
         """A message returned after the receiving device has executed the command.
         """
@@ -78,61 +59,6 @@ line, Q to quit, other key to next page....')
                 """
                 data['errLog'] = self.channel.before
             data['content'] = result
-        except ForwardError, e:
-            data['errLog'] = str(e)
-            data['status'] = False
-        return data
-
-    def _exitConfigMode(self):
-        """Exit from configuration mode to privileged mode.
-        """
-        # Set command.
-        exitCommand = "end"
-        data = {'status': False,
-                'content': '',
-                'errLog': ''}
-        try:
-            # Check config mode status.
-            if self.isConfigMode:
-                # Check current status
-                self.channel.send("%s\n" % (exitCommand))
-                # Get result.
-                data = self._recv(self.basePrompt)
-                if data['status']:
-                    # Flag config mode is False.
-                    self.isConfigMode = False
-            else:
-                raise ForwardError('Error: The current state is not configuration mode')
-        except ForwardError, e:
-            data['errLog'] = str(e)
-        self.getPrompt()
-        # release host prompt
-        return data
-
-    def _commit(self):
-        """To save the configuration information of the device,
-        it should be confirmed that the device is under the Config Mode before use.
-        """
-        data = {'status': False,
-                'content': '',
-                'errLog': ''}
-        # Set command.
-        saveCommand = "copy running-config startup-config"
-        try:
-            # Check config mode status.
-            if self.isConfigMode:
-                # Exit config mode.
-                self._exitConfigMode()
-                self.channel.send('%s\n' % (saveCommand))
-                # save setup to system
-                data = self._recv(self.prompt)
-                # Permission denied
-                if re.search('user "admin" only', data['content']):
-                    raise ForwardError(data['content'])
-                else:
-                    data['status'] = True
-            else:
-                raise ForwardError('Error: The current state is not configuration mode')
         except ForwardError, e:
             data['errLog'] = str(e)
             data['status'] = False
