@@ -50,3 +50,18 @@ def paraCheck(targets):
         return bool_legal
     else:
         return False
+
+
+def int_to_mask(mask_int):
+    # 24 --> 255.25.255.0
+    bin_arr = ['0' for i in range(32)]
+    for i in range(mask_int):
+        bin_arr[i] = '1'
+    tmpmask = [''.join(bin_arr[i * 8:i * 8 + 8]) for i in range(4)]
+    tmpmask = [str(int(tmpstr, 2)) for tmpstr in tmpmask]
+    return '.'.join(tmpmask)
+
+
+def mask_to_int(mask):
+    # 255.255.255.0 --> 24
+    return sum(bin(int(i)).count('1') for i in mask.split('.'))

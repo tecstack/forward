@@ -164,6 +164,7 @@ class BASEHUAWEI(BASESSHV2):
         return njInfo
 
     def showNtp(self):
+        # Gets the NTP server address of the device
         njInfo = {
             'status': False,
             'content': [],
@@ -186,6 +187,7 @@ class BASEHUAWEI(BASESSHV2):
         return njInfo
 
     def showSnmp(self):
+        # Gets the SNMP server address of the device
         njInfo = {
             'status': False,
             'content': [],

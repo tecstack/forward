@@ -21,11 +21,11 @@
 [Core][forward] Device class for ADX03100.
 """
 
-from forward.devclass.baseCisco import BASECISCO
+from forward.devclass.baseBrocade import BASEBROCADE
 
 
-class ADX03100(BASECISCO):
-    """The device model belongs to the cisco series
-    so the attributes and methods of BASECISCO are inherited.
+class ADX03100(BASEBROCADE):
+    """The device model belongs to the BROCADE series
+    so the attributes and methods of BASEBROCADE are inherited.
     """
     pass

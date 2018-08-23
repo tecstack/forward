@@ -28,6 +28,14 @@ class BASEMAIPU(BASESSHV1):
     """This is a manufacturer of maipu, using the
     SSHV1 version of the protocol, so it is integrated with BASESSHV1 library.
     """
+    def __init__(self, *args, **kws):
+        """Since the device's host prompt is different from BASESSHV1,
+        the basic prompt for the device is overwritten here.
+        """
+        BASESSHV1.__init__(self, *args, **kws)
+        self.moreFlag = re.escape('....press ENTER to next \
+line, Q to quit, other key to next page....')
+
     def privilegeMode(self):
         # Switch to privilege mode.
         result = {
@@ -281,6 +289,119 @@ class BASEMAIPU(BASESSHV1):
                     lineInfo["interface"] = re.search("[a-zA-z]+.*", _interfaceInfo.split()[-3]).group()
                     lineInfo["metric"] = re.search("\d+", _interfaceInfo.split()[-2]).group()
                     njInfo["content"].append(lineInfo)
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showLog(self):
+        # Get syslog's servers informatinos.
+        njInfo = {
+            "status": False,
+            "content": [],
+            "errLog": ""
+        }
+        result = self.command("show run syslog", prompt={"success": "[\r\n]+\S+.+(#|>) ?$",
+                                                         "eror": "Unrecognized[\s\S]+"})
+        if result["state"] == "success":
+            tmp = re.findall("logging (\d+\.\d+\.\d+\.\d+)",
+                             result["content"])
+            if tmp.__len__() > 0:
+                njInfo["content"] = tmp
+                njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showInterface(self):
+        # Get the interfaces information
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = "show interface"
+        prompt = {
+            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "error": "Unrecognized[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            allLine = re.findall(".*current state[\s\S]+?unicasts", result["content"])
+            for line in allLine:
+                lineInfo = {"interfaceName": "",
+                            "members": [],
+                            "lineState": "",
+                            "adminState": "",
+                            "description": "",
+                            "speed": "",
+                            "type": "",
+                            "duplex": "",
+                            "inputRate": "",
+                            "outputRate": "",
+                            "crc": "",
+                            "linkFlap": "",
+                            "mtu": "",
+                            "ip": ""}
+                #  Get name of the interface.
+                tmp = re.search("(.*)current state", line)
+                if tmp:
+                    lineInfo["interfaceName"] = tmp.group(1).strip()
+                # Get line state of the interface.
+                tmp = re.search("port link is (.*)", line)
+                if tmp:
+                    lineInfo["lineState"] = tmp.group(1).strip()
+                # Get the admin state of the interface.
+                tmp = re.search("current state:(.*),", line)
+                if tmp:
+                    lineInfo["adminState"] = tmp.group(1).strip()
+                # Get mac of the interface.
+                tmp = re.search("Hardware address is (.*)", line)
+                if tmp:
+                    lineInfo["mac"] = tmp.group(1).strip()
+                # Get the type of the interface.
+                tmp = re.search("Current port type: (\S+)", line)
+                if tmp:
+                    lineInfo["type"] = tmp.group(1).strip()
+                # Get the speed of the interface.
+                tmp = re.search("ActualSpeed is (\S+),", line)
+                if tmp:
+                    lineInfo["speed"] = tmp.group(1)
+                # Get duplex of the interface.
+                tmp = re.search("Duplex mode is (\S+)", line)
+                if tmp:
+                    lineInfo['duplex'] = tmp.group(1).strip()
+                # Get input rate of the interface.
+                tmp = re.search("Input  : (.*)", line)
+                if tmp:
+                    lineInfo["inputRate"] = tmp.group(1).strip()
+                #  Get output rate of the interface.
+                tmp = re.search("Output : (.*)", line)
+                if tmp:
+                    lineInfo["outputRate"] = tmp.group(1).strip()
+                njInfo["content"].append(lineInfo)
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showNtp(self):
+        # Gets the NTP server address of the device
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = "show running-config   | include  ntp"
+        prompt = {
+            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "error": "Unrecognized[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.findall("ntp server.*([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
+                             result["content"])
+            njInfo["content"] = tmp
             njInfo["status"] = True
         else:
             njInfo["errLog"] = result["errLog"]

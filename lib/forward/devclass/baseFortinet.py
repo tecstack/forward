@@ -21,16 +21,8 @@
 [Core][forward] Device class for Fortinet.
 """
 from forward.devclass.baseSSHV2 import BASESSHV2
+from forward.utils.paraCheck import int_to_mask
 import re
-
-
-def exchange_int_to_mask(mask_int):
-    bin_arr = ['0' for i in range(32)]
-    for i in range(mask_int):
-        bin_arr[i] = '1'
-    tmpmask = [''.join(bin_arr[i * 8:i * 8 + 8]) for i in range(4)]
-    tmpmask = [str(int(tmpstr, 2)) for tmpstr in tmpmask]
-    return '.'.join(tmpmask)
 
 
 class BASEFORTINET(BASESSHV2):
@@ -393,7 +385,7 @@ class BASEFORTINET(BASESSHV2):
                         continue
                     for config in detail["content"].split("next"):
                         # Match the description.
-                        reg = "set comment(.*)[\r\n]+.*[\r\n]+\s+set dst %s %s" % (net, exchange_int_to_mask(mask))
+                        reg = "set comment(.*)[\r\n]+.*[\r\n]+\s+set dst %s %s" % (net, int_to_mask(mask))
                         tmp = re.search(reg, config)
                         if tmp:
                             # Get description.

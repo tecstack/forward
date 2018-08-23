@@ -20,10 +20,30 @@
 [Core][forward] Device class for zte,zhong-xing.
 """
 from forward.devclass.baseSSHV2 import BASESSHV2
+import re
 
 
 class BASEZTE(BASESSHV2):
     """This is a manufacturer of zte, using the
     SSHV2 version of the protocol, so it is integrated with BASESSHV2 library.
     """
-    pass
+    def showVersion(self):
+        njInfo = {
+            'status': False,
+            'content': "",
+            'errLog': ''
+        }
+        cmd = "show version"
+        prompt = {
+            "success": "[vV]ersion[\s\S]+[\r\n]+\S+(#|>) ?$",
+            "error": "Invalid input[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.search("(software|system).*version ?:? ?(\S+)", result["content"], flags=re.IGNORECASE)
+            if tmp.lastindex == 2:
+                njInfo["content"] = tmp.group(2).strip(",")
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
