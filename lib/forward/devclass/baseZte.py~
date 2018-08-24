@@ -39,8 +39,8 @@ class BASEZTE(BASESSHV2):
             # Switch failure.
             return result
         # Excute a command.
-        data = self.command("write",
-                            prompt={"success": "OK[\s\S]+[\r\n]+\S+# ?$"})
+        data = self.command("copy running-config  startup-config",
+                            prompt={"success": "Copy complete[\s\S]+[\r\n]+\S+# ?$"})
         if data["state"] is None:
             result["errLog"] = "Failed save configuration, \
                                Info: [{content}] , [{errLog}]".format(content=data["content"], errLog=data["errLog"])
@@ -207,6 +207,8 @@ class BASEZTE(BASESSHV2):
         }
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
+            currentSection = "vlanName"
+            isContinueLine = False
             for _vlanInfo in result["content"].split("\r\n"):
                 tmp = re.search("^([0-9]+)", _vlanInfo)
                 # Get the line of vlan.
