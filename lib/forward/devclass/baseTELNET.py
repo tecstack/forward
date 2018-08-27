@@ -294,6 +294,7 @@ class BASETELNET(object):
                 # Timeout
                 result["errLog"] = '[Forward Error]: receive timeout,prompt is invalid.'
                 return result
+        result["status"] = True
         result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
         # remove the More charactor
         result["content"] = re.sub(' \-\-More\(CTRL\+C break\)\-\- (\x00|\x08){0,} +(\x00|\x08){0,}', "",

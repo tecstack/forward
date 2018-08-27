@@ -26,8 +26,12 @@ from forward.utils.forwardError import ForwardError
 
 class BASEJUNIPER(BASETELNET):
     """This is a manufacturer of juniper, using the
-    telnet version of the protocol, so it is integrated with BASELTELNET library.
+    telnet version of the protocol, so it is integrated with BASETELNET library.
     """
+    def __init__(self, *args, **kws):
+        BASETELNET.__init__(self, *args, **kws)
+        self.basePrompt = r"(>|#) *$"
+
     def _recv(self, _prompt):
         """The user receives the message returned by the device.
         """
@@ -221,3 +225,238 @@ class BASEJUNIPER(BASETELNET):
     #     mx960Bandwidth = Bandwidth(ip=ip, bandwidth=bandwidth, shell=self)
     #     njInfo = mx960Bandwidth.deleteBindIPAndBandwidth()
     #     return njInfo
+    def generalMode(self):
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # Get the current position before switch to general mode.
+        # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
+        if self.mode > 1:
+            tmp = self.command("quit", prompt={"success": "[\r\n]+\S+.+> ?$",
+                                               "error": "unknown command[\s\S]+"})
+            if tmp["state"] == "success":
+                result["status"] = True
+                self.mode = 1
+                return result
+            else:
+                result["errLog"] = tmp["errLog"]
+                return result
+        else:
+            result["status"] = True
+            return result
+
+    def privilegeMode(self):
+        # Switch to privilege mode.
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # devices of Juniper have no config-mode.
+        self.mode = 2
+        result["status"] = True
+        return result
+
+    def configMode(self):
+        # Switch to config mode.
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # If value of the mode is 2,start switching to configure-mode.
+        sendConfig = self.command("configure", prompt={"success": "[\r\n]+\S+\(config\)# ?$",
+                                                       "error": "unknown command[\s\S]+\S+.+> ?$"})
+        if sendConfig["state"] == "success":
+            # switch to config-mode was successful.
+            result["status"] = True
+            self.mode = 3
+            return result
+        elif sendConfig["state"] is None:
+            result["errLog"] = sendConfig["errLog"]
+            return result
+
+    def commit(self):
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # Switch to privilege-mode.
+        result = self.configMode()
+        if not result["status"]:
+            # Switch failure.
+            return result
+        # Excute a command.
+        data = self.command("commit",
+                            prompt={"success": "complete[\s\S]+[\r\n]+\S+# ?$",
+                                    "error": "unknown command[\s\S]+"})
+        if data["state"] is None:
+            result["errLog"] = "Failed save configuration, \
+                               Info: [{content}] , [{errLog}]".format(content=data["content"], errLog=data["errLog"])
+        else:
+            result["content"] = "The configuration was saved successfully."
+            result["status"] = True
+        return result
+
+    def showVersion(self):
+        # All the show commands must be done in general mode.
+        njInfo = {
+            'status': False,
+            'content': "",
+            'errLog': ''
+        }
+        # Before you execute the show command, you must go into general mode
+        tmp = self.generalMode()
+        if tmp["status"] is False:
+            return tmp
+        cmd = "show version"
+        prompt = {
+            "success": "[\r\n]+\S+> ?$",
+            "error": "unknown command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.search("Base OS boot (\S+)", result["content"])
+            if tmp:
+                njInfo["content"] = tmp.group(1).strip("[]")
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showInterface(self):
+        # Get the interface information
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        # Before you execute the show command, you must go into general mode
+        tmp = self.generalMode()
+        if tmp["status"] is False:
+            return tmp
+        cmd = "show interfaces extensive"
+        prompt = {
+            "success": "[\r\n]+\S+.+> ?$",
+            "error": "unknown command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            allLine = re.findall("[\S\s]+?\r\n\r\n", result["content"])
+            for line in allLine:
+                lineInfo = {"interfaceName": "",
+                            "members": [],
+                            "lineState": "",
+                            "adminState": "",
+                            "description": "",
+                            "speed": "",
+                            "type": "",
+                            "duplex": "",
+                            "inputRate": "",
+                            "outputRate": "",
+                            "crc": "",
+                            "linkFlap": "",
+                            "mtu": "",
+                            "ip": ""}
+                #  Get name of the interface.
+                tmp = re.search("interface:? (\S+)", line)
+                if tmp:
+                    lineInfo["interfaceName"] = tmp.group(1).strip(",")
+                else:
+                    continue
+                # Get line state of the interface.
+                tmp = re.search("link is (.*)", line)
+                if tmp:
+                    lineInfo["lineState"] = tmp.group(1).strip().lower()
+                # Get the admin state of the interface.
+                tmp = re.search(", (.+), Physical", line)
+                if tmp:
+                    lineInfo["adminState"] = tmp.group(1).strip().lower()
+                # Get mtu of the interface.
+                tmp = re.search("MTU: (\d+)", line)
+                if tmp:
+                    lineInfo["mtu"] = tmp.group(1).strip()
+                # Get mac of the interface.
+                tmp = re.search("Hardware address: (.*)", line)
+                if tmp:
+                    lineInfo["mac"] = tmp.group(1).strip()
+                # Get the type of the interface.
+                tmp = re.search("Link-level type: ([A-Za-z]+)", line)
+                if tmp:
+                    lineInfo["type"] = tmp.group(1).strip()
+                # Get input rate of the interface.
+                tmp = re.search("Input rate     : (.*)", line)
+                if tmp:
+                    lineInfo["inputRate"] = tmp.group(1).strip()
+                #  Get output rate of the interface.
+                tmp = re.search("Output rate    : +(.*)", line)
+                if tmp:
+                    lineInfo["outputRate"] = tmp.group(1).strip()
+                # Get description of the interface.
+                tmp = re.search("Description: (.*)", line)
+                if tmp:
+                    lineInfo["description"] = tmp.group(1).strip()
+                # Get duplex of therface.
+                tmp = re.search("([A-Za-z]+)\-duplex", line)
+                if tmp:
+                    lineInfo["duplex"] = tmp.group(1)
+                # Get speed of the interface.
+                tmp = re.search("Speed: (\S+),", line)
+                if tmp:
+                    lineInfo["speed"] = tmp.group(1)
+                njInfo["content"].append(lineInfo)
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showRoute(self,):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        # Before you execute the show command, you must go into general mode
+        tmp = self.generalMode()
+        if tmp["status"] is False:
+            return tmp
+        cmd = "show route"
+        prompt = {
+            "success": "[\r\n]+\S+.+> ?$",
+            "error": "unknown command[\s\S]+",
+        }
+        # Get name of routes.
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            allLine = result["content"].split("\r\n")[1:-1]
+            for line in allLine:
+                tmp = re.search("(\d+\.\d+\.\d+\.\d+)/(\d{1,2}).*\[([A-Za-z]+)/.*\]", line)
+                if tmp:
+                    lineInfo = {
+                        "net": "",
+                        "mask": "",
+                        "metric": "",
+                        "type": "",
+                        "description": "",
+                        "interface": "",
+                        "via": ""}
+                    lineInfo["net"] = tmp.group(1)
+                    lineInfo["mask"] = tmp.group(2)
+                    lineInfo["type"] = tmp.group(3).lower()
+                    njInfo["content"].append(lineInfo)
+                tmp = re.findall("(\d+\.\d+\.\d+\.\d+)? ?via (.*)", line)
+                if tmp:
+                    lineInfo = njInfo["content"][-1]
+                    lineInfo["via"] = tmp[0][0]
+                    lineInfo["interface"] = tmp[0][1]
+                    if njInfo["content"][-1]["via"] == "":
+                        njInfo["content"][-1] = lineInfo
+                    else:
+                        njInfo["content"].append(lineInfo)
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo

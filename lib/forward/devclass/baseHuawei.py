@@ -79,7 +79,8 @@ class BASEHUAWEI(BASESSHV2):
                 self.mode = 1
                 return result
             else:
-                return tmp
+                result["errLog"] = tmp["errLog"]
+                return result
         else:
             result["status"] = True
             return result
