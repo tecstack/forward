@@ -21,10 +21,161 @@
 [Core][forward] Device class for F5.
 """
 from forward.devclass.baseSSHV2 import BASESSHV2
+import re
 
 
 class BASEF5(BASESSHV2):
     """This is a manufacturer of F5, using the
     SSHV2 version of the protocol, so it is integrated with BASESSHV2 library.
     """
-    pass
+    def showVersion(self):
+        njInfo = {
+            'status': False,
+            'content': "",
+            'errLog': ''
+        }
+        cmd = "tmsh  show /sys version"
+        prompt = {
+            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "error": "command not found[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.search("Version +([0-9\.]+)", result["content"])
+            if tmp:
+                njInfo["content"] = tmp.group(1)
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showNtp(self):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = "tmsh list /sys ntp"
+        prompt = {
+            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "error": "command not found[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.findall("([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
+                             result["content"])
+            njInfo["content"] = tmp
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showSnmp(self):
+        # Get SNMP informatinos.
+        njInfo = {
+            "status": False,
+            # [{"ip:"10.1.1.1","port":"456"}]
+            "content": [],
+            "errLog": ""
+        }
+        prompt = {
+            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "error": "command not found[\s\S]+",
+        }
+        cmd = "tmsh list /sys snmp"
+        result = self.command(cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.findall("host.*(\d+\.\d+\.\d+\.\d+)\r\n\s+(port \d+)?",
+                             result["content"])
+            """
+            xxxx_1 {
+            community xxxx_2015
+            host 10.1.1.5
+            prot 8888
+            }
+            yyyyy_1 {
+            community yyyyy_2015
+            host 10.1.1.1
+            }
+            """
+            for line in tmp:
+                ip, port = line
+                port = re.sub("port ", "", port)
+                njInfo["content"].append({"ip": ip, "port": port})
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showInterface(self):
+        # Get the interface information
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = "tmsh  list /net interface"
+        prompt = {
+            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "error": "command not found[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            allLine = re.findall("net[\s\S]+?\}", result["content"])
+            for line in allLine:
+                lineInfo = {"interfaceName": "",
+                            "members": [],
+                            "lineState": "",
+                            "adminState": "",
+                            "description": "",
+                            "speed": "",
+                            "type": "",
+                            "duplex": "",
+                            "inputRate": "",
+                            "outputRate": "",
+                            "crc": "",
+                            "linkFlap": "",
+                            "mtu": "",
+                            "ip": ""}
+                #  Get name of the interface.
+                tmp = re.search("net interface (\S+)", line)
+                if tmp:
+                    lineInfo["interfaceName"] = tmp.group(1)
+                # Get mtu of the interface.
+                tmp = re.search("mtu (\d+)", line)
+                if tmp:
+                    lineInfo["mtu"] = tmp.group(1).strip()
+                # Get mac of the interface.
+                tmp = re.search("mac-address (.*)", line)
+                if tmp:
+                    lineInfo["mac"] = tmp.group(1).strip()
+                # Get description of the interface.
+                tmp = re.search("description (.*)", line)
+                if tmp:
+                    lineInfo["description"] = tmp.group(1).strip()
+                njInfo["content"].append(lineInfo)
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showLog(self):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = "tmsh list /sys syslog"
+        prompt = {
+            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "error": "command not found[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.findall("host ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
+                             result["content"])
+            njInfo["content"] = tmp
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo

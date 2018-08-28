@@ -267,7 +267,7 @@ class BASEJUNIPER(BASETELNET):
             "errLog": ""
         }
         # If value of the mode is 2,start switching to configure-mode.
-        sendConfig = self.command("configure", prompt={"success": "[\r\n]+\S+\(config\)# ?$",
+        sendConfig = self.command("configure", prompt={"success": "[\r\n]+\S+.+# ?$",
                                                        "error": "unknown command[\s\S]+\S+.+> ?$"})
         if sendConfig["state"] == "success":
             # switch to config-mode was successful.
@@ -456,6 +456,160 @@ class BASEJUNIPER(BASETELNET):
                         njInfo["content"][-1] = lineInfo
                     else:
                         njInfo["content"].append(lineInfo)
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showSnmp(self):
+        # Get SNMP informatinos.
+        njInfo = {
+            "status": False,
+            # [{"ip:"10.1.1.1","port":"456"}]
+            "content": [],
+            "errLog": ""
+        }
+        # Before you execute the show command, you must go into general mode
+        tmp = self.generalMode()
+        if tmp["status"] is False:
+            return tmp
+        prompt = {
+            "success": "[\r\n]+\S+.+> ?$",
+            "error": "unknown command[\s\S]+",
+        }
+        result = self.command("show configuration snmp ", prompt=prompt)
+        if result["state"] == "success":
+            # Separate information from each configuration section
+            allSection = re.findall("trap-group[\s\S]+?\r\n\}", result["content"])
+            # everyone of configuration.
+            """targets {
+                        172.16.147.34;
+                                172.16.147.35;
+                     }
+            """
+            for section in allSection:
+                # Get port of the snmp server.
+                tmp = re.search("destination-port (\d+)", section)
+                if tmp:
+                    port = tmp.group(1)
+                else:
+                    port = ""
+                # Get ip of the snmp server.
+                ip = re.findall("\d+\.\d+\.\d+\.\d+", section)
+                for address in ip:
+                    lineInfo = {"ip": address, "port": port}
+                    njInfo["content"].append(lineInfo)
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showNtp(self):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = "show configuration | display set | match ntp"
+        # Before you execute the show command, you must go into general mode
+        tmp = self.generalMode()
+        if tmp["status"] is False:
+            return tmp
+        prompt = {
+            "success": "[\r\n]+\S+.+> ?$",
+            "error": "unknown command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.findall("ntp server ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
+                             result["content"])
+            njInfo["content"] = tmp
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showLog(self):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = "show configuration | display set | match syslog"
+        # Before you execute the show command, you must go into general mode
+        tmp = self.generalMode()
+        if tmp["status"] is False:
+            return tmp
+        prompt = {
+            "success": "[\r\n]+\S+.+> ?$",
+            "error": "unknown command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = re.findall("syslog host ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
+                             result["content"])
+            njInfo["content"] = list(set(sorted(tmp)))
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def showVlan(self):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = "show configuration | display set | match vlan-id "
+        # Before you execute the show command, you must go into general mode
+        tmp = self.generalMode()
+        if tmp["status"] is False:
+            return tmp
+        prompt = {
+            "success": "[\r\n]+\S+.+> ?$",
+            "error": "unknown command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            for _vlanInfo in result["content"].split("\r\n"):
+                tmp = re.search("vlan-id ([0-9]+)", _vlanInfo)
+                lineInfo = {
+                    "id": "",
+                    "description": "",
+                    "status": "",
+                    "interface": [],
+                    "type": "",
+                }
+                # Get id of the vlan.
+                if tmp:
+                    lineInfo["id"] = tmp.group(1)
+                    if lineInfo in njInfo["content"]:
+                        # If the record already exists in njinfo, it is ignored
+                        continue
+                    else:
+                        njInfo["content"].append(lineInfo)
+                    continue
+                # Get range of the vlans.
+                vlanGroup = re.search("vlan-id-list (\d+)\-(\d+)", _vlanInfo)
+                if vlanGroup:
+                    # The starting id of the vlan.
+                    startVlan = int(vlanGroup.group(1))
+                    # The ending id of the vlan.
+                    endVlan = int(vlanGroup.group(2))
+                    for vlanId in range(startVlan, endVlan + 1):
+                        lineInfo = {
+                            "id": "",
+                            "description": "",
+                            "status": "",
+                            "interface": [],
+                            "type": "",
+                        }
+                        lineInfo["id"] = str(vlanId)
+                        if lineInfo in njInfo["content"]:
+                            # If the record already exists in njinfo, it is ignored
+                            continue
+                        else:
+                            njInfo["content"].append(lineInfo)
             njInfo["status"] = True
         else:
             njInfo["errLog"] = result["errLog"]
