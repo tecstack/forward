@@ -120,7 +120,7 @@ class BASERUIJIE(BASESSHV2):
             self.mode = 2
             return result
         elif sendEnable["state"] is None:
-            result["errLog"] = "Unknow error."
+            result["errLog"] = sendEnable["errLog"]
             return result
         # If device required a password,then send a password to device.
         sendPassword = self.command(self.privilegePw, prompt={"password": "[pP]assword.*",
@@ -144,11 +144,15 @@ class BASERUIJIE(BASESSHV2):
             'content': [],
             'errLog': ''
         }
-        cmd = '''show run |  include  ntp'''
+        cmd = '''show run | include  ntp'''
         prompt = {
             "success": "[\r\n]+\S+.+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
+        # Before you execute the show command, you must go into privilege mode
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            return tmp
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
             tmp = re.findall("ntp server ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
@@ -160,17 +164,50 @@ class BASERUIJIE(BASESSHV2):
             njInfo["errLog"] = result["errLog"]
         return njInfo
 
+    def showLog(self):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        cmd = '''show run | include  logging'''
+        prompt = {
+            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "error": "Unrecognized[\s\S]+",
+        }
+        # Before you execute the show command, you must go into privilege mode
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            return tmp
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            allLine = result["content"].split("\r\n")
+            for line in allLine:
+                if re.search("logging server", line):
+                    tmp = re.findall("([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
+                                     result["content"])
+                    if len(tmp) > 0:
+                        njInfo["content"].extend(tmp)
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
+        return njInfo
+
     def showSnmp(self):
         njInfo = {
             'status': False,
             'content': [],
             'errLog': ''
         }
-        cmd = '''show run |  include  snmp'''
+        cmd = '''show run | include  snmp'''
         prompt = {
             "success": "[\r\n]+\S+.+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
+        # Before you execute the show command, you must go into privilege mode
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            return tmp
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
             tmp = re.findall("snmp-server host ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
@@ -214,6 +251,10 @@ class BASERUIJIE(BASESSHV2):
             "success": "[\r\n]+\S+.+(>|#|\$) *$",
             "error": "Unrecognized[\s\S]+",
         }
+        # Before you execute the show command, you must go into privilege mode
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            return tmp
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
             currentSection = "vlanName"
@@ -261,6 +302,10 @@ class BASERUIJIE(BASESSHV2):
             "success": "[\r\n]+\S+.+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
+        # Before you execute the show command, you must go into privilege mode
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            return tmp
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
             for _interfaceInfo in result["content"].split("\r\n"):
@@ -322,6 +367,10 @@ class BASERUIJIE(BASESSHV2):
             "success": "[\r\n]+\S+.+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
+        # Before you execute the show command, you must go into privilege mode
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            return tmp
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
             interfacesFullInfo = re.split("========================== ", result["content"])[1::]
