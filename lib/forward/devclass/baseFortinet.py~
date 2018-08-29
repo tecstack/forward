@@ -116,7 +116,7 @@ class BASEFORTINET(BASESSHV2):
             result = self.command(cmd=cmd, prompt=prompt)
             if result["state"] == "success":
                 tmp = re.search('set server "([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})"',
-                                result["content"])
+                                 result["content"])
                 if tmp:
                     njInfo["content"].append(tmp.group(1))
                 njInfo["status"] = True

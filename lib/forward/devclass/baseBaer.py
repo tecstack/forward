@@ -28,6 +28,28 @@ class BASEBAER(BASESSHV2):
     """This is a manufacturer of baer, using the
     SSHV2 version of the protocol, so it is integrated with BASESSHV2 library.
     """
+    def commit(self):
+        result = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        # Switch to privilege-mode.
+        result = self.privilegeMode()
+        if not result["status"]:
+            # Switch failure.
+            return result
+        # Excute a command.
+        data = self.command("admin save",
+                            prompt={"success": "Completed[\s\S]+[\r\n]+\S+# ?$"})
+        if data["state"] is None:
+            result["errLog"] = "Failed save configuration, \
+                               Info: [{content}] , [{errLog}]".format(content=data["content"], errLog=data["errLog"])
+        else:
+            result["content"] = "The configuration was saved successfully."
+            result["status"] = True
+        return result
+
     def privilegeMode(self):
         # Switch to privilege mode.
         njInfo = {
