@@ -442,6 +442,6 @@ class BASERUIJIE(BASESSHV2):
         while not re.search(self.basePrompt, buff.split('\n')[-1]):
             try:
                 # Accumulative results
-                buff += self.shell.recv(1024)
+                buff += self.shell.recv(1024).decode()
             except Exception:
                 raise ForwardError('[Clean Buffer Error]: %s: Receive timeout [%s]' % (self.ip, buff))

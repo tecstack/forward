@@ -17,8 +17,8 @@
 
 * Building virtual environment (optional) 构建虚拟环境 (可选)
 
-  * 开发者用户推荐，使用pyenv和virtualenv构建纯净的python环境，基于python版本2.7.10
-  * We recommend that developer users use pyenv and virtualenv to build a pure Python environment which is based on Python version 2.7.10.
+  * 开发者用户推荐，使用pyenv和virtualenv构建纯净的python环境，基于python版本2.7.10，同时兼容python3.
+  * We recommend that developer users use pyenv and virtualenv to build a pure Python environment which is based on Python version 2.7.10, and compatible with python3 at the same time.
 
   ```Bash
   pyenv virtualenv 2.7.10 forward
@@ -70,9 +70,15 @@
 
   # 查看命令结果
   if result1['status']:
+      # python 2
       print '[%s] OS version info: %s' % ('cisco1', result1['content'])
+      # python 3
+      print('[%s] OS version info: %s' % ('cisco1', result1['content']))
   if result2['status']:
-      print '[%s] OS version info: %s' % ('cisco2', result2['content'])
+      # python 2
+      print '[%s] OS version info: %s' % ('cisco2', result1['content'])
+      # python 3
+      print('[%s] OS version info: %s' % ('cisco2', result1['content']))
   ```
 
 * 上述代码段中出现的'cisco1'和'cisco2'就是Forward设备类实例(N7018),不同设备类实例包含的方法可能不同，具体请查阅[类库文档](/docs/class)。

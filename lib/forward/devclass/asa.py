@@ -43,7 +43,7 @@ class ASA(BASECISCO):
         while not re.search(self.basePrompt, buff.split('\n')[-1]):
             try:
                 # Cumulative return result
-                buff += self.shell.recv(1024)
+                buff += self.shell.recv(1024).decode()
                 # Remove the \x charactor
                 buff += re.sub("\x07", "", buff)
             except Exception:

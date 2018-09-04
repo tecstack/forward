@@ -48,7 +48,7 @@ class S9312(BASEHUAWEI):
             else:
                 # vlan is exists
                 info["status"] = True
-        except Exception, e:
+        except Exception as e:
             info["status"] = False
             info["errLog"] = str(e)
         return info
@@ -73,7 +73,7 @@ class S9312(BASEHUAWEI):
             info["content"] = ""
             self.shell.send("vlan {vlan}\n".format(vlan=vlan))
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024)
+                info['content'] += self.shell.recv(1024).decode()
             # Get host prompt
             self.getPrompt()
             if not re.search('.*-vlan', self.prompt):
@@ -83,7 +83,7 @@ class S9312(BASEHUAWEI):
             # Send command.
             self.shell.send("name {ascription}\n".format(ascription=ascription))
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024)
+                info['content'] += self.shell.recv(1024).decode()
             # Get host prompt.
             self.getPrompt()
             # save  the configuration.
@@ -99,7 +99,7 @@ class S9312(BASEHUAWEI):
                 else:
                     # create successed. exit config mode
                     info["status"] = True
-        except Exception, e:
+        except Exception as e:
             info["status"] = False
             info["errLog"] = str(e)
         return info
@@ -137,7 +137,7 @@ class S9312(BASEHUAWEI):
                     info["status"] = False
                     info["errLog"] = tmp["content"]
                 break
-            except Exception, e:
+            except Exception as e:
                 info["errLog"] = str(e)
                 info["status"] = False
                 break
@@ -178,7 +178,7 @@ class S9312(BASEHUAWEI):
             # Send command.
             self.shell.send("interface Eth-Trunk {port}\n".format(port=port))
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024)
+                info['content'] += self.shell.recv(1024).decode()
             # Get new host prompt.
             self.getPrompt()
             # Keyword search.
@@ -189,7 +189,7 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
             info["content"] = ""
             self.shell.send("{cmd}\n".format(cmd=cmd))
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024)
+                info['content'] += self.shell.recv(1024).decode()
             # Get new host prompt.
             self.getPrompt()
             # save configuration
@@ -204,7 +204,7 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
                                     check found no configuration, so failed.info:[%s]" % tmp["errLog"])
             else:
                 info["status"] = True
-        except Exception, e:
+        except Exception as e:
             info["errLog"] = str(e)
             info["status"] = False
         return info
@@ -229,7 +229,7 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
                 info["status"] = False
             else:
                 info["status"] = True
-        except Exception, e:
+        except Exception as e:
             info["status"] = False
             info["errLog"] = str(e)
         return info
@@ -255,7 +255,7 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
             # Send command.
             self.shell.send("interface Vlanif {vlan}\n".format(vlan=vlan))
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024)
+                info['content'] += self.shell.recv(1024).decode()
             # Get new host prompt.
             self.getPrompt()
             if not re.search('Vlanif', self.prompt):
@@ -264,7 +264,7 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
             info["content"] = ""
             self.shell.send("description {ascription}\n".format(ascription=ascription))
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024)
+                info['content'] += self.shell.recv(1024).decode
             # Get new host prompt.
             self.getPrompt()
             # set ip
@@ -272,7 +272,7 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
             # Send command.
             self.shell.send("ip address {ip} 255.255.255.0\n".format(ip=ip))
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024)
+                info['content'] += self.shell.recv(1024).decode
             # Check
             if re.search("Error: The specified IP address is invalid", info["content"]):
                 raise ForwardError("Error: The specified IP address is invalid,IP should be a network segment")
@@ -292,7 +292,7 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
                 else:
                     # create successed. exit config mode
                     info["status"] = True
-        except Exception, e:
+        except Exception as e:
             info["status"] = False
             info["errLog"] = str(e)
         return info

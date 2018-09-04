@@ -103,7 +103,7 @@ class BASETELNET(object):
             # Modify login status to False.
             self.isLogin = False
             result['status'] = True
-        except Exception, e:
+        except Exception as e:
             result['status'] = False
             result['content'] = str(e)
         return result
@@ -143,10 +143,10 @@ class BASETELNET(object):
                     tmp = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", tmp)
                     data['content'] = tmp
                     data['status'] = True
-                except Exception, e:
+                except Exception as e:
                     # Not found host prompt
                     raise ForwardError('not found host prompt Errorr(%s)' % str(e))
-            except Exception, e:
+            except Exception as e:
                 # Not found host prompt
                 data['status'] = False
                 data['errLog'] = data['errLog'] + 'not found host prompt Errorr(%s)' % str(e)

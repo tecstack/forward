@@ -16,13 +16,14 @@
 """
 -----Introduction-----
 [Core][Forward] Login method thread function, used for the initialize multithread step
-Author: Wang Zhe
 """
 
+import six
 
 def loginThread(instance):
     # Login method thread function, used for the initialize multithread step
     if not instance.isLogin:
         result = instance.login()
         if not result['status']:
-            print '[Login Error]: %s :%s' % (instance.ip, result['errLog'])
+            six.print_('[Login Error]: %s :%s' % (instance.ip, result['errLog']))
+            # print '[Login Error]: %s :%s' % (instance.ip, result['errLog'])

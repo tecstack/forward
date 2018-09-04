@@ -109,7 +109,7 @@ class BASESSHV1(object):
             # Modify login status to False.
             self.isLogin = False
             result['status'] = True
-        except Exception, e:
+        except Exception as e:
             # If the close fails, set the login status to False and record the failure message
             result['status'] = False
             result['errLog'] = str(e)
@@ -162,7 +162,7 @@ class BASESSHV1(object):
                 tmp = re.sub('(\x00|\x08){0,}', "", tmp)
                 tmp = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", tmp)
                 data['content'] = tmp
-            except Exception, e:
+            except Exception as e:
                 # Unable to find the host prompt, command execution failed.
                 data['status'] = False
                 data['errLog'] = data['errLog'] + "not fond host prompt:Error(%s)" % str(e)

@@ -46,7 +46,7 @@ class S5800(BASEFENGHUO):
             # Host prompt is modified
             info["content"] = ""
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024)
+                info['content'] += self.shell.recv(1024).decode()
             self.getPrompt()
             if not re.search('vlan.*{vlan}'.format(vlan=vlan), self.prompt):
                 raise ForwardError("Failed to enter vlan mode,command:vlan {vlan}".format(vlan=vlan))
@@ -55,7 +55,7 @@ class S5800(BASEFENGHUO):
             # Host prompt is modified
             info["content"] = ""
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024)
+                info['content'] += self.shell.recv(1024).decode()
             # Get host prompt.
             self.getPrompt()
             # Failure to search for Vlan information.
@@ -77,7 +77,7 @@ class S5800(BASEFENGHUO):
                 else:
                     # create successed. exit config mode
                     info["status"] = True
-        except Exception, e:
+        except Exception as e:
             info["errLog"] = str(e)
             info["status"] = False
         return info
@@ -108,7 +108,7 @@ t link-type (access|trunk)[\s\S]*port .* vlan .*{vlan}".format(vlan=vlan, port=p
             else:
                 # No exists'
                 raise ForwardError('No exists')
-        except Exception, e:
+        except Exception as e:
             info["errLog"] = str(e)
             info["status"] = False
         return info
@@ -138,7 +138,7 @@ t link-type (access|trunk)[\s\S]*port .* vlan .*{vlan}".format(vlan=vlan, port=p
             self.shell.send("interface gigaethernet {port}\n".format(port=port))
             # Host prompt is modified
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024)
+                info['content'] += self.shell.recv(1024).decode()
             # release host prompt
             self.getPrompt()
             # Check the port mode
@@ -164,7 +164,7 @@ t link-type (access|trunk)[\s\S]*port .* vlan .*{vlan}".format(vlan=vlan, port=p
             self.shell.send("quit\n")
             info["content"] = ""
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024)
+                info['content'] += self.shell.recv(1024).decode()
             self.getPrompt()
             # save configuration
             tmp = self._commit()
@@ -179,7 +179,7 @@ t link-type (access|trunk)[\s\S]*port .* vlan .*{vlan}".format(vlan=vlan, port=p
                 # successed
                 info["content"] = "successed"
                 info["status"] = True
-        except Exception, e:
+        except Exception as e:
             info["errLog"] = str(e)
             info["status"] = False
         return info
@@ -212,7 +212,7 @@ t link-type (access|trunk)[\s\S]*port .* vlan .*{vlan}".format(vlan=vlan, port=p
                 else:
                     info["errLog"] = info['errLog']
                     break
-            except Exception, e:
+            except Exception as e:
                 info["errLog"] = str(e)
                 info["status"] = False
                 break
@@ -242,7 +242,7 @@ t link-type (access|trunk)[\s\S]*port .* vlan .*{vlan}".format(vlan=vlan, port=p
             self.shell.send("interface eth-trunk {port}\n".format(port=port))
             # Host prompt is modified
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024)
+                info['content'] += self.shell.recv(1024).decode()
             # release host prompt
             self.getPrompt()
             # Keyword search.
@@ -261,7 +261,7 @@ t link-type (access|trunk)[\s\S]*port .* vlan .*{vlan}".format(vlan=vlan, port=p
             self.shell.send("quit\n")
             info["content"] = ""
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024)
+                info['content'] += self.shell.recv(1024).decode()
             # save configuration
             self.getPrompt()
             # Save the configuration.
@@ -274,7 +274,7 @@ t link-type (access|trunk)[\s\S]*port .* vlan .*{vlan}".format(vlan=vlan, port=p
                 raise ForwardError("The configuration command has been executed,\
                                     but the check configuration does not exist! [%s]" % tmp['errLog'])
             info["status"] = True
-        except Exception, e:
+        except Exception as e:
             info["errLog"] = str(e)
             info["status"] = False
         return info

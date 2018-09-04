@@ -17,6 +17,7 @@
 
 import threading
 import importlib
+import six
 import forward.release
 from forward.utils.forwardError import ForwardError
 from forward.utils.loginThread import loginThread
@@ -49,7 +50,7 @@ class Forward(object):
             if paraCheck([[ip, model, username, password, kwargs]]):
                 targetList.append([ip, model, username, password, kwargs])
             else:
-                print "[Add Targets Error]: %s parameters type error, please check." % ip
+                six.print_("[Add Targets Error]: %s parameters type error, please check." % ip)
 
         self.targets.extend(targetList)
 
