@@ -62,3 +62,7 @@
       * [zx5952](/docs/class/sshv2/zte/zx5952.md)
   * [baseBrocade](/docs/class/sshv2/brocade)
       * [vlb](/docs/class/sshv2/brocade/vlb.md)
+  * [baseRuijieV1](/docs/class/sshv1/ruijie)
+      * [rg5510](/docs/class/sshv1/ruijie/rg5510v1.md)
+  * [baseRuijieV2](/docs/class/sshv2/ruijie)
+      * [rg5510](/docs/class/sshv2/ruijie/rg5510v2.md)

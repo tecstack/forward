@@ -1,6 +1,6 @@
 ## 基本介绍
 
-* 支持思科C6509设备的操作。
+* 支持锐捷设备的操作。
 
 ## 接口列表
 
@@ -31,7 +31,7 @@
 
 * <a name="init">__init__</a>
 
-	功能特性继承自[baseCisco](/docs/class/sshv2/cisco/README.md)
+	功能特性继承自[baseSSHV2](/docs/class/sshv2/README.md)
 
 ---
 
@@ -39,7 +39,7 @@
 
 	调用此接口进行登录(参数来自init)，成功后取得shell环境、清除登陆后设备发送的欢迎信息、设置超时时间(timeout)，判断登录设备是否遇到密码过期提醒需要修改、以及取得主机提示符，比如 `[root@localhost ] # ` 。
 
-	功能特性继承自[baseCisco](/docs/class/sshv2/cisco/README.md)
+	功能特性继承自[baseSSHV2](/docs/class/sshv2/README.md)
 
 ---
 
@@ -47,7 +47,7 @@
 
     注销与单个设备的会话。
 
-	功能特性继承自[baseCisco](/docs/class/sshv2/cisco/README.md)
+	功能特性继承自[baseSSHV2](/docs/class/sshv2/README.md)
 
 ---
 
@@ -57,7 +57,7 @@
 	
 	注意： 不要使用该接口执行切换模式的命令，比如`enable`、`sys`、`config`、`interface`，也不要在切换模式后使用该接口,如果真的有需要，请使用<a href="#command">command高级开发接口</a>。 
 
-	功能特性继承自[baseCisco](/docs/class/sshv2/cisco/README.md)
+	功能特性继承自[baseSSHV2](/docs/class/sshv2/README.md)
 
 ---
 
@@ -65,7 +65,7 @@
 
 	在目标设备上执行`任何`命令，然后一直等待收取该命令的执行结果，直到`预期的消息出现`或`等待超时`为止，最后返回一个字典（dict）格式的数据。
 
-	功能特性继承自[baseCisco](/docs/class/sshv2/cisco/README.md)
+	功能特性继承自[baseSSHV2](/docs/class/sshv2/README.md)
 
 ---
 
@@ -75,7 +75,7 @@
 
 	`注意：该接口一般仅用于Forward内部使用。`
 	
-	功能特性继承自[baseCisco](/docs/class/sshv2/cisco/README.md)
+	功能特性继承自[baseSSHV2](/docs/class/sshv2/README.md)
 
 ---
 
@@ -85,7 +85,7 @@
 
 	`注意：该接口仅用于Forward内部使用`。
 
-	功能特性继承自[baseCisco](/docs/class/sshv2/cisco/README.md)
+	功能特性继承自[baseSSHV2](/docs/class/sshv2/README.md)
 
 ---
 
@@ -95,8 +95,94 @@
 
 	注意：`execute`、`command`在每次执行命令之前会自动调用该接口进行清除，该接口一般只用于Forward内部使用。
 
-	功能特性继承自[baseCisco](/docs/class/sshv2/cisco/README.md)
+	功能特性继承自[baseSSHV2](/docs/class/sshv2/README.md)
 
+---
+
+* <a name="privilegeMode">privilegeMode</a>
+
+	在设备上，切换至特权模式。支持从普通模式切换至特权模式，也支持从更高一级的模式（如配置模式、接口模式等）降低至特权模式。而在调用之前，无需关心设备处于哪一级模式下。
+
+	注意：如果设备提示需要输入特权模式密码的，在登录之前必须传递对应的特权模式密码给Forward，以便在切换时自动输入，否则会切换失败；如果切换至特权模式无需密码的，可以传递特权模式密码动作。
+
+	* 调用参数
+	
+		无。
+
+	* 返回参数
+
+		| 字段 | 类型 | 描述 | 样例 |
+		| --- | --- | --- | --- |
+		| status | bool | 调用该接口是否成功 | False | 
+		| content | str | 调用该接口所产生的正确内容输出,但可能为空，这取决于所执行命令的结果 |  |
+		| errLog |  str | 调用该接口所产生的错误内容或Forward的错误提示信息 | 用户名或密码错误 |
+
+	* 案例(部分设备需切换至特权模式才能执行show run命令，下面模拟这样的场景)
+	
+	``` Python
+	>>> instance=......
+	>>> instance.login()
+	>>> instance.privilegeMode()
+	>>> {"status":True,"content":"","errLog":""}
+	>>> instance.command("show run",prompt={"success":"(#|>|\]) ?$"},"error":"error") 
+	```
+---
+
+* <a name="configMode">configMode</a>
+
+	在设备上，切换至配置模式。支持从普通模式直接切换至配置模式，也支持从更高一级的模式（如接口模式等）降低至配置模式。而在调用之前，无需关心设备处于哪一级模式下。
+
+	注意：如果是从普通模式直接切换到配置模式的，中间需要经过切换至`特权模式`,在该过程中有可能需要特权模式密码。所以在Forward登录之初，就应该传递特权模式密码以备用，如果设备不需要特权模式密码，则可以不用传递。
+
+	* 调用参数
+	
+		无。
+
+	* 返回参数
+
+		| 字段 | 类型 | 描述 | 样例 |
+		| --- | --- | --- | --- |
+		| status | bool | 调用该接口是否成功 | False | 
+		| content | str | 调用该接口所产生的正确内容输出,但可能为空，这取决于所执行命令的结果 |  |
+		| errLog |  str | 调用该接口所产生的错误内容或Forward的错误提示信息 | 切换失败 |
+
+	* 案例(当设备进入配置模式时，才能进入interface模式，下面模拟这样的场景)
+	
+	``` Python
+	>>> instance=......
+	>>> instance.login()
+	>>> instance.configMode()
+	>>> {"status":True,"content":"","errLog":""}
+	>>> instance.command("interface ge0/0/1",prompt={"success":"(#|>|\]) ?$"},"error":"error") 
+	```
+
+---
+
+* <a name="commit">commit</a>
+
+	在设备上，当配置好一些参数后，可以调用该接口进行保存配置。而在调用之前，无需关心设备处于哪一级模式下。
+
+	注意：调用该接口需要shell处于特权模式下（华为设备除外），在这个过程中可能会需要特权模式密码。所以在Forward登录之初，就应该传递特权模式密码以备用，如果设备不需要特权模式密码，则可以不用传递。
+
+	* 调用参数
+	
+		无。
+
+	* 返回参数
+
+		| 字段 | 类型 | 描述 | 样例 |
+		| --- | --- | --- | --- |
+		| status | bool | 调用该接口是否成功 | False | 
+		| content | str | 调用该接口所产生的正确内容输出,但可能为空，这取决于所执行命令的结果 |  |
+		| errLog |  str | 调用该接口所产生的错误内容或Forward的错误提示信息 | 保存失败 |
+
+	* 案例
+	
+	``` Python
+	>>> instance=......
+	>>> instance.login()
+	>>> instance.commit()
+	>>> {"status":True,"content":"保存成功","errLog":""}
 
 ---
 
