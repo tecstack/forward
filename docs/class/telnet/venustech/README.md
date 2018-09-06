@@ -31,7 +31,7 @@
 
 * <a name="init">__init__</a>
 
-	功能特性继承自[baseTELNET](/docs/class/telnet/README.md)
+	功能特性继承自[baseRaiseCome](/docs/class/sshv2/raisecome/README.md)
 
 ---
 
@@ -39,7 +39,7 @@
 
 	调用此接口进行登录(参数来自init)，成功后取得shell环境、清除登陆后设备发送的欢迎信息、设置超时时间(timeout)，判断登录设备是否遇到密码过期提醒需要修改、以及取得主机提示符，比如 `[root@localhost ] # ` 。
 
-	功能特性继承自[baseTELNET](/docs/class/telnet/README.md)
+	功能特性继承自[baseRaiseCome](/docs/class/sshv2/raisecome/README.md)
 
 ---
 
@@ -47,7 +47,7 @@
 
     注销与单个设备的会话。
 
-	功能特性继承自[baseTELNET](/docs/class/telnet/README.md)
+	功能特性继承自[baseRaiseCome](/docs/class/sshv2/raisecome/README.md)
 
 ---
 
@@ -57,7 +57,7 @@
 	
 	注意： 不要使用该接口执行切换模式的命令，比如`enable`、`sys`、`config`、`interface`，也不要在切换模式后使用该接口,如果真的有需要，请使用<a href="#command">command高级开发接口</a>。 
 
-	功能特性继承自[baseTELNET](/docs/class/telnet/README.md)
+	功能特性继承自[baseRaiseCome](/docs/class/sshv2/raisecome/README.md)
 
 ---
 
@@ -65,7 +65,7 @@
 
 	在目标设备上执行`任何`命令，然后一直等待收取该命令的执行结果，直到`预期的消息出现`或`等待超时`为止，最后返回一个字典（dict）格式的数据。
 
-	功能特性继承自[baseTELNET](/docs/class/telnet/README.md)
+	功能特性继承自[baseRaiseCome](/docs/class/sshv2/raisecome/README.md)
 
 ---
 
@@ -75,7 +75,7 @@
 
 	`注意：该接口一般仅用于Forward内部使用。`
 	
-	功能特性继承自[baseTELNET](/docs/class/telnet/README.md)
+	功能特性继承自[baseRaiseCome](/docs/class/sshv2/raisecome/README.md)
 
 ---
 
@@ -85,7 +85,7 @@
 
 	`注意：该接口仅用于Forward内部使用`。
 
-	功能特性继承自[baseTELNET](/docs/class/telnet/README.md)
+	功能特性继承自[baseRaiseCome](/docs/class/sshv2/raisecome/README.md)
 
 ---
 
@@ -95,7 +95,8 @@
 
 	注意：`execute`、`command`在每次执行命令之前会自动调用该接口进行清除，该接口一般只用于Forward内部使用。
 
-	功能特性继承自[baseTELNET](/docs/class/telnet/README.md)
+	功能特性继承自[baseRaiseCome](/docs/class/sshv2/raisecome/README.md)
+
 
 ---
 
@@ -225,7 +226,7 @@
 		| 字段 | 类型 | 描述 | 样例 |
 		| --- | --- | --- | --- |
 		| status | bool | 调用该接口是否成功 | False | 
-		| content | list | 调用该接口所产生的正确内容输出,但可能为空，这取决于所执行命令的结果 | <a href="route">路由列表的详细字段</a> |
+		| content | list | 调用该接口所产生的正确内容输出,但可能为空，这取决于所执行命令的结果 | <a href="#route">路由列表的详细字段</a> |
 		| errLog |  str | 调用该接口所产生的错误内容或Forward的错误提示信息 | 命令执行失败 |
 
 		* <a name="route">路由列表的详细字段</a>
@@ -264,7 +265,7 @@
 		| 字段 | 类型 | 描述 | 样例 |
 		| --- | --- | --- | --- |
 		| status | bool | 调用该接口是否成功 | False | 
-		| content | list | 调用该接口所产生的正确内容输出,但可能为空，这取决于所执行命令的结果 | <a href="vlan">Vlan列表的详细字段</a> |
+		| content | list | 调用该接口所产生的正确内容输出,但可能为空，这取决于所执行命令的结果 | <a href="#vlan">Vlan列表的详细字段</a> |
 		| errLog |  str | 调用该接口所产生的错误内容或Forward的错误提示信息 | 命令执行失败 |
 
 		* <a name="vlan">Vlan列表的详细字段</a>
@@ -378,7 +379,7 @@
 		| 字段 | 类型 | 描述 | 样例 |
 		| --- | --- | --- | --- |
 		| status | bool | 调用该接口是否成功 | False | 
-		| content | list | 调用该接口所产生的正确内容输出,但可能为空，这取决于所执行命令的结果 | <a href="interface">Interface数据格式字段</a>|
+		| content | list | 调用该接口所产生的正确内容输出,但可能为空，这取决于所执行命令的结果 | <a href="#interface">Interface数据格式字段</a>|
 		| errLog |  str | 调用该接口所产生的错误内容或Forward的错误提示信息 | 命令执行失败 |
 
 		
@@ -409,4 +410,3 @@
 	>>> instance.login()
 	>>> instance.showInterface()
 	>>> {"status":True,"content":[{...},{...}],"errLog":""}
-
