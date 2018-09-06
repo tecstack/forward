@@ -50,7 +50,7 @@ class VLB(BASEBROCADE):
             self.shell.send(cmd)
             try:
                 while not re.search(zcliPrompt, result["content"]):
-                    result['content'] += self.shell.recv(1024)
+                    result['content'] += self.shell.recv(1024).decode
                 # Save the host prompt before entering the zcli mode
                 self.oldPrompt = self.prompt
                 # update host prompt
@@ -58,7 +58,7 @@ class VLB(BASEBROCADE):
                 # Flag zcli mode is True.
                 self.isZcliMode = True
                 result['status'] = True
-            except Exception, e:
+            except Exception as e:
                 # Error,flag zcli mode is False.
                 self.isZcliMode = False
                 result['status'] = False
@@ -85,11 +85,11 @@ class VLB(BASEBROCADE):
                 self.prompt = self.oldPrompt
                 try:
                     while not re.search(self.prompt, result["content"]):
-                        result['content'] += self.shell.recv(1024)
+                        result['content'] += self.shell.recv(1024).decode
                     # The switch mode status is False
                     self.isZcliMode = False
                     result['status'] = True
-                except Exception, e:
+                except Exception as e:
                     result['status'] = False
                     result['errLog'] = '[ZCLI Error]: {info}'.format(info=str(e))
             else:

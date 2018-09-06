@@ -61,7 +61,7 @@ class NJTELNETWraper(telnetlib.Telnet):
                 njInfo['errLog'] = 'Username or Password wrong'
             else:
                 njInfo['errLog'] = 'Login status is unknown'
-        except Exception, e:
+        except Exception as e:
             njInfo['errLog'] = str(e)
         return njInfo
 

@@ -328,14 +328,14 @@ class BASEDEPP(BASESSHV2):
         try:
             # connect to url
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
             return result
         try:
             client.service.modAddrObj(**{"oldname": oldName, "name": name, "ip": ip})
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -365,14 +365,14 @@ class BASEDEPP(BASESSHV2):
         try:
             # connect to url
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
             return result
         try:
             client.service.delAddrObj(name=name)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -410,14 +410,14 @@ class BASEDEPP(BASESSHV2):
         try:
             # connect to url
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
             return result
         try:
             client.service.addAddrObj(**{"name": name, "ip": ip})
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -464,7 +464,7 @@ class BASEDEPP(BASESSHV2):
         try:
             # connect to url
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
         p = {"name": name,
@@ -475,7 +475,7 @@ class BASEDEPP(BASESSHV2):
         try:
             client.service.updateServerObject(p)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -522,7 +522,7 @@ class BASEDEPP(BASESSHV2):
         try:
             # connect to url
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
         p = {"name": name,
@@ -533,7 +533,7 @@ class BASEDEPP(BASESSHV2):
         try:
             client.service.deleteServerObject(p)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -581,7 +581,7 @@ class BASEDEPP(BASESSHV2):
         try:
             # connect to url
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
         p = {"name": name,
@@ -592,7 +592,7 @@ class BASEDEPP(BASESSHV2):
         try:
             client.service.createServerObject(p)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -621,7 +621,7 @@ class BASEDEPP(BASESSHV2):
             result["errLog"] = "[Forward Error] Please specify the value of the globalAddress"
         try:
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
             return result
@@ -634,7 +634,7 @@ class BASEDEPP(BASESSHV2):
         try:
             client.service.updateStaticNat(p)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -663,7 +663,7 @@ class BASEDEPP(BASESSHV2):
             result["errLog"] = "[Forward Error] Please specify the value of the globalAddress"
         try:
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
             return result
@@ -676,7 +676,7 @@ class BASEDEPP(BASESSHV2):
         try:
             client.service.deleteStaticNat(p)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -705,7 +705,7 @@ class BASEDEPP(BASESSHV2):
             result["errLog"] = "[Forward Error] Please specify the value of the globalAddress"
         try:
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
             return result
@@ -718,7 +718,7 @@ class BASEDEPP(BASESSHV2):
         try:
             client.service.createStaticNat(p)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -749,7 +749,7 @@ class BASEDEPP(BASESSHV2):
             result["errLog"] = "[Forward Error] Please specify the value of the localAddress as a address range."
         try:
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
             return result
@@ -762,7 +762,7 @@ class BASEDEPP(BASESSHV2):
         try:
             client.service.deleteDnat(p)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -787,7 +787,7 @@ class BASEDEPP(BASESSHV2):
             result["errLog"] = "[Forward Error] Please specify the value of the localAddress as a address range."
         try:
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
             return result
@@ -800,7 +800,7 @@ class BASEDEPP(BASESSHV2):
         try:
             client.service.createDnat(p)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -829,7 +829,7 @@ class BASEDEPP(BASESSHV2):
             return result
         try:
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
             return result
@@ -841,7 +841,7 @@ class BASEDEPP(BASESSHV2):
         try:
             client.service.deleteSnat(p)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -865,7 +865,7 @@ class BASEDEPP(BASESSHV2):
             return result
         try:
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
             return result
@@ -877,7 +877,7 @@ class BASEDEPP(BASESSHV2):
         try:
             client.service.createSnat(p)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -971,7 +971,7 @@ class BASEDEPP(BASESSHV2):
         try:
             # connect to url
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
             return result
@@ -1005,7 +1005,7 @@ class BASEDEPP(BASESSHV2):
         try:
             client.service.updateSecurityPolicy(p)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -1098,7 +1098,7 @@ class BASEDEPP(BASESSHV2):
         try:
             # connect to url
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
             return result
@@ -1132,7 +1132,7 @@ class BASEDEPP(BASESSHV2):
         try:
             client.service.deleteSecurityPolicy(p)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."
@@ -1225,7 +1225,7 @@ class BASEDEPP(BASESSHV2):
         try:
             # connect to url
             client = Client(url, username=self.username, password=self.password)
-        except Exception, e:
+        except Exception as e:
             result["errLog"] = "[Forward Error] Connected to {url} was\
                                 failure, reason: {err}".format(err=str(e), url=url)
             return result
@@ -1259,7 +1259,7 @@ class BASEDEPP(BASESSHV2):
         try:
             client.service.createSecurityPolicy(p)
             result["status"] = True
-        except Exception, e:
+        except Exception as e:
             num = e.message[0]
             if num == 401:
                 result["errLog"] = "username or password invalid."

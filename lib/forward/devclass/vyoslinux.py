@@ -62,7 +62,7 @@ class VYOSLINUX(BCLINUX7):
                     # Get more.
                     self.getMore(result['content'])
                     # Get result.
-                    result['content'] += self.shell.recv(1024)
+                    result['content'] += self.shell.recv(1024).decode
                 # try to extract the return data
                 try:
                     # Intercepting the results of the command execution.

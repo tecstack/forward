@@ -88,7 +88,7 @@ class BASESSHV2(object):
                 ) and (
                     not re.search('new +password', tmpBuffer.split('\n')[-1], flags=re.IGNORECASE)
                 ):
-                    tmpBuffer += self.shell.recv(1024)
+                    tmpBuffer += self.shell.recv(1024).decode()
                 # if prompt is 'New Password' ,raise Error.
                 if re.search('new +password', tmpBuffer.split('\n')[-1], flags=re.IGNORECASE):
                     raise ForwardError(
@@ -145,7 +145,7 @@ class BASESSHV2(object):
             try:
                 while not re.search(self.prompt, result['content'].split('\n')[-1]):
                     self.getMore(result['content'])
-                    result['content'] += self.shell.recv(1024)
+                    result['content'] += self.shell.recv(1024).decode()
                 # try to extract the return data
                 tmp = re.search(resultPattern, result['content']).group(1)
                 # Delete special characters caused by More split screen.
@@ -210,7 +210,7 @@ class BASESSHV2(object):
             self.getMore(result["content"])
             try:
                 result["content"] += self.shell.recv(204800)
-            except Exception, e:
+            except Exception as e:
                 result["errLog"] = "Forward had recived data timeout. [%s]" % str(e)
                 return result
             # Mathing specify key
@@ -246,7 +246,7 @@ class BASESSHV2(object):
             self.shell.send('\n')
             # set recv timeout to self.timeout/10 fot temporary
             while not re.search(self.basePrompt, result):
-                result += self.shell.recv(1024)
+                result += self.shell.recv(1024).decode()
             if result:
                 # recv() get something
                 # select last line character,[ex]' >[localhost@labstill019~]$ '
@@ -291,6 +291,6 @@ class BASESSHV2(object):
         # When after switching mode, the prompt will change, it should be based on basePrompt to check and at last line
         while not re.search(self.basePrompt, buff.split('\n')[-1]):
             try:
-                buff += self.shell.recv(1024)
+                buff += self.shell.recv(1024).decode()
             except Exception:
                 raise ForwardError('[Clean Buffer Error]: %s: Receive timeout [%s]' % (self.ip, buff))

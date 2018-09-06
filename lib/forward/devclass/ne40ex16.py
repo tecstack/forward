@@ -44,7 +44,7 @@ class NE40EX16(BASEHUAWEI):
                 self.shell.send('%s\n' % (saveCommand))
                 # save setup to system
                 while not re.search(self.prompt, data['content'].split('\n')[-1]):
-                    data['content'] += self.shell.recv(1024)
+                    data['content'] += self.shell.recv(1024).decode()
                     # When prompted, reply Y,Search range at last line
                     if re.search(re.escape('Are you sure to continue?[Y/N]'), data['content'].split('\n')[-1]):
                         # interact,send y
@@ -57,7 +57,7 @@ class NE40EX16(BASEHUAWEI):
                     data['status'] = True
             else:
                 raise IOError('Error: The current state is not configuration mode')
-        except Exception, e:
+        except Exception as e:
             data['errLog'] = str(e)
             data['status'] = False
         return data
@@ -80,7 +80,7 @@ class NE40EX16(BASEHUAWEI):
                 self.shell = self.channel.invoke_shell(width=1000, height=1000)
                 tmpBuffer = ''
                 while not re.search(self.basePrompt, tmpBuffer.split('\n')[-1]):
-                    tmpBuffer += self.shell.recv(1024)
+                    tmpBuffer += self.shell.recv(1024).decode()
                     # When prompted, reply N
                     if re.search('\[Y/N\]:', tmpBuffer):
                         self.shell.send('N\n')
