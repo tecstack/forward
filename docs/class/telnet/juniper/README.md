@@ -15,6 +15,7 @@
 | <a href="#getPrompt">getPrompt</a> | 获取主机提示符，并识别登录设备后所处模式 |
 | <a href="#getMore">getMore</a> | 自动获取分页消息 |
 | <a href="#cleanBuffer">cleanBuffer</a> | 清除通道内残留信息 |
+| <a href="#generalMode">generalMode</a> | 切换至普通模式 |
 | <a href="#privilegeMode">privilegeMode</a> | 切换至特权模式 |
 | <a href="#configMode">configMode</a> | 切换至配置模式 |
 | <a href="#commit">commit</a> | 保存配置 |
@@ -96,6 +97,33 @@
 	注意：`execute`、`command`在每次执行命令之前会自动调用该接口进行清除，该接口一般只用于Forward内部使用。
 
 	功能特性继承自[baseTELNET](/docs/class/telnet/README.md)
+---
+
+* <a name="generalMode">generalMode</a>
+
+	在设备上，切换至普通模式。从任何模式（如配置模式、接口模式等）降低至该模式。而在调用之前，无需关心设备处于哪一级模式下。
+
+	* 调用参数
+	
+		无。
+
+	* 返回参数
+
+		| 字段 | 类型 | 描述 | 样例 |
+		| --- | --- | --- | --- |
+		| status | bool | 调用该接口是否成功 | False | 
+		| content | str | 调用该接口所产生的正确内容输出,但可能为空，这取决于所执行命令的结果 |  |
+		| errLog |  str | 调用该接口所产生的错误内容或Forward的错误提示信息 | 用户名或密码错误 |
+
+	* 案例(部分设备需要降低至该模式下才能执行show的命令)
+	
+	``` Python
+	>>> instance=......
+	>>> instance.login()
+	>>> instance.generalMode()
+	>>> {"status":True,"content":"","errLog":""}
+	>>> instance.command("show version",prompt={"success":"(#|>|\]) ?$"},"error":"error") 
+	```
 
 ---
 
