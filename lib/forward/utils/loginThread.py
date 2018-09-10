@@ -20,6 +20,7 @@
 
 import six
 
+
 def loginThread(instance):
     # Login method thread function, used for the initialize multithread step
     if not instance.isLogin:

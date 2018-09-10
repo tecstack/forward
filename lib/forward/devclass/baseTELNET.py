@@ -112,7 +112,7 @@ class BASETELNET(object):
         """execute a command line, only suitable for the scene when
         the prompt is equal before and after execution
         """
-        dataPattern = '[\r\n]+([\s\S]*)[\r\n]+' + self.prompt
+        dataPattern = '[\r\n]+([\s\S]*)[\r\n]+(\x1b\[m)?' + self.prompt
         # Spaces will produce special characters and re.escape('show ver') --> show \\ ver
         data = {'status': False,
                 'content': '',

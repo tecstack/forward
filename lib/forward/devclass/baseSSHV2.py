@@ -141,7 +141,7 @@ class BASESSHV2(object):
             # [ex] when send('ls\r'),get 'ls\r\nroot base etc \r\n[wangzhe@cloudlab100 ~]$ '
             # [ex] data should be 'root base etc '
             self.shell.send(cmd + "\r")
-            resultPattern = re.compile('[\r\n]+([\s\S]*)[\r\n]+' + self.prompt)
+            resultPattern = re.compile('[\r\n]+([\s\S]*)[\r\n]+(\x1b\[m)?' + self.prompt)
             try:
                 while not re.search(self.prompt, result['content'].split('\n')[-1]):
                     self.getMore(result['content'])
