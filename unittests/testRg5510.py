@@ -18,7 +18,7 @@
 import unittest
 import importlib
 from forward.utils.forwardError import ForwardError
-from forward.devclass.baseRuijie import BASERUIJIE
+from forward.devclass.baseRuijieV2 import BASERUIJIE
 
 
 class deviceClassRg5510(unittest.TestCase):

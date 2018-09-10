@@ -18,7 +18,7 @@
 import unittest
 import importlib
 from forward.utils.forwardError import ForwardError
-from forward.devclass.baseCisco import BASECISCO
+from forward.devclass.baseBrocade import BASEBROCADE
 
 
 class deviceClassAdx03100(unittest.TestCase):
@@ -62,4 +62,4 @@ class deviceClassAdx03100(unittest.TestCase):
         # Inherit from BASESSHV2
         cls = getattr(importlib.import_module('forward.devclass.{dev}'.format(dev=self.deviceClassName)),
                       self.deviceClassName.upper())
-        self.assertEquals(cls.__bases__[0], BASECISCO)
+        self.assertEquals(cls.__bases__[0], BASEBROCADE)
