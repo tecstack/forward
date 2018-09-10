@@ -1,12 +1,24 @@
-#!/usr/bin/evn python
 # coding:utf-8
 #
-# (c) 2017, Azrael <azrael-ex@139.com>
+# This file is part of Forward.
+#
+# Forward is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Forward is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 """
 -----Introduction-----
 [Core][forward] Base device class for telnet method, by using telnetlib module.
-Author: Azrael, Cheung Kei-Chuen
 """
 import re
 from forward.utils.telnet import telnet
@@ -30,9 +42,12 @@ class BASETELNET(object):
 
         self.channel = ''
         self.shell = ''
-        self.basePrompt = r'(>|#|\]|\$|\)) *$'
+        # self.basePrompt = r'(>|#|\]|\$|\)) *$'
+        # Multiple identical characters may appear
+        self.basePrompt = r"(>|#|\]|\$) *$"
         self.prompt = ''
-        self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+'
+        self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+|\(Q to quit\)'
+        self.mode = 1
 
         """
         - parameter ip: device's ip
@@ -88,7 +103,7 @@ class BASETELNET(object):
             # Modify login status to False.
             self.isLogin = False
             result['status'] = True
-        except Exception, e:
+        except Exception as e:
             result['status'] = False
             result['content'] = str(e)
         return result
@@ -97,7 +112,7 @@ class BASETELNET(object):
         """execute a command line, only suitable for the scene when
         the prompt is equal before and after execution
         """
-        dataPattern = '[\r\n]+([\s\S]*)[\r\n]+' + self.prompt
+        dataPattern = '[\r\n]+([\s\S]*)[\r\n]+(\x1b\[m)?' + self.prompt
         # Spaces will produce special characters and re.escape('show ver') --> show \\ ver
         data = {'status': False,
                 'content': '',
@@ -124,12 +139,14 @@ class BASETELNET(object):
                     tmp = re.search(dataPattern, data['content']).group(1)
                     # Delete special characters caused by More split screen.
                     tmp = re.sub("<--- More --->\\r +\\r", "", tmp)
+                    tmp = re.sub('(\x00|\x08){0,}', "", tmp)
+                    tmp = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", tmp)
                     data['content'] = tmp
                     data['status'] = True
-                except Exception, e:
+                except Exception as e:
                     # Not found host prompt
                     raise ForwardError('not found host prompt Errorr(%s)' % str(e))
-            except Exception, e:
+            except Exception as e:
                 # Not found host prompt
                 data['status'] = False
                 data['errLog'] = data['errLog'] + 'not found host prompt Errorr(%s)' % str(e)
@@ -203,7 +220,14 @@ class BASETELNET(object):
         # [ex]'[localhost@labstill019~]'
         # self.prompt=self.prompt[1:-1]
         # [ex]'\\[localhost\\@labstill019\\~\\]$'
-        self.prompt = re.escape(i[-1].split('\n')[-1])
+        self.prompt = i[-1].split('\n')[-1]
+        if re.search("> ?$", self.prompt):
+            # If last character of host prompt of the device ens in '>', the command line of device in gneral mode.
+            self.mode = 1
+        elif re.search("(#|\]) ?$", self.prompt):
+            # If last character of host prompt of the device ens in '#', the command line of device in enable mode.
+            self.mode = 2
+        self.prompt = re.escape(self.prompt)
         return self.prompt
 
     def cleanBuffer(self):
@@ -218,58 +242,62 @@ class BASETELNET(object):
         """execute a command line, powerful and suitable for any scene,
         but need to define whole prompt dict list
         """
+        # regx compile
+        """
+        _promptKey = prompt.keys()
+        for key in _promptKey:
+            prompt[key] = re.compile(prompt[key])
+        In Telnet, regular expressions cannot be compiled
+        """
         result = {
-            'status': True,
+            'status': False,
             'content': '',
             'errLog': '',
             "state": None
         }
+        if self.isLogin is False:
+            result['errLog'] = '[Execute Error]: device not login.'
         # Parameters check
-        if (cmd is None) or (not isinstance(prompt, list)) or (not isinstance(timeout, int)):
-            raise ForwardError("""You should pass such a form of argument: \
-CMD = 'Your command', prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt4']}] ,\
-timeout=30""")
-        for section in prompt:
-            if not isinstance(section.values(), list):
-                raise ForwardError("""you should pass such a form of argument:\
-prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt4']}]""")
+        parameterFormat = {
+            "success": "regular-expression-success",
+            "error": "regular-expression-error"
+        }
+        if (cmd is None) or (not isinstance(prompt, dict)) or (not isinstance(timeout, int)):
+            raise ForwardError("You should given a parameter for prompt such as: %s" % (str(parameterFormat)))
         try:
+            # send a command
             self.channel.write("{cmd}\r".format(cmd=cmd))
-            try:
-                info = ''
-                while True:
-                    """ First, the program accepts the return message based on the base prompt, and if you accept
-                    it directly from the specified prompt, there will be many times out of time in the middle,
-                    resulting in reduced efficiency"""
-                    i = self.channel.expect([r'%s' % self.moreFlag, r"%s" % self.basePrompt], timeout=timeout)
-                    info += i[-1]
-                    if i[0] == 0:
-                        tmp = self.newGetMore(prompt, timeout)
-                        info += tmp[0]
-                        result["state"] = tmp[1]
-                        break
-                    elif i[0] == -1:
-                        raise ForwardError('Error: receive timeout ')
-                    else:
-                        for section in prompt:
-                            # section.values() is : [ [p1,p2,p3] ]
-                            for _prompt in section.values()[0]:
-                                if re.search(_prompt, info.split("\n")[-1]):
-                                    result["state"] = section.keys()[0]
-                                    break
-                            # Find the specified state type
-                            if not result["state"] is None:
-                                break
-                        # Find the specified state type,exit
-                        if not result["state"] is None:
-                            break
-                result['content'] += info
-                result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
-            # If you accept a timeout, cancel SSH
-            except Exception, e:
-                self.logout()
-                raise ForwardError(str(e))
-        except Exception, e:
-            result["errLog"] = str(e)
-            result["status"] = False
+        except Exception:
+            # break, if faild
+            result["errLog"] = "Forward had sent a command failure."
+            return result
+        while True:
+            i = self.channel.expect([r'%s' % self.moreFlag,
+                                     # prompt-1
+                                     r"%s" % prompt.items()[0][1],
+                                     # prompt-2
+                                     r"%s" % prompt.items()[1][1]], timeout=timeout)
+            result["content"] += i[-1]
+            if i[0] == 0:
+                # Get more
+                self.channel.write(" ".format(cmd=cmd))
+            elif i[0] == 1:
+                # Find the prompt-1
+                result["state"] = prompt.items()[0][0]
+                break
+            elif i[0] == 2:
+                # Find the prompt-2
+                result["state"] = prompt.items()[1][0]
+                break
+            elif i[0] == -1:
+                # Timeout
+                result["errLog"] = '[Forward Error]: receive timeout,prompt is invalid.'
+                return result
+        result["status"] = True
+        result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
+        # remove the More charactor
+        result["content"] = re.sub(' \-\-More\(CTRL\+C break\)\-\- (\x00|\x08){0,} +(\x00|\x08){0,}', "",
+                                   result["content"])
+        # remove the space key
+        result["content"] = re.sub("(\x08)+ +", "", result["content"])
         return result

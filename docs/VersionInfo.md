@@ -1,4 +1,13 @@
 ## Version Update Record 版本更新记录
+### V3.2.0
+1. 实现Forward对python3的兼容性。
+2. 新增了一批设备方法，包括查询系统坂本、端口信息、路由信息、vlan、ntp信息等，详见[类库文档](/docs/class)。
+3. 完善文档。
+
+### V3.1.0
+1. 简化command方法调用格式，详见[自定义指令 command](/docs/advance/command.md)。
+2. 修复优化了部分核心代码。
+
 ### V3.0.8
 1. 新增sshv1和telnet通道标准类的command命令模式。
 

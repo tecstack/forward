@@ -1,7 +1,20 @@
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
+# coding:utf-8
 #
-# (c) 2017, Azrael <azrael-ex@139.com>
+# This file is part of Forward.
+#
+# Forward is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Forward is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 """
 -----Introduction-----
@@ -31,9 +44,12 @@ class BASESSHV2(object):
 
         self.channel = ''
         self.shell = ''
-        self.basePrompt = r'(>|#|\]|\$|\)) *$'
+        # self.basePrompt = r'(>|#|\]|\$|\)) *$'
+        # Multiple identical characters may appear
+        self.basePrompt = "(>|#|\]|\$) *$"
         self.prompt = ''
-        self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+'
+        self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+|\(Q to quit\)'
+        self.mode = 1
 
         """
         - parameter ip: device's ip
@@ -72,7 +88,7 @@ class BASESSHV2(object):
                 ) and (
                     not re.search('new +password', tmpBuffer.split('\n')[-1], flags=re.IGNORECASE)
                 ):
-                    tmpBuffer += self.shell.recv(1024)
+                    tmpBuffer += self.shell.recv(1024).decode()
                 # if prompt is 'New Password' ,raise Error.
                 if re.search('new +password', tmpBuffer.split('\n')[-1], flags=re.IGNORECASE):
                     raise ForwardError(
@@ -125,15 +141,20 @@ class BASESSHV2(object):
             # [ex] when send('ls\r'),get 'ls\r\nroot base etc \r\n[wangzhe@cloudlab100 ~]$ '
             # [ex] data should be 'root base etc '
             self.shell.send(cmd + "\r")
-            resultPattern = '[\r\n]+([\s\S]*)[\r\n]+' + self.prompt
+            resultPattern = re.compile('[\r\n]+([\s\S]*)[\r\n]+(\x1b\[m)?' + self.prompt)
             try:
                 while not re.search(self.prompt, result['content'].split('\n')[-1]):
                     self.getMore(result['content'])
-                    result['content'] += self.shell.recv(1024)
+                    result['content'] += self.shell.recv(1024).decode()
                 # try to extract the return data
                 tmp = re.search(resultPattern, result['content']).group(1)
                 # Delete special characters caused by More split screen.
                 tmp = re.sub("<--- More --->\\r +\\r", "", tmp)
+                tmp = re.sub(" *---- More ----\x1b\[42D                                          \x1b\[42D", "", tmp)
+                # remove the More charactor
+                tmp = re.sub(' \-\-More\(CTRL\+C break\)\-\- (\x00|\x08){0,} +(\x00|\x08){0,}', "", tmp)
+                # remove the space key
+                tmp = re.sub("(\x08)+ +", "", tmp)
                 result['content'] = tmp
             except Exception as e:
                 # pattern not match
@@ -150,46 +171,69 @@ class BASESSHV2(object):
         """execute a command line, powerful and suitable for any scene,
         but need to define whole prompt dict list
         """
+        # regx compile
+        _promptKey = prompt.keys()
+        for key in _promptKey:
+            prompt[key] = re.compile(prompt[key])
         result = {
-            'status': True,
+            'status': False,
             'content': '',
             'errLog': '',
             "state": None
         }
+        if self.isLogin is False:
+            result['errLog'] = '[Execute Error]: device not login.'
+            return result
+        # Setting timeout.
+        self.shell.settimeout(timeout)
         # Parameters check
-        if (cmd is None) or (not isinstance(prompt, list)) or (not isinstance(timeout, int)):
-            raise ForwardError("""You should pass such a form of argument: \
-CMD = 'Your command', prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt4']}]""")
-        for section in prompt:
-            if not isinstance(section.values(), list):
-                raise ForwardError("""you should pass such a form of argument:\
-prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt4']}]""")
+        parameterFormat = {
+            "success": "regular-expression-success",
+            "error": "regular-expression-error"
+        }
+        if (cmd is None) or (not isinstance(prompt, dict)) or (not isinstance(timeout, int)):
+            raise ForwardError("You should given a parameter for prompt such as: %s" % (str(parameterFormat)))
+        # Clean buffer data.
+        while self.shell.recv_ready():
+            self.shell.recv(1024).decode()
         try:
+            # send a command
             self.shell.send("{cmd}\r".format(cmd=cmd))
+        except Exception:
+            # break, if faild
+            result["errLog"] = "Forward has sent a command failure."
+            return result
+        isBreak = False
+        while True:
+            # Remove special characters.
+            result["content"] = re.sub("", "", result["content"])
+            self.getMore(result["content"])
             try:
-                while True:
-                    self.getMore(result['content'])
-                    result["content"] += self.shell.recv(1024)
-                    for section in prompt:
-                        # section.values() is : [ [p1,p2,p3] ]
-                        for _prompt in section.values()[0]:
-                            if re.search(_prompt, result["content"].split("\n")[-1]):
-                                result["state"] = section.keys()[0]
-                                break
-                        # Find the specified state type
-                        if not result["state"] is None:
-                            break
-                    # Find the specified state type,exit
-                    if not result["state"] is None:
-                        break
-                result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
-            # If you accept a timeout, cancel SSH
-            except Exception, e:
-                self.logout()
-                raise ForwardError(str(e))
-        except Exception, e:
-            result["errLog"] = str(e)
-            result["status"] = False
+                result["content"] += self.shell.recv(204800).decode()
+            except Exception as e:
+                result["errLog"] = "Forward had recived data timeout. [%s]" % str(e)
+                return result
+            # Mathing specify key
+            for key in prompt:
+                if re.search(prompt[key], result["content"]):
+                    # Found it
+                    result["state"] = key
+                    isBreak = True
+                    break
+            # Keywords have been captured.
+            if isBreak is True:
+                break
+        # Clearing special characters
+        result["content"] = re.sub(" *---- More ----\x1b\[42D                                          \x1b\[42D",
+                                   "",
+                                   result["content"])
+        result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
+        # remove the More charactor
+        result["content"] = re.sub(' \-\-More\(CTRL\+C break\)\-\- (\x00|\x08){0,} +(\x00|\x08){0,}', "",
+                                   result["content"])
+        # remove the space key
+        result["content"] = re.sub("(\x08)+ +", "", result["content"])
+        result["status"] = True
         return result
 
     def getPrompt(self):
@@ -202,7 +246,7 @@ prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt
             self.shell.send('\n')
             # set recv timeout to self.timeout/10 fot temporary
             while not re.search(self.basePrompt, result):
-                result += self.shell.recv(1024)
+                result += self.shell.recv(1024).decode()
             if result:
                 # recv() get something
                 # select last line character,[ex]' >[localhost@labstill019~]$ '
@@ -212,6 +256,14 @@ prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt
                 # [ex]'[localhost@labstill019~]'
                 # self.prompt=self.prompt[1:-1]
                 # [ex]'\\[localhost\\@labstill019\\~\\]$'
+                if re.search("> ?$", self.prompt):
+                    # If last character of host prompt of the device ens in '>',
+                    # the command line of device in gneral mode.
+                    self.mode = 1
+                elif re.search("(#|\]) ?$", self.prompt):
+                    # If last character of host prompt of the device ens in '#',
+                    # the command line of device in enable mode.
+                    self.mode = 2
                 self.prompt = re.escape(self.prompt)
                 return self.prompt
             else:
@@ -233,12 +285,12 @@ prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt
         """Clean the shell buffer whatever they are, by sending a carriage return
         """
         if self.shell.recv_ready():
-            self.shell.recv(4096)
+            self.shell.recv(4096).decode()
         self.shell.send('\n')
         buff = ''
         # When after switching mode, the prompt will change, it should be based on basePrompt to check and at last line
         while not re.search(self.basePrompt, buff.split('\n')[-1]):
             try:
-                buff += self.shell.recv(1024)
+                buff += self.shell.recv(1024).decode()
             except Exception:
                 raise ForwardError('[Clean Buffer Error]: %s: Receive timeout [%s]' % (self.ip, buff))

@@ -1,10 +1,23 @@
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
+# coding:utf8
 #
-# (c) 2017, Azrael <azrael-ex@139.com>
+# This file is part of Forward.
+#
+# Forward is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Forward is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import threading
 import importlib
+import six
 import forward.release
 from forward.utils.forwardError import ForwardError
 from forward.utils.loginThread import loginThread
@@ -37,7 +50,7 @@ class Forward(object):
             if paraCheck([[ip, model, username, password, kwargs]]):
                 targetList.append([ip, model, username, password, kwargs])
             else:
-                print "[Add Targets Error]: %s parameters type error, please check." % ip
+                six.print_("[Add Targets Error]: %s parameters type error, please check." % ip)
 
         self.targets.extend(targetList)
 

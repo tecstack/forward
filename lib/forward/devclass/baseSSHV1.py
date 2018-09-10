@@ -1,7 +1,20 @@
-#!/usr/bin/evn python
 # coding:utf-8
 #
-# (c) 2017, Azrael <azrael-ex@139.com>
+# This file is part of Forward.
+#
+# Forward is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Forward is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 """
 -----Introduction-----
@@ -31,9 +44,12 @@ class BASESSHV1(object):
 
         self.channel = ''
         self.shell = ''
-        self.basePrompt = r'(>|#|\]|\$|\)) *$'
+        # self.basePrompt = r'(>|#|\]|\$|\)) *$'
+        # Multiple identical characters may appear
+        self.basePrompt = r"(>|#|\]|\$) *$"
         self.prompt = ''
-        self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+'
+        self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+|\(Q to quit\)'
+        self.mode = 1
 
         """
         - parameter ip: device's ip
@@ -93,7 +109,7 @@ class BASESSHV1(object):
             # Modify login status to False.
             self.isLogin = False
             result['status'] = True
-        except Exception, e:
+        except Exception as e:
             # If the close fails, set the login status to False and record the failure message
             result['status'] = False
             result['errLog'] = str(e)
@@ -111,7 +127,7 @@ class BASESSHV1(object):
         # Remove legacy data from the SSH before executing the command.
         self.cleanBuffer()
         # dataPattern = re.escape(cmd)+'.*\r\n([\s\S]*)\r\n'+self.prompt
-        dataPattern = '[\r\n]+([\s\S]*)[\r\n]+'
+        dataPattern = '[\r\n]+([\s\S]*)[\r\n]+(\x1b\[m)?'
         # SSHV1 pexpect not have self.prompt end
         data = {'status': False,
                 'content': '',
@@ -143,8 +159,10 @@ class BASESSHV1(object):
                 tmp = re.search(dataPattern, data['content']).group(1)
                 # Delete special characters caused by More split screen.
                 tmp = re.sub("<--- More --->\\r +\\r", "", tmp)
+                tmp = re.sub('(\x00|\x08){0,}', "", tmp)
+                tmp = re.sub(re.escape("--More(CTRL+Cbreak)--"), "", tmp)
                 data['content'] = tmp
-            except Exception, e:
+            except Exception as e:
                 # Unable to find the host prompt, command execution failed.
                 data['status'] = False
                 data['errLog'] = data['errLog'] + "not fond host prompt:Error(%s)" % str(e)
@@ -214,6 +232,7 @@ class BASESSHV1(object):
         """
         if self.isLogin:
             # login status True
+            self.cleanBuffer()
             self.channel.send('\n')
             """The host base prompt is the end of the received flag, and if the data is
             not received at the set time, the timeout is exceeded.
@@ -225,9 +244,15 @@ class BASESSHV1(object):
             # [ex]'[localhost@labstill019~]'
             # self.prompt=self.prompt[1:-1]
             # [ex]'\\[localhost\\@labstill019\\~\\]$'
-            self.prompt = self.channel.before.split('\n')[-1] + "(>|#|\$|\]|\)) *$"
+            self.prompt = self.channel.before.split('\n')[-1] + self.channel.after
         else:
             raise ForwardError('[Get Prompt Error]: %s: Not login yet.' % self.ip)
+        if re.search("> ?$", self.prompt):
+            # If last character of host prompt of the device ens in '>', the command line of device in gneral mode.
+            self.mode = 1
+        elif re.search("(#|\]) ?$", self.prompt):
+            # If last character of host prompt of the device ens in '#', the command line of device in enable mode.
+            self.mode = 2
         return self.prompt
 
     def cleanBuffer(self):
@@ -238,7 +263,7 @@ class BASESSHV1(object):
             """When after switching mode, the prompt will change, it should be based
             on basePrompt to check and at last line
             """
-            return self.channel.expect(self.prompt, timeout=self.timeout)
+            return self.channel.expect(self.basePrompt, timeout=self.timeout)
         except pexpect.TIMEOUT:
             # No legacy data.
             return ''
@@ -247,70 +272,68 @@ class BASESSHV1(object):
         """execute a command line, powerful and suitable for any scene,
         but need to define whole prompt dict list
         """
+        # regx compile
+        """_promptKey = prompt.keys()
+        for key in _promptKey:
+            prompt[key] = re.compile(prompt[key])
+        In SSHV1, regular expressions cannot be compiled
+        """
         result = {
-            'status': True,
+            'status': False,
             'content': '',
             'errLog': '',
             "state": None
         }
+        if self.isLogin is False:
+            result['errLog'] = '[Execute Error]: device not login.'
         # Parameters check
-        if (cmd is None) or (not isinstance(prompt, list)) or (not isinstance(timeout, int)):
-            raise ForwardError("""You should pass such a form of argument: \
-CMD = 'Your command', prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt4']}] ,\
-timeout=30""")
-        for section in prompt:
-            if not isinstance(section.values(), list):
-                raise ForwardError("""you should pass such a form of argument:\
-prompt = [{" success ": ['prompt1', 'prompt2']}, {" error" : ['prompt3', 'prompt4']}]""")
+        parameterFormat = {
+            "success": "regular-expression-success",
+            "error": "regular-expression-error"
+        }
+        if (cmd is None) or (not isinstance(prompt, dict)) or (not isinstance(timeout, int)):
+            raise ForwardError("You should given a parameter for prompt such as: %s" % (str(parameterFormat)))
         try:
+            # send a command
             self.channel.send("{cmd}\r".format(cmd=cmd))
-            try:
-                info = ''
-                while True:
-                    """ First, the program accepts the return message based on the base prompt, and if program
-                    accept it directly from the specified prompt, there will be many times out of time in the
-                    middle,resulting in reduced efficiency"""
-                    i = self.channel.expect([r'%s' % self.moreFlag, r"%s" % self.basePrompt,
-                                             pexpect.TIMEOUT], timeout=timeout)
-                    if i == 2:
-                        """The host prompt is not finished with the traditional # $ >
-                        and you need to set it like that.
-                        """
-                        raise ForwardError('Error: base prompt receive timeout')
-                    if i == 0:
-                        info += self.channel.before
-                        # Get More then result
-                        tmp = self.newGetMore(prompt, timeout)
-                        info += tmp[0]
-                        result["state"] = tmp[1]
-                        # To complete the receiving
-                        break
-                    else:
-                        # To complete the receiving
-                        info += self.channel.before
-                        # read base prompt
-                        info += self.channel.after
-                        for section in prompt:
-                            # section.values() is : [ [p1,p2,p3] ]
-                            for _prompt in section.values()[0]:
-                                if re.search(_prompt, info.split("\n")[-1]):
-                                    result["state"] = section.keys()[0]
-                                    break
-                            # Find the specified state type
-                            if not result["state"] is None:
-                                break
-                        # Find the specified state type,exit
-                        if not result["state"] is None:
-                            break
-                result['content'] += info
-                # Delete special characters caused by More split screen.
-                result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
-            except Exception, e:
-                # If program accept a timeout, cancel SSH
-                self.logout()
-                raise ForwardError(str(e))
-        except Exception, e:
-            # Program run failed
-            result["errLog"] = str(e)
-            result["status"] = False
+        except Exception:
+            # break, if faild
+            result["errLog"] = "Forward had sent a command failure."
+            return result
+
+        while True:
+            i = self.channel.expect([r'%s' % self.moreFlag,
+                                     # prompt-1
+                                     r"%s" % prompt.items()[0][1],
+                                     # prompt-2
+                                     r"%s" % prompt.items()[1][1],
+                                     pexpect.TIMEOUT], timeout=timeout)
+            result["content"] += self.channel.before
+            if i == 3:
+                """The host prompt is not finished with the traditional # $ >
+                and you need to set it like that.
+                """
+                result["errLog"] = '[Forward Error]: receive timeout,prompt is invalid.'
+                return result
+            if i == 1:
+                # Find the prompt-1
+                result["state"] = prompt.items()[0][0]
+                break
+            if i == 2:
+                # Find the prompt-2
+                result["state"] = prompt.items()[1][0]
+                break
+            if i == 0:
+                # Get More then result
+                self.channel.send(" ")
+        result["status"] = True
+        # Replenish prompt
+        result["content"] += self.channel.after
+        # Delete special characters caused by More split screen.
+        result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
+        # remove the More charactor
+        result["content"] = re.sub(' \-\-More\(CTRL\+C break\)\-\- (\x00|\x08){0,} +(\x00|\x08){0,}', "",
+                                   result["content"])
+        # remove the space key
+        result["content"] = re.sub("(\x08)+ +", "", result["content"])
         return result

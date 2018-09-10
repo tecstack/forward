@@ -16,9 +16,15 @@
   result2 = cisco2.execute('show version')
 
   if result1['status']:
+      # python 2
       print '[%s] OS version info: %s' % ('cisco1', result1['content'])
+      # python 3
+      print('[%s] OS version info: %s' % ('cisco1', result1['content']))
   if result2['status']:
-      print '[%s] OS version info: %s' % ('cisco2', result2['content'])
+      # python 2
+      print '[%s] OS version info: %s' % ('cisco2', result1['content'])
+      # python 3
+      print('[%s] OS version info: %s' % ('cisco2', result1['content']))
   ```
 * &ensp;&ensp;上述代码段中出现的'cisco1'和'cisco2'就是Forward设备类实例(N7018),不同设备类实例包含的方法可能不同，具体请查阅类库文档。
 * &ensp;&ensp;The 'cisco1' and 'cisco2' appearing in the above code segment are Forward device class instances (N7018). Different device class instances contain different methods. Please consult the class library document.

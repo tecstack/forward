@@ -1,9 +1,20 @@
-#!/usr/bin/python
-# coding:utf-8
+# This file is part of Forward.
+#
+# Forward is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Forward is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 -----Introduction-----
 [Core][forward] Function for sshv1, by using pexpect module.
-Author: Cheung Kei-Chuen,Wangzhe
 """
 import os
 import sys
@@ -18,9 +29,10 @@ def checkPassWord(ssh, password, P=False):
               "errLog": ""}
     # througt SSH chanel determine whether there is interaction password prompt
     if not P:
-        ssh.expect([r"[Pp]assword", ".*"])
+        ssh.expect([r"[Pp]assword:", ".*"])
     ssh.send(password + '\n')
-    p = ssh.expect([r"[Pp]assword", r"(>|#|\]|\$) *$"])
+    # Multiple identical characters may appear
+    p = ssh.expect([r"[Pp]assword:", r"(>|#|\]|\$){1,}.*$"])
     if p == 0:
         njInfo['errLog'] = "Username or Password wrong"
         # if expect characters is password,then the account password is wrong
@@ -52,7 +64,7 @@ class NJSSHV1Wraper(pexpect.spawn):
     def login(self, password=None):
         pexpect.spawn.__init__(self, 'ssh -p %d %s@%s' % (self.port, self.username, self.ip))
         self.setwinsize(1000, 1000)
-        i = self.expect([r'[Pp]assword',
+        i = self.expect([r'[Pp]assword.*:.*',
                         'Are you sure you want to continue connecting (yes/no)?',
                          'Connection refused', pexpect.TIMEOUT], self.timeout)
         if i == 0:

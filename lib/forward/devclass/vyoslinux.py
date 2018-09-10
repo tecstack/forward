@@ -1,12 +1,24 @@
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
+# coding:utf-8
 #
-# (c) 2017, Azrael <azrael-ex@139.com>
+# This file is part of Forward.
+#
+# Forward is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Forward is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 """
 -----Introduction-----
 [Core][forward] Device class for bclinux7.
-Author: Cheung Kei-Chuen
 """
 import re
 from forward.devclass.bclinux7 import BCLINUX7
@@ -50,7 +62,7 @@ class VYOSLINUX(BCLINUX7):
                     # Get more.
                     self.getMore(result['content'])
                     # Get result.
-                    result['content'] += self.shell.recv(1024)
+                    result['content'] += self.shell.recv(1024).decode
                 # try to extract the return data
                 try:
                     # Intercepting the results of the command execution.

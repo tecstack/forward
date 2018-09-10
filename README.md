@@ -17,8 +17,8 @@
 
 * Building virtual environment (optional) 构建虚拟环境 (可选)
 
-  * 开发者用户推荐，使用pyenv和virtualenv构建纯净的python环境，基于python版本2.7.10
-  * We recommend that developer users use pyenv and virtualenv to build a pure Python environment which is based on Python version 2.7.10.
+  * 开发者用户推荐，使用pyenv和virtualenv构建纯净的python环境，基于python版本2.7.10，同时兼容python3.
+  * We recommend that developer users use pyenv and virtualenv to build a pure Python environment which is based on Python version 2.7.10, and compatible with python3 at the same time.
 
   ```Bash
   pyenv virtualenv 2.7.10 forward
@@ -55,19 +55,30 @@
   from forward import Forward
 
   new = Forward()
+
+  # 分别传入IP地址、设备型号、登录账户、登录密码
   new.addTargets(['192.168.113.1-192.168.113.2'], 'n7018', 'username', 'password')
   instances = new.getInstances()
 
+  # 获取实例
   cisco1 = instances['192.168.113.1']
   cisco2 = instances['192.168.113.2']
 
+  # 执行show version命令
   result1 = cisco1.execute('show version')
   result2 = cisco2.execute('show version')
 
+  # 查看命令结果
   if result1['status']:
+      # python 2
       print '[%s] OS version info: %s' % ('cisco1', result1['content'])
+      # python 3
+      print('[%s] OS version info: %s' % ('cisco1', result1['content']))
   if result2['status']:
-      print '[%s] OS version info: %s' % ('cisco2', result2['content'])
+      # python 2
+      print '[%s] OS version info: %s' % ('cisco2', result1['content'])
+      # python 3
+      print('[%s] OS version info: %s' % ('cisco2', result1['content']))
   ```
 
 * 上述代码段中出现的'cisco1'和'cisco2'就是Forward设备类实例(N7018),不同设备类实例包含的方法可能不同，具体请查阅[类库文档](/docs/class)。
@@ -79,7 +90,7 @@
 
 * [初始化 Initialize](/docs/advance/initialize.md)
 * [预登陆 PreLogin](/docs/advance/prelogin.md)
-* [自定义指令 command](/docs/advance/command.md)
+* [自定义指令(适合开发者) command](/docs/advance/command.md)
 
 ---
 

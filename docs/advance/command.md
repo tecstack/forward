@@ -6,12 +6,14 @@
 
 ##### Options
 
-| parameter | required | default | choices | comments |
-|:--:|:--:|:--:|:--:|:--:|
-| cmd | yes | none |  | The command line you want to execute. |
-| prompt | yes | none |  | The prompt dict which will decide the type of CMD execution result. |
+| parameter | required | example | comments |
+|:--:|:--:|:--:|:--:|
+| cmd | yes | 'show vlan name VLAN2018' | Command to execute. |
+| prompt | yes | { 'success': 'VLAN\s+Name[\s\S]*#', 'non-exist': r'ERROR.+not exist[\s\S]*#' } | Result type and the corresponding regex. |
 
 * command会在执行cmd之后依次匹配prompt中定义的正则表达式，匹配后中断后续匹配并返回状态结果。
+
+* prompt中定义的正则表达式匹配成功后即返回结果，可能会导致设备返回的后续结果没有完整接收，所以建议活用正则表达式（例如以命令提示符为结尾）以避免上述情况。
 
 ##### Return
 
@@ -20,9 +22,9 @@
 | attr | type | example | comments |
 |:--:|:--:|:--:|:--:|
 | status | boolean | True | CMD execution status. |
-| state | string | 'state_you_defined' | CMD execution result type. |
-| content | boolean | True | CMD execution console output. |
-| errLog | boolean | True | CMD execution error log(when status is False). |
+| state | string | 'non-exist' | CMD execution result type. |
+| content | string | 'ERROR: VLAN does not exist, vlan name VLAN2018' | CMD execution console output. |
+| errLog | string | '.....' | CMD execution error log(when status is False). |
 
 ##### Example
 
@@ -61,18 +63,18 @@ linux = fw.getInstances()['192.168.10.10']
 
 def cp(from_path, to_path, overwrite):
     cmd = 'cp -i %s %s' % (from_path, to_path)
-    prompt = [
-      { 'exist': ['overwrite'] },
-      { 'denied': ['permission denied'] },
-      { 'success': ['COREVM60 \~\]\$', '\$'] }
-    ]
+    prompt = {
+      'exist': r'overwrite',
+      'denied': r'permission denied',
+      'success': r'COREVM60 \~\]\$'
+    }
 
     def call_exist():
         confirm_cmd = overwrite
-        confirm_prompt = [
-          { 'error': ['error'] },
-          { 'success': ['COREVM60 \~\]\$', '\$'] }
-        ]
+        confirm_prompt = {
+          'error': r'error',
+          'success': r'COREVM60 \~\]\$'
+        }
         confirm_result = linux.command(cmd=confirm_cmd, prompt=confirm_prompt)
       	if confirm_result['status'] == True and confirm_result['state'] == 'success':
       		  print 'copy complete! overwrite: %s' % overwrite
