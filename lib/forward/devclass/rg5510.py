@@ -22,6 +22,6 @@
 from forward.devclass.baseRuijie import BASERUIJIE
 
 
-class RG5510V2(BASERUIJIE):
+class RG5510(BASERUIJIE):
 
     pass
