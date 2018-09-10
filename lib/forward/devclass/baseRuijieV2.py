@@ -434,7 +434,7 @@ class BASERUIJIE(BASESSHV2):
         it can be rewritten to modify the function.
         """
         if self.shell.recv_ready():
-            self.shell.recv(4096)
+            self.shell.recv(4096).decode()
         # Ruijie equipment does not support sending line, must sent some space characters to device.
         self.shell.send(' \n')
         buff = ''

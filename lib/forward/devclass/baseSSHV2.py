@@ -195,7 +195,7 @@ class BASESSHV2(object):
             raise ForwardError("You should given a parameter for prompt such as: %s" % (str(parameterFormat)))
         # Clean buffer data.
         while self.shell.recv_ready():
-            self.shell.recv(1024)
+            self.shell.recv(1024).decode()
         try:
             # send a command
             self.shell.send("{cmd}\r".format(cmd=cmd))
@@ -209,7 +209,7 @@ class BASESSHV2(object):
             result["content"] = re.sub("", "", result["content"])
             self.getMore(result["content"])
             try:
-                result["content"] += self.shell.recv(204800)
+                result["content"] += self.shell.recv(204800).decode()
             except Exception as e:
                 result["errLog"] = "Forward had recived data timeout. [%s]" % str(e)
                 return result
@@ -285,7 +285,7 @@ class BASESSHV2(object):
         """Clean the shell buffer whatever they are, by sending a carriage return
         """
         if self.shell.recv_ready():
-            self.shell.recv(4096)
+            self.shell.recv(4096).decode()
         self.shell.send('\n')
         buff = ''
         # When after switching mode, the prompt will change, it should be based on basePrompt to check and at last line

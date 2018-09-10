@@ -35,7 +35,7 @@ class ASA(BASECISCO):
         to fit the device of this type.
         """
         if self.shell.recv_ready():
-                self.shell.recv(4096)
+            self.shell.recv(4096).decode()
         self.shell.send('\r\n')
         buff = ''
         """ When after switching mode, the prompt will change,
