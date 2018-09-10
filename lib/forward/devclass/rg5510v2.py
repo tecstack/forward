@@ -17,7 +17,7 @@
 
 """
 -----Introduction-----
-[Core][forward] Device class for rg5510-sshv1.
+[Core][forward] Device class for rg5510-sshv2.
 """
 from forward.devclass.baseRuijieV2 import BASERUIJIE
 
