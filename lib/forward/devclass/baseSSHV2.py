@@ -86,11 +86,11 @@ class BASESSHV2(object):
                 while (
                     not re.search(self.basePrompt, tmpBuffer.split('\n')[-1])
                 ) and (
-                    not re.search('new +password', tmpBuffer.split('\n')[-1], flags=re.IGNORECASE)
+                    not re.search('(new +password)|(password.*change)', tmpBuffer.split('\n')[-1], flags=re.IGNORECASE)
                 ):
                     tmpBuffer += self.shell.recv(1024).decode()
                 # if prompt is 'New Password' ,raise Error.
-                if re.search('new +password', tmpBuffer.split('\n')[-1], flags=re.IGNORECASE):
+                if re.search('(new +password)|(password.*change)', tmpBuffer.split('\n')[-1], flags=re.IGNORECASE):
                     raise ForwardError(
                         '[Login Error]: %s: Password expired, needed to be updated!' % self.ip
                     )
