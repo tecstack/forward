@@ -566,7 +566,12 @@ class BASECISCO(BASESSHV2):
         result["errLog"] = "Vlan {vlan_id} doest not exist.".format(vlan_id=vlan_id)
         return result
 
-    def create_vlan(self, vlan_id):
+    def create_vlan(self, vlan_id, save=False):
+        """
+        @param vlan_id: vlan-id,
+        @param save: Configuration is not saved by default
+
+        """
         # Crate vlan.
         result = {
             "status": False,
@@ -589,16 +594,22 @@ class BASECISCO(BASESSHV2):
             result["errLog"] = tmp["content"]
             return result
         else:
-            # The vlan was created successfuly, then to save configration.
-            tmp = self.commit()
-            if not tmp["status"]:
-                return tmp
+            # The vlan was created successfuly, then to save configration if save is True.
+            if save is True:
+                tmp = self.commit()
+                if not tmp["status"]:
+                    return tmp
+                else:
+                    result["content"] = "The vlan {vlan_id} was created,configration was saved.".format(vlan_id=vlan_id)
+                    result["status"] = True
+                    return result
             else:
-                result["content"] = "The vlan {vlan_id} was created successfuly.".format(vlan_id=vlan_id)
-                result["status"] = True
-                return result
+                    result["content"] = "The vlan {vlan_id} was created,\
+                                         but configration was not saved.".format(vlan_id=vlan_id)
+                    result["status"] = True
+                    return result
 
-    def delete_vlan(self, vlan_id):
+    def delete_vlan(self, vlan_id, save=False):
         # Delete vlan.
         result = {
             "status": False,
@@ -616,14 +627,21 @@ class BASECISCO(BASESSHV2):
         }
         tmp = self.command(cmd, prompt=prompt)
         if not self.vlan_exist(vlan_id)["status"]:
-            # The vlan was deleted successfuly, then to save configration.
-            tmp = self.commit()
-            if not tmp["status"]:
-                return tmp
+            # The vlan was deleted successfuly, then to save configration if save is True.
+            if save is True:
+                tmp = self.commit()
+                if not tmp["status"]:
+                    return tmp
+                else:
+                    result["content"] = "The vlan {vlan_id} was deleted,configration was saved.".format(vlan_id=vlan_id)
+                    result["status"] = True
+                    return result
             else:
-                result["content"] = "The vlan {vlan_id} was deleted successfuly.".format(vlan_id=vlan_id)
-                result["status"] = True
-                return result
+                    result["content"] = "The vlan {vlan_id} was deleted,\
+                                         but configration was not saved.".format(vlan_id=vlan_id)
+                    result["status"] = True
+                    return result
+
         else:
             result["errLog"] = "The vlan {vlan_id} was not deleted.".format(vlan_id=vlan_id)
             return result
