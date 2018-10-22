@@ -614,7 +614,7 @@ class BASECISCO(BASESSHV2):
         prompt = {
             "success": "[\r\n]+\S+.+config\)(#|>) ?$",
         }
-        tmp = self.command(cmd, prompt=prompt)
+        tmp = self.command(cmd,prompt=prompt)
         if not self.vlan_exist(vlan_id)["status"]:
             # The vlan was deleted successfuly, then to save configration.
             tmp = self.commit()
