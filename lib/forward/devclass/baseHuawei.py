@@ -243,6 +243,13 @@ class BASEHUAWEI(BASESSHV2):
                         if tmp.lastindex == 3:
                             lineInfo["interface"] = tmp.group(3).split()
                         njInfo["content"].append(lineInfo)
+                    else:
+                        # Vlan has not yet configured interfaces.
+                        tmp = re.search("([0-9]+)\s+([a-z]+)", _vlanInfo)
+                        if tmp:
+                            lineInfo["id"] = tmp.group(1)
+                            lineInfo["type"] = tmp.group(2)
+                            njInfo["content"].append(lineInfo)
                 elif isContinueLine is True and not re.search("VID  Status",
                                                               _vlanInfo) and currentSection == "vlanName":
                     for _interface in _vlanInfo.split():
@@ -407,3 +414,83 @@ class BASEHUAWEI(BASESSHV2):
         else:
             njInfo["errLog"] = result["errLog"]
         return njInfo
+
+    def vlanExist(self, vlan_id):
+        # Check if the vlan exists.
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        vlan_id = str(vlan_id)
+        vlan_list = self.showVlan()
+        # check
+        if not vlan_list["status"]:
+            return vlan_list
+        for line in vlan_list["content"]:
+            if vlan_id == line["id"]:
+                result["status"] = True
+                return result
+        result["errLog"] = "Vlan {vlan_id} doest not exist.".format(vlan_id=vlan_id)
+        return result
+
+    def createVlan(self, vlan_id, description="None"):
+        """
+        @param vlan_id: vlan-id,
+        @param description: description of vlan.
+
+        """
+        # Crate vlan.
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        vlan_id = str(vlan_id)
+        # Enter config-mode.
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            # Failed to enter configuration mode
+            return tmp
+        cmd = "vlan {vlan_id}\rdescription {description}".format(vlan_id=vlan_id, description=description)
+        prompt = {
+            "success": "[\r\n]+\S+.+vlan{vlan_id}\] ?$".format(vlan_id=vlan_id),
+            "error": "Error:[\s\S]+",
+        }
+        # runing command of vlan.
+        tmp = self.command(cmd, prompt=prompt)
+        if tmp["state"] == "error":
+            result["errLog"] = tmp["content"]
+            return result
+        else:
+            # The vlan was created successfuly, then to save configration if save is True.
+            result["content"] = "The vlan {vlan_id} was created.".format(vlan_id=vlan_id)
+            result["status"] = True
+            return result
+
+    def deleteVlan(self, vlan_id):
+        # Deleting vlan.
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        # Enter config-mode.
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            # Failed to enter configuration mode
+            return tmp
+        cmd = "undo vlan {vlan_id}".format(vlan_id=vlan_id)
+        prompt = {
+            "success": "[\r\n]+\S+.+vlan{vlan_id}\] ?$".format(vlan_id=vlan_id),
+            "error": "Error:[\s\S]+",
+        }
+        tmp = self.command(cmd, prompt=prompt)
+        if not self.vlan_exist(vlan_id)["status"]:
+            # The vlan was deleted successfuly, then to save configration if save is True.
+            result["content"] = "The vlan {vlan_id} was deleted.".format(vlan_id=vlan_id)
+            result["status"] = True
+            return result
+        else:
+            result["errLog"] = "The vlan {vlan_id} was not deleted.".format(vlan_id=vlan_id)
+            return result
