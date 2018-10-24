@@ -584,7 +584,7 @@ class BASECISCO(BASESSHV2):
         if not tmp["status"]:
             # Failed to enter configuration mode
             return tmp
-        cmd = "vlan {vlan_id}".format(vlan_id=vlan_id)
+        cmd = "vlan {vlan_id}\rdescription {description}".format(vlan_id=vlan_id, description=description)
         prompt = {
             "success": "[\r\n]+\S+.+config\-vlan\)(#|>) ?$",
             "error": "Invalid[\s\S]+config\)(#|>) ?$",
@@ -616,7 +616,7 @@ class BASECISCO(BASESSHV2):
             "success": "[\r\n]+\S+.+config\)(#|>) ?$",
         }
         tmp = self.command(cmd, prompt=prompt)
-        if not self.vlan_exist(vlan_id)["status"]:
+        if not self.vlanExist(vlan_id)["status"]:
             # The vlan was deleted successfuly, then to save configration if save is True.
             result["content"] = "The vlan {vlan_id} was deleted.".format(vlan_id=vlan_id)
             result["status"] = True

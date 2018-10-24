@@ -486,7 +486,7 @@ class BASEHUAWEI(BASESSHV2):
             "error": "Error:[\s\S]+",
         }
         tmp = self.command(cmd, prompt=prompt)
-        if not self.vlan_exist(vlan_id)["status"]:
+        if not self.vlanExist(vlan_id)["status"]:
             # The vlan was deleted successfuly, then to save configration if save is True.
             result["content"] = "The vlan {vlan_id} was deleted.".format(vlan_id=vlan_id)
             result["status"] = True

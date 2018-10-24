@@ -445,3 +445,81 @@ class BASERUIJIE(BASESSHV2):
                 buff += self.shell.recv(1024).decode()
             except Exception:
                 raise ForwardError('[Clean Buffer Error]: %s: Receive timeout [%s]' % (self.ip, buff))
+
+    def vlanExist(self, vlan_id):
+        # Check if the vlan exists.
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        vlan_id = str(vlan_id)
+        vlan_list = self.showVlan()
+        # check
+        if not vlan_list["status"]:
+            return vlan_list
+        for line in vlan_list["content"]:
+            if vlan_id == line["id"]:
+                result["status"] = True
+                return result
+        result["errLog"] = "Vlan {vlan_id} doest not exist.".format(vlan_id=vlan_id)
+        return result
+
+    def createVlan(self, vlan_id, description="None"):
+        """
+        @param vlan_id: vlan-id,
+        @param description: description of vlan.
+
+        """
+        # Crate vlan.
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        vlan_id = str(vlan_id)
+        # Enter config-mode.
+        tmp = self.configMode()
+        if not tmp["status"]:
+            # Failed to enter configuration mode
+            return tmp
+        cmd = "vlan {vlan_id}\rname {description}".format(vlan_id=vlan_id, description=description)
+        prompt = {
+            "success": "[\r\n]+\S+.+config\-vlan\)(#|>) ?$",
+            "error": "Invalid[\s\S]+config\)(#|>) ?$",
+        }
+        tmp = self.command(cmd, prompt=prompt)
+        if tmp["state"] == "error":
+            result["errLog"] = tmp["content"]
+            return result
+        else:
+            # The vlan was created successfuly, then to save configration if save is True.
+            result["content"] = "The vlan {vlan_id} was created.".format(vlan_id=vlan_id)
+            result["status"] = True
+            return result
+
+    def deleteVlan(self, vlan_id):
+        # Delete vlan.
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        # Enter config-mode.
+        tmp = self.configMode()
+        if not tmp["status"]:
+            # Failed to enter configuration mode
+            return tmp
+        cmd = "no vlan {vlan_id}".format(vlan_id=vlan_id)
+        prompt = {
+            "success": "[\r\n]+\S+.+config\)(#|>) ?$",
+        }
+        tmp = self.command(cmd, prompt=prompt)
+        if not self.vlanExist(vlan_id)["status"]:
+            # The vlan was deleted successfuly, then to save configration if save is True.
+            result["content"] = "The vlan {vlan_id} was deleted.".format(vlan_id=vlan_id)
+            result["status"] = True
+            return result
+        else:
+            result["errLog"] = "The vlan {vlan_id} was not deleted.".format(vlan_id=vlan_id)
+            return result
