@@ -36,7 +36,7 @@ class BASEVENUSTECH(BASETELNET):
         }
         # Get the current position Before switch to privileged mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
-        if self.mode > 2:
+        if self.mode >= 2:
             exitResult = self.command("end", prompt={"success": "[\r\n]+\S+# ?$",
                                                      "error": "Unknown command[\s\S]+"})
             if not exitResult["state"] == "success":
@@ -47,10 +47,6 @@ class BASEVENUSTECH(BASETELNET):
                 self.mode = 2
                 result["status"] = True
                 return result
-        elif self.mode == 2:
-            # The device is currently in privilege-mode ,so there is no required to switch.
-            result["status"] = True
-            return result
         # else, command line of the device is in general-mode.
         # Start switching to privilege-mode.
         sendEnable = self.command("enable", prompt={"password": "[pP]assword.*", "noPassword": "[\r\n]+\S+# ?$"})

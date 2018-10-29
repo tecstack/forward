@@ -94,7 +94,7 @@ class BASERUIJIE(BASESSHV2):
         }
         # Get the current position Before switch to privileged mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
-        if self.mode > 2:
+        if self.mode >= 2:
             exitResult = self.command("end", prompt={"success": "[\r\n]+\S+.+(#|>|\]) ?$",
                                                      "error": "(#|>)"})
             if not exitResult["state"] == "success":
@@ -105,10 +105,6 @@ class BASERUIJIE(BASESSHV2):
                 self.mode = 2
                 result["status"] = True
                 return result
-        elif self.mode == 2:
-            # The device is currently in privilege-mode ,so there is no required to switch.
-            result["status"] = True
-            return result
         # else, command line of the device is in general-mode.
         # Start switching to privilege-mode.
         sendEnable = self.command("enable", prompt={"password": "[pP]assword.*",
@@ -465,10 +461,10 @@ class BASERUIJIE(BASESSHV2):
         result["errLog"] = "Vlan {vlan_id} doest not exist.".format(vlan_id=vlan_id)
         return result
 
-    def createVlan(self, vlan_id, description="None"):
+    def createVlan(self, vlan_id, name="None"):
         """
         @param vlan_id: vlan-id,
-        @param description: description of vlan.
+        @param name: name of vlan.
 
         """
         # Crate vlan.
@@ -483,19 +479,19 @@ class BASERUIJIE(BASESSHV2):
         if not tmp["status"]:
             # Failed to enter configuration mode
             return tmp
-        cmd = "vlan {vlan_id}\rname {description}".format(vlan_id=vlan_id, description=description)
+        cmd = "vlan {vlan_id}\rname {name}".format(vlan_id=vlan_id, name=name)
         prompt = {
             "success": "[\r\n]+\S+.+config\-vlan\)(#|>) ?$",
             "error": "Invalid[\s\S]+config\)(#|>) ?$",
         }
         tmp = self.command(cmd, prompt=prompt)
-        if tmp["state"] == "error":
-            result["errLog"] = tmp["content"]
-            return result
-        else:
+        if tmp["state"] == "success":
             # The vlan was created successfuly, then to save configration if save is True.
             result["content"] = "The vlan {vlan_id} was created.".format(vlan_id=vlan_id)
             result["status"] = True
+            return result
+        else:
+            result["errLog"] = tmp["content"]
             return result
 
     def deleteVlan(self, vlan_id):

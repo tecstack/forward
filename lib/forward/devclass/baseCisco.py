@@ -24,6 +24,7 @@
 import re
 from forward.devclass.baseSSHV2 import BASESSHV2
 from forward.utils.forwardError import ForwardError
+from forward.utils.paraCheck import checkIP
 
 
 class BASECISCO(BASESSHV2):
@@ -87,7 +88,7 @@ class BASECISCO(BASESSHV2):
         }
         # Get the current position Before switch to privileged mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
-        if self.mode > 2:
+        if self.mode >= 2:
             exitResult = self.command("end", prompt={"success": "[\r\n]+\S+# ?$"})
             if not exitResult["state"] == "success":
                 result["errLog"] = "Demoted from configuration-mode to privilege-mode failed."
@@ -97,10 +98,6 @@ class BASECISCO(BASESSHV2):
                 self.mode = 2
                 result["status"] = True
                 return result
-        elif self.mode == 2:
-            # The device is currently in privilege-mode ,so there is no required to switch.
-            result["status"] = True
-            return result
         # else, command line of the device is in general-mode.
         # Start switching to privilege-mode.
         sendEnable = self.command("enable", prompt={"password": "[pP]assword.*", "noPassword": "[\r\n]+\S+# ?$"})
@@ -566,10 +563,10 @@ class BASECISCO(BASESSHV2):
         result["errLog"] = "Vlan {vlan_id} doest not exist.".format(vlan_id=vlan_id)
         return result
 
-    def createVlan(self, vlan_id, description="None"):
+    def createVlan(self, vlan_id, name="None"):
         """
         @param vlan_id: vlan-id,
-        @param description: description of vlan.
+        @param name: name of vlan.
 
         """
         # Crate vlan.
@@ -584,19 +581,19 @@ class BASECISCO(BASESSHV2):
         if not tmp["status"]:
             # Failed to enter configuration mode
             return tmp
-        cmd = "vlan {vlan_id}\rdescription {description}".format(vlan_id=vlan_id, description=description)
+        cmd = "vlan {vlan_id}\rname {name}".format(vlan_id=vlan_id, name=name)
         prompt = {
             "success": "[\r\n]+\S+.+config\-vlan\)(#|>) ?$",
             "error": "Invalid[\s\S]+config\)(#|>) ?$",
         }
         tmp = self.command(cmd, prompt=prompt)
-        if tmp["state"] == "error":
-            result["errLog"] = tmp["content"]
-            return result
-        else:
+        if tmp["state"] == "success":
             # The vlan was created successfuly, then to save configration if save is True.
             result["content"] = "The vlan {vlan_id} was created.".format(vlan_id=vlan_id)
             result["status"] = True
+            return result
+        else:
+            result["errLog"] = tmp["content"]
             return result
 
     def deleteVlan(self, vlan_id):
@@ -624,3 +621,118 @@ class BASECISCO(BASESSHV2):
         else:
             result["errLog"] = "The vlan {vlan_id} was not deleted.".format(vlan_id=vlan_id)
             return result
+
+    def interfaceVlanExist(self, vlan_id):
+        # parameter vlan_id: Vlan123
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        # Checking parameter
+        vlan_id = str(vlan_id).strip()
+        if re.search("^[0-9]+$", vlan_id):
+            vlan_id = "Vlan" + vlan_id
+        for line in self.showInterface()["content"]:
+            if vlan_id == line["interfaceName"]:
+                result["status"] = True
+                return result
+        return result
+
+    def deleteInterfaceVlan(self, vlan_id):
+        # Deleting virtual vlan.
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        # Enter config-mode.
+        tmp = self.configMode()
+        if not tmp["status"]:
+            # Failed to enter configuration mode
+            return tmp
+        cmd = "no interface vlan {vlan_id}".format(vlan_id=vlan_id)
+        prompt = {
+            "success": "[\r\n]+\S+.+config\)(#|>) ?$",
+        }
+        tmp = self.command(cmd, prompt=prompt)
+        if not self.interfaceVlanExist(vlan_id)["status"]:
+            # The interface-vlan was deleted successfuly.
+            result["content"] = "The interface-vlan {vlan_id} was deleted.".format(vlan_id=vlan_id)
+            result["status"] = True
+            return result
+        else:
+            result["errLog"] = "The interface-vlan {vlan_id} was not deleted.".format(vlan_id=vlan_id)
+            return result
+
+    def createInterfaceVlan(self, vlan_id, ip=None, mask=None, description="None"):
+        # Creating virtual vlan.
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        # Checking parameters.
+        if ip is None or mask is None:
+            result["errLog"] = "parameter of ip and mask can not be None."
+            return result
+        elif checkIP(ip) is False:
+            result["errLog"] = "Illegal IP address."
+            return result
+        elif checkIP(mask) is False:
+            result["errLog"] = "Illegal net mask."
+            return result
+        # Enter config-mode.
+        tmp = self.configMode()
+        if not tmp["status"]:
+            # Failed to enter configuration mode
+            return tmp
+        cmd1 = "interface vlan {vlan_id}".format(vlan_id=vlan_id)
+        cmd2 = "description {description}".format(description=description)
+        cmd3 = "ip address {ip} {mask}".format(ip=ip, mask=mask)
+        # Forward need to check if The vlan exists,before creating.
+        if not self.vlanExist(vlan_id)["status"]:
+            # no exists.
+            result["errLog"] = "The vlan({vlan_id}) doest not exists,\
+thus can't create interface-vlan.".format(vlan_id=vlan_id)
+            return result
+        prompt1 = {
+            "success": "[\r\n]+\S+.+config\-if\)# ?$",
+            "error": "[\r\n]+\S+.+config\)# ?$",
+            # "error": "(Invalid|Error|Illegal|marker|Incomplete)[\s\S]+",
+        }
+        prompt2 = {
+            "success": "{cmd2}[\r\n]+\S+.+config\-if\)# ?$".format(cmd2=cmd2),
+            "error": "(Invalid|Error|Illegal|marker|Incomplete)[\s\S]+",
+        }
+        prompt3 = {
+            "success": "{cmd3}[\r\n]+\S+.+config\-if\)# ?$".format(cmd3=cmd3),
+            "error": "(Invalid|Error|Illegal|marker|Incomplete)[\s\S]+",
+        }
+        # Running cmd1.
+        tmp = self.command(cmd1, prompt=prompt1)
+        if not tmp["state"] == "success":
+            self.deleteInterfaceVlan(vlan_id)
+            result["errLog"] = tmp["errLog"]
+            return result
+        # Running cmd2
+        tmp = self.command(cmd2, prompt=prompt2)
+        if not tmp["state"] == "success":
+            self.deleteInterfaceVlan(vlan_id)
+            result["errLog"] = tmp["errLog"]
+            return result
+        # Running cmd3
+        tmp = self.command(cmd3, prompt=prompt3)
+        if not tmp["state"] == "success":
+            self.deleteInterfaceVlan(vlan_id)
+            result["errLog"] = tmp["errLog"]
+            return result
+        # Checking...
+        if self.interfaceVlanExist(vlan_id)["status"]:
+            result["conent"] = "The configuration was created by Forwarder."
+            result["status"] = True
+        else:
+            # The configuration was not created and rolled back.
+            self.deleteInterfaceVlan(vlan_id)
+            result["errLog"] = tmp["errLog"]
+        return result
