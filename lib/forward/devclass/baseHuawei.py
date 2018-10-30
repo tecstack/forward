@@ -321,8 +321,9 @@ class BASEHUAWEI(BASESSHV2):
             'errLog': ''
         }
         cmd = "display interface"
+        # There are Special characters in some descriptions.
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "\r\n\r\n\S+.+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -346,7 +347,7 @@ class BASEHUAWEI(BASESSHV2):
                             "mac": "",
                             "ip": ""}
                 # Get name of the interface.
-                lineInfo['interfaceName'] = re.search("(.*)current state", _interfaceInfo).group(1)
+                lineInfo['interfaceName'] = re.search("(.*)current state", _interfaceInfo).group(1).strip()
                 # Get state of the interface and remove extra character.
                 lineInfo['interfaceState'] = re.search("current state :(.*)", _interfaceInfo).group(1).strip()
                 # Get state of line protocol of the interface and remove extra character.
@@ -516,14 +517,14 @@ class BASEHUAWEI(BASESSHV2):
             "content": {},
             "errLog": ""
         }
-        # Enter config-mode.
-        tmp = self.configMode()
+        # Enter privilege-mode.
+        tmp = self.privilegeMode()
         if not tmp["status"]:
             # Failed to enter configuration mode
             return tmp
-        cmd = "undo interface vlan {vlan_id}".format(vlan_id=vlan_id)
+        cmd = "undo interface vlanif {vlan_id}".format(vlan_id=vlan_id)
         prompt = {
-            "success": "[\r\n]+\S+.+(\[|>) ?$",
+            "success": "[\r\n]+\S+.+(\]|>) ?$",
         }
         tmp = self.command(cmd, prompt=prompt)
         if not self.interfaceVlanExist(vlan_id)["status"]:
@@ -552,8 +553,8 @@ class BASEHUAWEI(BASESSHV2):
         elif checkIP(mask) is False:
             result["errLog"] = "Illegal net mask."
             return result
-        # Enter config-mode.
-        tmp = self.configMode()
+        # Enter privilege-mode.
+        tmp = self.privilegeMode()
         if not tmp["status"]:
             # Failed to enter configuration mode
             return tmp

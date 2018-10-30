@@ -374,13 +374,13 @@ class BASECISCO(BASESSHV2):
                     _interfaceInfo = _interfaceInfo.split("\r\r\n")[1]
                     tmp = re.search("(.*) is", _interfaceInfo)
                     if tmp:
-                        lineInfo["interfaceName"] = tmp.group(1)
+                        lineInfo["interfaceName"] = tmp.group(1).strip()
                         njInfo["content"].append(lineInfo)
                     continue
                 else:
                     tmp = re.search("(.*?) is", _interfaceInfo)
                     if tmp:
-                        lineInfo["interfaceName"] = tmp.group(1)
+                        lineInfo["interfaceName"] = tmp.group(1).strip()
                     else:
                         continue
                     tmp = re.search("admin state is (.*)", _interfaceInfo)
