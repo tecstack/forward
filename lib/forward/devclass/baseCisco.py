@@ -563,7 +563,7 @@ class BASECISCO(BASESSHV2):
         result["errLog"] = "Vlan {vlan_id} doest not exist.".format(vlan_id=vlan_id)
         return result
 
-    def createVlan(self, vlan_id, name="None"):
+    def createVlan(self, vlan_id, name=None):
         """
         @param vlan_id: vlan-id,
         @param name: name of vlan.
@@ -581,18 +581,23 @@ class BASECISCO(BASESSHV2):
         if not tmp["status"]:
             # Failed to enter configuration mode
             return tmp
-        cmd = "vlan {vlan_id}\rname {name}".format(vlan_id=vlan_id, name=name)
+        if name is None:
+            # no name.
+            cmd = "vlan {vlan_id}".format(vlan_id=vlan_id)
+        else:
+            cmd = "vlan {vlan_id}\rname {name}".format(vlan_id=vlan_id, name=name)
         prompt = {
             "success": "[\r\n]+\S+.+config\-vlan\)(#|>) ?$",
-            "error": "Invalid[\s\S]+config\)(#|>) ?$",
+            "error": "[\r\n]+(Invalid|Error)[\s\S]+",
         }
         tmp = self.command(cmd, prompt=prompt)
-        if tmp["state"] == "success":
+        if tmp["state"] == "success" and not re.search(prompt["error"], tmp["content"]):
             # The vlan was created successfuly, then to save configration if save is True.
             result["content"] = "The vlan {vlan_id} was created.".format(vlan_id=vlan_id)
             result["status"] = True
             return result
         else:
+            self.deleteVlan(vlan_id)
             result["errLog"] = tmp["content"]
             return result
 
@@ -637,6 +642,7 @@ class BASECISCO(BASESSHV2):
             if vlan_id == line["interfaceName"]:
                 result["status"] = True
                 return result
+        result["errLog"] = "The interface-vlan {vlan_id} doest not exist.".format(vlan_id=vlan_id)
         return result
 
     def deleteInterfaceVlan(self, vlan_id):
