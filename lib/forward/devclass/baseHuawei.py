@@ -484,7 +484,7 @@ class BASEHUAWEI(BASESSHV2):
             return tmp
         cmd = "undo vlan {vlan_id}".format(vlan_id=vlan_id)
         prompt = {
-            "success": "[\r\n]+\S+.+vlan{vlan_id}\] ?$".format(vlan_id=vlan_id),
+            "success": "[\r\n]+\S+.+\] ?$".format(vlan_id=vlan_id),
             "error": "Error:[\s\S]+",
         }
         tmp = self.command(cmd, prompt=prompt)
