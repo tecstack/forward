@@ -136,6 +136,9 @@ class BASECISCO(BASESSHV2):
             "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            return tmp
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
             tmp = re.findall("ntp server ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
@@ -158,6 +161,9 @@ class BASECISCO(BASESSHV2):
             "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            return tmp
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
             tmp = re.findall("loggin server ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
@@ -180,6 +186,9 @@ class BASECISCO(BASESSHV2):
             "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            return tmp
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
             tmp = re.findall("snmp-server host ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})",
@@ -202,6 +211,9 @@ class BASECISCO(BASESSHV2):
             "success": "[vV]ersion[\s\S]+[\r\n]+\S+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            return tmp
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
             tmp = re.search("(software|system).*version(.*)", result["content"], flags=re.IGNORECASE)
@@ -233,6 +245,9 @@ class BASECISCO(BASESSHV2):
         ---- -----        ----------
         1    enet         CE
         """
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            return tmp
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
             currentSection = "vlanName"
@@ -299,6 +314,9 @@ class BASECISCO(BASESSHV2):
             "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            return tmp
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
             for _interfaceInfo in result["content"].split("\r\n"):
@@ -350,6 +368,9 @@ class BASECISCO(BASESSHV2):
             "success": "[\r\n]+\S+.+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            return tmp
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
             i = 0
@@ -560,7 +581,7 @@ class BASECISCO(BASESSHV2):
             if vlan_id == line["id"]:
                 result["status"] = True
                 return result
-        result["errLog"] = "Vlan {vlan_id} doest not exist.".format(vlan_id=vlan_id)
+        result["errLog"] = "Vlan {vlan_id} does not exist.".format(vlan_id=vlan_id)
         return result
 
     def createVlan(self, vlan_id, name=None):
@@ -642,7 +663,7 @@ class BASECISCO(BASESSHV2):
             if vlan_id == line["interfaceName"]:
                 result["status"] = True
                 return result
-        result["errLog"] = "The interface-vlan {vlan_id} doest not exist.".format(vlan_id=vlan_id)
+        result["errLog"] = "The interface-vlan {vlan_id} does not exist.".format(vlan_id=vlan_id)
         return result
 
     def deleteInterfaceVlan(self, vlan_id):
@@ -688,20 +709,20 @@ class BASECISCO(BASESSHV2):
         elif checkIP(mask) is False:
             result["errLog"] = "Illegal net mask."
             return result
-        # Enter config-mode.
-        tmp = self.configMode()
-        if not tmp["status"]:
-            # Failed to enter configuration mode
-            return tmp
         cmd1 = "interface vlan {vlan_id}".format(vlan_id=vlan_id)
         cmd2 = "description {description}".format(description=description)
         cmd3 = "ip address {ip} {mask}".format(ip=ip, mask=mask)
         # Forward need to check if The vlan exists,before creating.
         if not self.vlanExist(vlan_id)["status"]:
             # no exists.
-            result["errLog"] = "The vlan({vlan_id}) doest not exists,\
+            result["errLog"] = "The vlan({vlan_id}) does not exists,\
 thus can't create interface-vlan.".format(vlan_id=vlan_id)
             return result
+        # Enter config-mode.
+        tmp = self.configMode()
+        if not tmp["status"]:
+            # Failed to enter configuration mode
+            return tmp
         prompt1 = {
             "success": "[\r\n]+\S+.+config\-if\)# ?$",
             "error": "[\r\n]+\S+.+config\)# ?$",
@@ -735,10 +756,10 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
             return result
         # Checking...
         if self.interfaceVlanExist(vlan_id)["status"]:
-            result["conent"] = "The configuration was created by Forwarder."
+            result["content"] = "The configuration was created by Forwarder."
             result["status"] = True
         else:
             # The configuration was not created and rolled back.
             self.deleteInterfaceVlan(vlan_id)
-            result["errLog"] = tmp["errLog"]
+            result["errLog"] = "The configuration was not created and rolled back"
         return result

@@ -210,8 +210,8 @@ class BASESSHV2(object):
             self.getMore(result["content"])
             try:
                 result["content"] += self.shell.recv(204800).decode()
-            except Exception as e:
-                result["errLog"] = "Forward had recived data timeout. [%s]" % str(e)
+            except Exception:
+                result["errLog"] = "Forward had recived data timeout. [%s]" % result["content"]
                 return result
             # Mathing specify key
             for key in prompt:

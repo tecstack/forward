@@ -429,7 +429,7 @@ class BASEHUAWEI(BASESSHV2):
             if vlan_id == line["id"]:
                 result["status"] = True
                 return result
-        result["errLog"] = "Vlan {vlan_id} doest not exist.".format(vlan_id=vlan_id)
+        result["errLog"] = "Vlan {vlan_id} does not exist.".format(vlan_id=vlan_id)
         return result
 
     def createVlan(self, vlan_id, name=None):
@@ -512,7 +512,7 @@ class BASEHUAWEI(BASESSHV2):
             if vlan_id == line["interfaceName"]:
                 result["status"] = True
                 return result
-        result["errLog"] = "The interface-vlan {vlan_id} doest not exist.".format(vlan_id=vlan_id)
+        result["errLog"] = "The interface-vlan {vlan_id} does not exist.".format(vlan_id=vlan_id)
         return result
 
     def deleteInterfaceVlan(self, vlan_id):
@@ -569,7 +569,7 @@ class BASEHUAWEI(BASESSHV2):
         # Forward need to check if The vlan exists,before creating.
         if not self.vlanExist(vlan_id)["status"]:
             # no exists.
-            result["errLog"] = "The vlan({vlan_id}) doest not exists,\
+            result["errLog"] = "The vlan({vlan_id}) does not exists,\
 thus can't create interface-vlan.".format(vlan_id=vlan_id)
             return result
         prompt1 = {

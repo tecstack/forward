@@ -851,8 +851,25 @@ class BASEDEPP(BASESSHV2):
                 result["errLog"] = "Unknow error."
         return result
 
-    def createSNAT(self, name, interface=None, addressPool="", enable=True, vsysName="PublicSystem",
+    def createSNAT(self,
+                   name,
+                   interface="",
+                   addressPool="",
+                   sourceIP={"type": "0",
+                             "name": "GL-CSPC-VM-172.20.255.104"},
+                   destinationIP={"type": 0,
+                                  "name": ""},
+                   service={"type": 0,
+                            "name": "ECHO-reply"},
+                   enable=True,
+                   vsysName="PublicSystem",
                    applyTime=None):
+        """
+        @param name(str):    The name of SNAT.
+        @param interface(str): The name of export interface,eg:"vlan1,vlan2,vlan3",maxomum is 16
+        @param addressPool(str): The address pool,eg: "" for using export-address
+                                 or "#" for using None-NAT  or "192.168.1.1,192.168.1.2,..1.7" ,maximum is 7
+        """
         result = {
             'status': False,
             'content': '',
@@ -873,6 +890,9 @@ class BASEDEPP(BASESSHV2):
              "name": name,
              "interface": interface,
              "addressPool": addressPool,
+             "sourceIpObjects": sourceIP,
+             "destinationIpObjects": destinationIP,
+             "serverObjects": service,
              "enable": enable}
         try:
             client.service.createSnat(p)
@@ -884,7 +904,7 @@ class BASEDEPP(BASESSHV2):
             elif num == 506:
                 result["errLog"] = "Specify parameters error,the configuration-name already exist,or vsysName not exist"
             else:
-                result["errLog"] = "Unknow error."
+                result["errLog"] = "Unknow error[%s]." % str(e)
         return result
 
     def updateSecurityPolicy(self, name, action=None,
