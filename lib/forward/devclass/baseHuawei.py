@@ -21,6 +21,7 @@
 """
 
 import re
+import logging
 from forward.devclass.baseSSHV2 import BASESSHV2
 from forward.utils.forwardError import ForwardError
 from forward.utils.paraCheck import checkIP
@@ -484,17 +485,20 @@ class BASEHUAWEI(BASESSHV2):
             return tmp
         cmd = "undo vlan {vlan_id}".format(vlan_id=vlan_id)
         prompt = {
-            "success": "[\r\n]+\S+.+\] ?$".format(vlan_id=vlan_id),
-            "error": "Error:[\s\S]+",
+            "success": "{cmd}[\r\n]+\S+.+\] ?$".format(vlan_id=vlan_id, cmd=cmd),
+            "error": "(Error):[\s\S]+",
         }
         tmp = self.command(cmd, prompt=prompt)
-        if not self.vlanExist(vlan_id)["status"]:
+        logging.debug("runing command result:" + str(tmp))
+        if tmp["state"] == "success":
             # The vlan was deleted successfuly, then to save configration if save is True.
             result["content"] = "The vlan {vlan_id} was deleted.".format(vlan_id=vlan_id)
             result["status"] = True
             return result
         else:
-            result["errLog"] = "The vlan {vlan_id} was not deleted.".format(vlan_id=vlan_id)
+            result["errLog"] = "The vlan {vlan_id} was not deleted[{content},{errLog}].".format(vlan_id=vlan_id,
+                                                                                                content=tmp["content"],
+                                                                                                errLog=tmp["errLog"])
             return result
 
     def interfaceVlanExist(self, vlan_id):
