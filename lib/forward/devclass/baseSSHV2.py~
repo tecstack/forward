@@ -246,7 +246,7 @@ class BASESSHV2(object):
             self.shell.send('\n')
             # set recv timeout to self.timeout/10 fot temporary
             while not re.search(self.basePrompt, result):
-                result += self.shell.recv(1024)
+                result += self.shell.recv(1024).decode()
             if result:
                 # recv() get something
                 # select last line character,[ex]' >[localhost@labstill019~]$ '
