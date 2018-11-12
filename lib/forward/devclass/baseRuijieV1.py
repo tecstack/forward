@@ -443,6 +443,25 @@ class BASERUIJIE(BASESSHV1):
             # No legacy data.
             return ''
 
+    def vlanExist(self, vlan_id):
+        # Check if the vlan exists.
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        vlan_id = str(vlan_id)
+        vlan_list = self.showVlan()
+        # check
+        if not vlan_list["status"]:
+            return vlan_list
+        for line in vlan_list["content"]:
+            if vlan_id == line["id"]:
+                result["status"] = True
+                return result
+        result["errLog"] = "Vlan {vlan_id} doest not exist.".format(vlan_id=vlan_id)
+        return result
+
     def createVlan(self, vlan_id, description="None"):
         """
         @param vlan_id: vlan-id,
