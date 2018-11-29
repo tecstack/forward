@@ -545,7 +545,7 @@ class BASEDEPP(BASESSHV2):
 
     def createServiceObject(self, name, protocol=None, sRange=None,
                             dRange=None, vsysName="PublicSystem",
-                            applyTime=None):
+                            applyTime=None, **kws):
         # load module of suds.
         from suds.client import Client
         """

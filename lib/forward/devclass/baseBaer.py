@@ -345,8 +345,8 @@ class BASEBAER(BASESSHV2):
             "content": [],
             "errLog": ""
         }
-        result = self.command("show service sap-using description", prompt={"success": "[\r\n]+\S+.+# ?$",
-                                                                            "eror": "Bad command[\s\S]+"})
+        result = self.command("show service sap-using", prompt={"success": "[\r\n]+\S+.+# ?$",
+                                                                "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             for line in result["content"].split("\r\n"):
                 lineInfo = {"id": "",
