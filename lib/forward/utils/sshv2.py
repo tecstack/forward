@@ -33,7 +33,7 @@ def sshv2(ip='', username='', password='', timeout=30, port=22):
         port = int(port)
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(ip, port, username, password, timeout=timeout)
+        ssh.connect(ip, port, username, password, timeout=timeout, allow_agent=False, look_for_keys=False)
         njInfo['content'] = ssh
     except Exception as e:
         njInfo['status'] = False
