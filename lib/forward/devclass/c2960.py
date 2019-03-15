@@ -140,3 +140,42 @@ class C2960(BASECISCO):
         else:
             njInfo["errLog"] = result["errLog"]
         return njInfo
+
+    def basicInfo(self):
+        njInfo = BASECISCO.basicInfo(self)
+        cmd = "show version"
+        prompt = {
+            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        runningDate = -1
+        if tmp["status"]:
+            result = self.command(cmd=cmd, prompt=prompt)
+            if result["state"] == "success":
+                dataLine = re.search("uptime is.*", result["content"])
+                if dataLine is not None:
+                    tmp = re.search("([0-9]+) years", dataLine.group())
+                    if tmp:
+                        runningDate += int(tmp.group(1) * 365)
+                    tmp = re.search("([0-9]+) weeks", dataLine.group())
+                    if tmp:
+                        runningDate += int(tmp.group(1) * 7)
+                    tmp = re.search("([0-9]+) day(s)?", dataLine.group())
+                    if tmp:
+                        runningDate += int(tmp.group(1))
+                    # Weather running-time of the device is more than 7 days
+                    if runningDate > 7:
+                        njInfo["content"]["noRestart"]["status"] = True
+                    elif runningDate == -1:
+                        pass
+                    else:
+                        njInfo["content"]["noRestart"]["status"] = False
+                    # Return detail to Forward.
+                    njInfo["content"]["noRestart"]["content"] = dataLine.group().strip()
+                else:
+                    # Forward did't find the uptime of the device.
+                    pass
+        else:
+            return tmp
+        return njInfo

@@ -19,6 +19,7 @@
 -----Introduction-----
 [Core][forward] Device class for n7018.
 """
+import re
 from forward.devclass.baseCisco import BASECISCO
 
 
@@ -58,3 +59,32 @@ class N7018(BASECISCO):
                                  username=username,
                                  password=password,
                                  addCommand='user {username} password {password} role network-admin\n')
+
+    def basicInfo(self):
+        njInfo = BASECISCO.basicInfo(self)
+        cmd = "show system uptime"
+        prompt = {
+            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        if tmp["status"]:
+            result = self.command(cmd=cmd, prompt=prompt)
+            if result["state"] == "success":
+                dataLine = re.search("System uptime: +([0-9]+) days", result["content"])
+                if dataLine.lastindex == 1 and dataLine is not None:
+                    # Get year,month and day of the uptime.
+                    # Weather running-time of the device is more than 7 days
+                    runningDate = int(dataLine.group(1))
+                    if runningDate > 7:
+                        njInfo["content"]["noRestart"]["status"] = True
+                    else:
+                        njInfo["content"]["noRestart"]["status"] = False
+                    # Return detail to Forward.
+                    njInfo["content"]["noRestart"]["content"] = dataLine.group().strip()
+                else:
+                    # Forward did't find the uptime of the device.
+                    pass
+        else:
+            return tmp
+        return njInfo
