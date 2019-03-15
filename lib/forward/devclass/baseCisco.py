@@ -110,7 +110,7 @@ class BASECISCO(BASESSHV2):
             result["errLog"] = "Unknow error."
             return result
         # If device required a password,then send a password to device.
-        sendPassword = self.command(self.privilegePw, prompt={"password": "[pP]assword.*",
+        sendPassword = self.command(self.privilegePw, prompt={"password": "[pP]assword.*|Access denied.*|Bad secrets.*",
                                                               "noPassword": "[\r\n]+\S+# ?$"})
         if sendPassword["state"] == "password":
             # Password error,switch is failed.
@@ -763,3 +763,17 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
             self.deleteInterfaceVlan(vlan_id)
             result["errLog"] = "The configuration was not created and rolled back"
         return result
+    def basicInfo(self):
+        njInfo={
+                "status":True,
+                "content":{
+                        "noRestart": {"status":None,"content":""},
+                        "systemTime": {"status": None, "content": ""},
+                        "cpuLow": {"status": None, "content": ""},
+                        "memLow": {"status": None, "content": ""},
+                        "boardCard": {"status": None, "content": ""},
+                        "tempLow": {"status": None, "content": ""},
+                        "firewallConnection": {"status": None, "content": ""}},
+                "errLog":""
+                }
+        return njInfo
