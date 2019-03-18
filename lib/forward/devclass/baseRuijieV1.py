@@ -520,3 +520,48 @@ class BASERUIJIE(BASESSHV1):
         else:
             result["errLog"] = "The vlan {vlan_id} was not deleted.".format(vlan_id=vlan_id)
             return result
+
+    def basicInfo(self, cmd="show version"):
+        njInfo={
+                "status":True,
+                "content":{
+                        "noRestart": {"status":None,"content":""},
+                        "systemTime": {"status": None, "content": ""},
+                        "cpuLow": {"status": None, "content": ""},
+                        "memLow": {"status": None, "content": ""},
+                        "boardCard": {"status": None, "content": ""},
+                        "tempLow": {"status": None, "content": ""},
+                        "firewallConnection": {"status": None, "content": ""}},
+                "errLog":""
+                }
+        prompt = {
+            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "error": "(Invalid input|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        runningDate = -1
+        if tmp["status"]:
+            result = self.command(cmd=cmd, prompt=prompt)
+            if result["state"] == "success":
+                dataLine = re.search("[Uu]ptime +: +([0-9]+).*", result["content"])
+                if dataLine is not None:
+                    runningDate = int(dataLine.group(1))
+                    # Weather running-time of the device is more than 7 days
+                    if runningDate > 7:
+                        njInfo["content"]["noRestart"]["status"] = True
+                    elif runningDate == -1:
+                        pass
+                    else:
+                        njInfo["content"]["noRestart"]["status"] = False
+                    # Return detail to Forward.
+                    njInfo["content"]["noRestart"]["content"] = dataLine.group().strip()
+                else:
+                    # Forward did't find the uptime of the device.
+                    pass
+            else:
+                # That forwarder execute the command is failed.
+                result["status"] = False
+                return result
+        else:
+            return tmp
+        return njInfo

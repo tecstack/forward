@@ -433,3 +433,56 @@ class BASEFORTINET(BASESSHV2):
         else:
             njInfo["errLog"] = result["errLog"]
         return njInfo
+
+    def basicInfo(self, cmd="get system performance status"):
+        njInfo={
+                "status":True,
+                "content":{
+                        "noRestart": {"status":None,"content":""},
+                        "systemTime": {"status": None, "content": ""},
+                        "cpuLow": {"status": None, "content": ""},
+                        "memLow": {"status": None, "content": ""},
+                        "boardCard": {"status": None, "content": ""},
+                        "tempLow": {"status": None, "content": ""},
+                        "firewallConnection": {"status": None, "content": ""}},
+                "errLog":""
+                }
+        prompt = {
+            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "error": "([Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        runningDate = -1
+        if tmp["status"]:
+            result = self.command(cmd=cmd, prompt=prompt)
+            if result["state"] == "success":
+                dataLine = re.search("[Uu]ptime:? .+(day|year|week).*", result["content"])
+                if dataLine is not None:
+                    tmp = re.search("([0-9]+) year", dataLine.group())
+                    if tmp:
+                        runningDate += int(tmp.group(1)) * 365
+                    tmp = re.search("([0-9]+) week", dataLine.group())
+                    if tmp:
+                        runningDate += int(tmp.group(1)) * 7
+                    tmp = re.search("([0-9]+) day", dataLine.group())
+                    if tmp:
+                        runningDate += int(tmp.group(1))
+                    # Weather running-time of the device is more than 7 days
+                    if runningDate > 7:
+                        njInfo["content"]["noRestart"]["status"] = True
+                    elif runningDate == -1:
+                        pass
+                    else:
+                        njInfo["content"]["noRestart"]["status"] = False
+                    # Return detail to Forward.
+                    njInfo["content"]["noRestart"]["content"] = dataLine.group().strip()
+                else:
+                    # Forward did't find the uptime of the device.
+                    pass
+            else:
+                # That forwarder execute the command is failed.
+                result["status"] = False
+                return result
+        else:
+            return tmp
+        return njInfo

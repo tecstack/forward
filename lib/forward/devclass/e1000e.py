@@ -24,4 +24,5 @@ from forward.devclass.baseHuawei import BASEHUAWEI
 class E1000E(BASEHUAWEI):
     """This is a manufacturer of huawei, it is integrated with BASEHUAWEI library.
     """
+
     pass

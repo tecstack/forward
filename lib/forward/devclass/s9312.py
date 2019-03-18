@@ -296,3 +296,457 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
             info["status"] = False
             info["errLog"] = str(e)
         return info
+
+    def showInterfacePower(self, port):
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        prompt = {
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        if port.startswith('XGi'):
+            port = re.findall('\d+\S+', port)[0]
+            cmd = 'display transceiver interface XGigabitEthernet ' + port + ' verbose '
+        elif port.startswith('Gi'):
+            port = re.findall('\d+\S+',port)[0]
+            cmd = 'display transceiver interface GigabitEthernet ' + port + ' verbose '
+        _result = self.command(cmd=cmd, prompt=prompt)
+        if not _result['status'] or _result['state'] != 'success':
+            njInfo['errLog'] = _result['errLog']
+            return njInfo
+        info = re.findall(r'dBM.*:(.*)\r', _result['content'])
+        result = {}
+        if string.atof(info[0]) > string.atof(info[6]):
+            result['TX'] = 'HIGH'
+        elif string.atof(info[0]) < string.atof(info[7]):
+            result['TX'] = 'LOW'
+        else:
+            result['TX'] = 'normal'
+
+        if string.atof(info[3]) > string.atof(info[8]):
+            result['RX'] = 'HIGH'
+        elif string.atof(info[3]) < string.atof(info[9]):
+            result['RX'] = 'LOW'
+        else:
+            result['RX'] = 'normal'
+        njInfo['status'] = True
+        njInfo['content'] = result
+        return njInfo
+
+    def showSyslog(self):
+        """show the system syslog server and logbuffer
+        example cmd:
+            display info-center
+
+        Returns:
+            logbuffer level and syslog server level
+        """
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        prompt = {
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        cmd = 'display info-center'
+        result = self.command(cmd=cmd, prompt=prompt)
+        if not result['status'] or result['state'] != 'success':
+            njInfo['status'] = result['errLog']
+            return njInfo
+
+        syslog_server_list = re.split('language.*',result['content'])
+        syslog_server_list.pop()
+        syslog_server_list_ = re.split('\n',syslog_server_list[0])
+        njInfo_ = {
+            'status':True,
+            'errLog':'',
+            'content':{}
+        }
+        njInfo_['content']['syslog_server'] = {}
+        syslog_server_ = re.findall('(\d+\.\d+\.\d+\.\d+)',syslog_server_list[0],re.M)
+        if syslog_server_:
+            for line in syslog_server_list_:
+                syslog_server = re.findall('(\d+\.\d+\.\d+\.\d+), channel number (\d)',line,re.M)
+                if syslog_server:
+                    _syslog_server_ = syslog_server[0][0]
+                    _syslog_level_ = syslog_server[0][1]
+                    njInfo_['content']['syslog_server'][_syslog_server_] = _syslog_level_
+        else:
+            njInfo_['content']['syslog_server']['NULL'] = 'NULL'
+
+        syslog_buffer_list = re.split('Log buffer',result['content'])
+        syslog_buffer_ = syslog_buffer_list[-1]
+        logbuffer = re.findall('channel number : (\d)',syslog_buffer_,re.M)
+        if logbuffer:
+            njInfo_['content']['logbuffer'] = logbuffer[0]
+        else:
+            njInfo_['content']['logbuffer'] = 'NULL'
+        njInfo['status'] = njInfo_['status']
+        njInfo['content'] = njInfo_['content']
+        return njInfo
+
+    def aclGet(self, acl_name='LOGIN', acl_ip='1.1.1.5'):
+        """show ip acl
+
+        Returns:
+            the ip acl list
+        """
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        prompt = {
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        acl = {}
+        acl_name = re.sub(' *', '', acl_name)
+        cmd = "display current-configuration | begin user-interface"
+        result = self.command(cmd=cmd, prompt=prompt)
+        if not result['status'] or result['state'] != 'success':
+            njInfo['status'] = result['errLog']
+            return njInfo
+        acl_num = re.findall('acl (\d+)', result['content'])[0]
+        cmd = 'display acl %s | include %s' % (acl_num, acl_ip)
+        result = self.command(cmd=cmd, prompt=prompt)
+        if not result['status'] or result['state'] != 'success':
+            njInfo['status'] = result['errLog']
+            return njInfo
+        if len(re.findall(acl_ip, result['content'])) > 0:
+            njInfo['status'] = True
+        else:
+            njInfo['status'] = False
+        return njInfo
+
+    def showSystemUptime(self):
+        '''display version
+        Return:
+           weeks_of_uptime,days_of_uptime
+        '''
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        prompt = {
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        cmd = 'display version '
+        result = self.command(cmd=cmd, prompt=prompt)
+        if not result['status'] or result['state'] != 'success':
+            njInfo['status'] = result['errLog']
+        uptime=re.search('Switch uptime is\s+(\d+)\s+weeks, (\d+)\s+days',result['content'])
+        weeksUptime = uptime.groups()[0]
+        daysUptime= uptime.groups()[1]
+        njInfo['status'] = True
+        njInfo['content'] = weeksUptime,daysUptime
+        return njInfo
+
+    def showHardware(self):
+        """show hardware statu
+        Returns:
+            sensor,temperature,power,Fan status
+            True or False
+        """
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        prompt = {
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        cmd='display health'
+        result = self.command(cmd=cmd, prompt=prompt)
+        if not result['status'] or result['state'] != 'success':
+            njInfo['errLog'] = result['errLog']
+            return njInfo
+
+        dashCount=2
+        contentMatch=False
+        usefulList=[]
+        mystr = result['content'].split('\n')
+        mystr.pop(0)
+        mystr.pop(-1)
+        for line in mystr:
+            if re.findall('Slot  Card  Sensor SensorName       Status', line):
+                contentMatch=True
+                continue
+            if contentMatch==False :
+                continue
+            if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
+                dashCount=dashCount-1
+                continue
+            if dashCount==1:
+                usefulList.append(line) #print line
+                continue
+            elif dashCount == 0 :
+                contentMatch=False
+                dashCount=2
+        resultSensor = usefulList
+
+        dashCount=2
+        contentMatch=False
+        usefulList=[]
+        mystr = result['content'].split('\n')
+        mystr.pop(0)
+        mystr.pop(-1)
+        for line in mystr:
+            if re.findall('PowerID  Online  Mode   State      Current', line):
+                contentMatch=True
+                continue
+            if contentMatch==False :
+                continue
+            if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
+                dashCount=dashCount-1
+                continue
+            if dashCount==1:
+                usefulList.append(line) #print line
+                continue
+            elif dashCount == 0 :
+                contentMatch=False
+                dashCount=2
+        reultTemperature = usefulList
+
+        dashCount=2
+        contentMatch=False
+        usefulList=[]
+        mystr = result['content'].split('\n')
+        mystr.pop(0)
+        mystr.pop(-1)
+        for line in mystr:
+            if re.findall('PowerID  Online  Mode   State      Current', line):
+                contentMatch=True
+                continue
+            if contentMatch==False :
+                continue
+            if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
+                dashCount=dashCount-1
+                continue
+            if dashCount==1:
+                usefulList.append(line) #print line
+                continue
+            elif dashCount == 0 :
+                contentMatch=False
+                dashCount=2
+        resultPower = usefulList
+
+        dashCount=2
+        contentMatch=False
+        usefulList=[]
+        mystr = result['content'].split('\n')
+        mystr.pop(0)
+        mystr.pop(-1)
+        for line in mystr:
+            if re.findall('FanID   FanNum   Online   Register', line):
+                contentMatch=True
+                continue
+            if contentMatch==False :
+                continue
+            if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
+                dashCount=dashCount-1
+                continue
+            if dashCount==1:
+                usefulList.append(line) #print line
+                continue
+            elif dashCount == 0 :
+                contentMatch=False
+                dashCount=2
+        result_fan = usefulList
+
+        sensorNormal=True
+        temperatureNormal=True
+        powerNormal=True
+        fanNormal=True
+        errorDevice = []
+        for line in resultSensor:
+            if not re.findall('Normal', line): #health output for sensor: If a line include 'Normal', it is normal
+                sensorNormal=False
+                errorDevice.append(line)
+        for line in reultTemperature:
+            if not re.findall('Normal', line): #health output for temperature: If a line include 'Normal', it is normal
+                temperatureNormal=False
+                errorDevice.append(line)
+        for line in resultPower:#health output for power: If a line include 'Present' and 'Supply' together, it is normal
+            if re.findall('Present', line):
+                if not re.findall('Supply',line):
+                    temperatureNormal=False
+                    errorDevice.append(line)
+            if re.findall('FAN', line):
+                if not (re.findall('Registered', line)):
+                    fanNormal=False
+                    errorDevice.append(line)
+        if not errorDevice:
+            njInfo['content'] = 'check pass'
+        else:
+            njInfo['content'] = errorDevice
+        njInfo['status'] = True
+        return njInfo
+
+    def showMemory(self):
+        """show memory used
+        Returns:
+            the device memory used
+        """
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        prompt = {
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        memory_enough=True
+        cmd='display health | after 17 include System memory usage at'
+        result = self.command(cmd=cmd, prompt=prompt)
+        if not result['status'] or result['state'] !='success':
+            njInfo['errLog'] = result['errLog']
+            return njInfo
+
+        dashCount=3
+        contentMatch=False
+        usefulList=[]
+        mystr = result['content'].split('\n')
+        mystr.pop(0)
+        mystr.pop(-1)
+        for line in mystr:
+            if re.findall('System memory usage at', line):
+                contentMatch=True
+                continue
+            if contentMatch==False :
+                continue
+            if  re.findall('----------',line):
+                dashCount=dashCount-1
+                continue
+            if dashCount==1:
+                usefulList.append(line) #print line
+                continue
+            elif dashCount == 0 :
+                contentMatch=False
+                dashCount=3
+        resultMemory = usefulList
+
+        # resultMemory=self.usefulContent(result['content'],'System memory usage at') #strip off unuseful line
+        for line in resultMemory:
+            value=re.findall('(\d+)%', line)
+            if float(value[0])>= float(value[1]):
+                memoryEnough=False
+        njInfo['status'] = True
+        njInfo['content'] = memoryEnough
+        return njInfo
+
+    def showCpu(self):
+        """show cpu used
+        Returns:
+            the device memory used
+        """
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        prompt = {
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        cpu_enough=True
+        cmd='display health | after 17 include System cpu usage at'
+        result = self.command(cmd=cmd, prompt=prompt)
+        if not result['status'] or result['state'] !='success':
+            njInfo['errLog'] = result['errLog']
+            return njInfo
+        dashCount=3
+        contentMatch=False
+        usefulList=[]
+        mystr = result['content'].split('\n')
+        mystr.pop(0)
+        mystr.pop(-1)
+        for line in mystr:
+            if re.findall('System memory usage at', line):
+                contentMatch=True
+                continue
+            if contentMatch==False :
+                continue
+            if  re.findall('----------',line):
+                dashCount=dashCount-1
+                continue
+            if dashCount==1:
+                usefulList.append(line) #print line
+                continue
+            elif dashCount == 0 :
+                contentMatch=False
+                dashCount=3
+        resultMemory = usefulList
+
+        # result_cpu=self.usefulContent(result['content'],'System cpu usage at') #strip off unuseful line
+        for line in resultCPU:
+            value=re.findall('(\d+)%', line)
+            if float(value[0])>= float(value[1]):
+                cpu_enough=False
+        njInfo['status'] = True
+        njInfo['content'] = cpu_enough,resultCPU
+        return njInfo
+
+    def showSpanningTreeStatus(self):
+        """show spanning tree stat
+           judge if the root bridge ID equal local bridge ID ---S9312 must be root
+        Returns:
+            the spanning tree status
+        """
+        njInfo = {
+            'status': False,
+            'content': [],
+            'errLog': ''
+        }
+        prompt = {
+            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "error": "Invalid command[\s\S]+",
+        }
+        # cpu_enough=True
+        cmdLocla='display stp bridge local'
+        cmdRoot='display stp bridge root'
+        resultLocal=self.command(cmd=cmdLocla, prompt=prompt)
+        resultRoot=self.command(cmd=cmdRoot, prompt=prompt)
+        if not resultLocal['status'] or resultLocal['state'] !='success':
+            njInfo['errLog'] = resultLocal['errLog']
+            return njInfo
+        if not resultRoot['status'] or resultRoot['state'] !='success':
+            njInfo['errLog'] = resultRoot['errLog']
+            return njInfo
+        resultLocal=resultLocal['content'].split('\n')
+        resultRoot=resultRoot['content'].split('\n')
+        resultLocal.pop(0)
+        resultLocal.pop(-1)
+        resultRoot.pop(0)
+        resultRoot.pop(-1)
+        rootBridge=''
+        spanning_tree_change=False
+        for i in range(len(resultRoot)):
+            if i <= 2:
+                continue
+            if rootBridge=='':
+                rootBridge=resultRoot[i].split()[1]
+                continue
+            if resultRoot[i].split()[1] != rootBridge:
+                spanning_tree_change=True
+            else:
+                pass
+        for i in range(len(resultLocal)):
+            if i <=2:
+                continue
+            if resultLocal[i].split()[1]!= rootBridge:
+                spanning_tree_change=True
+            else:
+                pass
+        njInfo['status'] = True
+        njInfo['content'] = rootBridge,spanning_tree_change
+        return njInfo
