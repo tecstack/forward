@@ -48,7 +48,7 @@ class BASESSHV2(object):
         # Multiple identical characters may appear
         self.basePrompt = "(>|#|\]|\$) *$"
         self.prompt = ''
-        self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+|\(Q to quit\)'
+        self.moreFlag = '(< *)?(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+( *>)?|\(Q to quit\)'
         self.mode = 1
 
         """
@@ -201,7 +201,7 @@ class BASESSHV2(object):
             self.shell.send("{cmd}\r".format(cmd=cmd))
         except Exception:
             # break, if faild
-            result["errLog"] = "Forward has sent a command failure."
+            result["errLog"] = "That forwarder has sent a command is failed."
             return result
         isBreak = False
         while True:
@@ -215,7 +215,7 @@ class BASESSHV2(object):
                 return result
             # Mathing specify key
             for key in prompt:
-                if re.search(prompt[key], result["content"]):
+                if re.search(prompt[key], re.sub(self.moreFlag, "", result["content"])):
                     # Found it
                     result["state"] = key
                     isBreak = True
@@ -223,6 +223,8 @@ class BASESSHV2(object):
             # Keywords have been captured.
             if isBreak is True:
                 break
+        # Delete page break
+        result["content"] = re.sub(self.moreFlag, "", result["content"])
         # Clearing special characters
         result["content"] = re.sub(" *---- More ----\x1b\[42D                                          \x1b\[42D",
                                    "",

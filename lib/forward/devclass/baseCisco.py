@@ -779,11 +779,12 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
                 }
         prompt = {
             "success": "[\r\n]+\S+.+(>|\]|#) ?$",
-            "error": "(Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+            "error": "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
         }
         tmp = self.privilegeMode()
         runningDate = -1
         if tmp["status"]:
+            # Find uptime of the devices.
             result = self.command(cmd=cmd, prompt=prompt)
             if result["state"] == "success":
                 dataLine = re.search(" [Uu]ptime:? .+(day|year|week).*", result["content"])
@@ -811,8 +812,20 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
                     pass
             else:
                 # That forwarder execute the command is failed.
-                result["status"] = False
-                return result
+                pass
+            # Find information of firewall-connection.
+            result = self.command(cmd="show conn", prompt=prompt)
+            if result["state"] == "success":
+                dataLine = re.search("([0-9]+) in use", result["content"])
+                if dataLine is not None:
+                    njInfo["content"]["firewallConnection"]["status"] =  True
+                    njInfo["content"]["firewallConnection"]["content"] = dataLine.group()
+                else:
+                    pass
+            else:
+                # That forwarder execute the command is failed.
+                pass
+
         else:
             return tmp
         return njInfo
