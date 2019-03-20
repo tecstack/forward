@@ -765,18 +765,15 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
         return result
 
     def basicInfo(self, cmd="show version"):
-        njInfo={
-                "status":True,
-                "content":{
-                        "noRestart": {"status":None,"content":""},
-                        "systemTime": {"status": None, "content": ""},
-                        "cpuLow": {"status": None, "content": ""},
-                        "memLow": {"status": None, "content": ""},
-                        "boardCard": {"status": None, "content": ""},
-                        "tempLow": {"status": None, "content": ""},
-                        "firewallConnection": {"status": None, "content": ""}},
-                "errLog":""
-                }
+        njInfo = {"status": True,
+                  "content": {"noRestart": {"status": None, "content": ""},
+                              "systemTime": {"status": None, "content": ""},
+                              "cpuLow": {"status": None, "content": ""},
+                              "memLow": {"status": None, "content": ""},
+                              "boardCard": {"status": None, "content": ""},
+                              "tempLow": {"status": None, "content": ""},
+                              "firewallConnection": {"status": None, "content": ""}},
+                  "errLog": ""}
         prompt = {
             "success": "[\r\n]+\S+.+(>|\]|#) ?$",
             "error": "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
@@ -818,7 +815,7 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
             if result["state"] == "success":
                 dataLine = re.search("([0-9]+) in use", result["content"])
                 if dataLine is not None:
-                    njInfo["content"]["firewallConnection"]["status"] =  True
+                    njInfo["content"]["firewallConnection"]["status"] = True
                     njInfo["content"]["firewallConnection"]["content"] = dataLine.group()
                 else:
                     pass
@@ -828,4 +825,38 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
 
         else:
             return tmp
+        return njInfo
+
+    def showOSPF(self, cmd="show ip ospf  neighbors"):
+        njInfo = {
+            "status": True,
+            "content": [],
+            "errLog": ""
+        }
+
+        prompt = {
+            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "error": "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            return njInfo
+        result = self.command(cmd, prompt)
+        dataLine = re.findall("[0-9]{1,3}.*", result["content"])
+        if len(dataLine) == 0:
+            return njInfo
+        for line in dataLine:
+            line = line.split()
+            if len(line) == 7:
+                njInfo["content"].append({
+                    "neighbor-id": line[0],
+                    "pri": line[1],
+                    "state": line[2] + line[3],
+                    "uptime": line[4],
+                    "address": line[5],
+                    "interface": line[6]}
+                    )
+            else:
+                # The line does not matched data of expection.
+                continue
         return njInfo
