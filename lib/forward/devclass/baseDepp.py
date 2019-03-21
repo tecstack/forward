@@ -223,7 +223,7 @@ class BASEDEPP(BASESSHV2):
             njInfo["errLog"] = result["errLog"]
         return njInfo
 
-    def showInterfaces(self):
+    def showInterface(self):
         njInfo = {
             'status': False,
             'content': [],
