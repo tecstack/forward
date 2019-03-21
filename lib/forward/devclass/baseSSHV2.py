@@ -216,6 +216,7 @@ class BASESSHV2(object):
             # Mathing specify key
             for key in prompt:
                 if re.search(prompt[key], re.sub(self.moreFlag, "", result["content"])):
+
                     # Found it
                     result["state"] = key
                     isBreak = True
@@ -224,7 +225,7 @@ class BASESSHV2(object):
             if isBreak is True:
                 break
         # Delete page break
-        result["content"] = re.sub(self.moreFlag, "", result["content"])
+        result["content"] = re.sub("\r\n.*?\r *?\r", "\r\n", result["content"])
         # Clearing special characters
         result["content"] = re.sub(" *---- More ----\x1b\[42D                                          \x1b\[42D",
                                    "",

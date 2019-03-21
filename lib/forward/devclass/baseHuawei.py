@@ -368,11 +368,15 @@ class BASEHUAWEI(BASESSHV2):
                 else:
                     lineInfo["speed"] = ""
                 # Get duplex of the interface.
-                tmp = re.search("([a-z]+)\-duplex", _interfaceInfo)
+                tmp = re.search("([a-z]+)\-duplex", _interfaceInfo, flags=re.IGNORECASE)
                 if tmp:
                     lineInfo["duplex"] = tmp.group(1)
                 else:
                     lineInfo["duplex"] = ""
+                # Get duplex of the interface for s9312
+                tmp = re.search("Duplex: ([a-z]+)", _interfaceInfo, flags=re.IGNORECASE)
+                if tmp:
+                    lineInfo["duplex"] = tmp.group(1)
                 # Get ip of the interface.
                 tmp = re.search("Internet Address is (.*)", _interfaceInfo)
                 if tmp:

@@ -338,7 +338,7 @@ class BASESSHV1(object):
         # Replenish prompt
         result["content"] += self.channel.after
         # Delete page break
-        result["content"] = re.sub(self.moreFlag, "", result["content"])
+        result["content"] = re.sub("\r\n.*?\r *?\r", "\r\n", result["content"])
         # Delete special characters caused by More split screen.
         result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
         # remove the More charactor
