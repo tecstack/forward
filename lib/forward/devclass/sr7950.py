@@ -33,7 +33,7 @@ class SR7950(BASEBAER):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unknown command[\s\S]+",
         }
         portResult = port.split('/')

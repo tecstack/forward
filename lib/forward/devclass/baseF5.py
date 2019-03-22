@@ -35,7 +35,7 @@ class BASEF5(BASESSHV2):
         }
         cmd = "tmsh  show /sys version"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "command not found[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -56,7 +56,7 @@ class BASEF5(BASESSHV2):
         }
         cmd = "tmsh list /sys ntp"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "command not found[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -78,7 +78,7 @@ class BASEF5(BASESSHV2):
             "errLog": ""
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "command not found[\s\S]+",
         }
         cmd = "tmsh list /sys snmp"
@@ -115,7 +115,7 @@ class BASEF5(BASESSHV2):
         }
         cmd = "tmsh  list /net interface"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "command not found[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -166,7 +166,7 @@ class BASEF5(BASESSHV2):
         }
         cmd = "tmsh list /sys syslog"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "command not found[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -187,7 +187,7 @@ class BASEF5(BASESSHV2):
         }
         cmd = "tmsh list /net route"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "command not found[\s\S]+",
         }
         # Get name of routes.
@@ -244,7 +244,7 @@ class BASEF5(BASESSHV2):
         }
         cmd = "tmsh list /net vlan"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "command not found[\s\S]+",
         }
         # Get name of routes.
@@ -282,20 +282,17 @@ class BASEF5(BASESSHV2):
         return njInfo
 
     def basicInfo(self, cmd="uptime"):
-        njInfo={
-                "status":True,
-                "content":{
-                        "noRestart": {"status":None,"content":""},
-                        "systemTime": {"status": None, "content": ""},
-                        "cpuLow": {"status": None, "content": ""},
-                        "memLow": {"status": None, "content": ""},
-                        "boardCard": {"status": None, "content": ""},
-                        "tempLow": {"status": None, "content": ""},
-                        "firewallConnection": {"status": None, "content": ""}},
-                "errLog":""
-                }
+        njInfo = {"status": True,
+                  "content": {"noRestart": {"status": None, "content": ""},
+                              "systemTime": {"status": None, "content": ""},
+                              "cpuLow": {"status": None, "content": ""},
+                              "memLow": {"status": None, "content": ""},
+                              "boardCard": {"status": None, "content": ""},
+                              "tempLow": {"status": None, "content": ""},
+                              "firewallConnection": {"status": None, "content": ""}},
+                  "errLog": ""}
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(command not found|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
         }
         runningDate = -1

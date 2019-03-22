@@ -1290,20 +1290,17 @@ class BASEDEPP(BASESSHV2):
         return result
 
     def basicInfo(self, cmd="show version"):
-        njInfo={
-                "status":True,
-                "content":{
-                        "noRestart": {"status":None,"content":""},
-                        "systemTime": {"status": None, "content": ""},
-                        "cpuLow": {"status": None, "content": ""},
-                        "memLow": {"status": None, "content": ""},
-                        "boardCard": {"status": None, "content": ""},
-                        "tempLow": {"status": None, "content": ""},
-                        "firewallConnection": {"status": None, "content": ""}},
-                "errLog":""
-                }
+        njInfo = {"status": True,
+                  "content": {"noRestart": {"status": None, "content": ""},
+                              "systemTime": {"status": None, "content": ""},
+                              "cpuLow": {"status": None, "content": ""},
+                              "memLow": {"status": None, "content": ""},
+                              "boardCard": {"status": None, "content": ""},
+                              "tempLow": {"status": None, "content": ""},
+                              "firewallConnection": {"status": None, "content": ""}},
+                  "errLog": ""}
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "([Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
         }
         runningDate = -1

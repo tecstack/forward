@@ -143,4 +143,3 @@ class C2960(BASECISCO):
 
     def basicInfo(self):
         return BASECISCO.basicInfo(self, "show version")
-

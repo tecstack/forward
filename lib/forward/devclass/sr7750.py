@@ -33,7 +33,7 @@ class SR7750(BASEBAER):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unknown command[\s\S]+",
         }
         cmd = 'show port ' + port + ' detail | match dBm'

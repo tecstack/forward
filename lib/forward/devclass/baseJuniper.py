@@ -233,7 +233,7 @@ class BASEJUNIPER(BASETELNET):
         # Get the current position before switch to general mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
         if self.mode > 1:
-            tmp = self.command("quit", prompt={"success": "[\r\n]+\S+.+> ?$",
+            tmp = self.command("quit", prompt={"success": "[\r\n]+\S+> ?$",
                                                "error": "unknown command[\s\S]+"})
             if tmp["state"] == "success":
                 result["status"] = True
@@ -267,7 +267,7 @@ class BASEJUNIPER(BASETELNET):
         }
         # If value of the mode is 2,start switching to configure-mode.
         sendConfig = self.command("configure", prompt={"success": "[\r\n]+\S+# ?$",
-                                                       "error": "unknown command[\s\S]+\S+.+> ?$"})
+                                                       "error": "unknown command[\s\S]+\S+> ?$"})
         if sendConfig["state"] == "success":
             # switch to config-mode was successful.
             result["status"] = True
@@ -615,18 +615,15 @@ class BASEJUNIPER(BASETELNET):
         return njInfo
 
     def basicInfo(self, cmd="show system uptime"):
-        njInfo={
-                "status":True,
-                "content":{
-                        "noRestart": {"status":None,"content":""},
-                        "systemTime": {"status": None, "content": ""},
-                        "cpuLow": {"status": None, "content": ""},
-                        "memLow": {"status": None, "content": ""},
-                        "boardCard": {"status": None, "content": ""},
-                        "tempLow": {"status": None, "content": ""},
-                        "firewallConnection": {"status": None, "content": ""}},
-                "errLog":""
-                }
+        njInfo = {"status": True,
+                  "content": {"noRestart": {"status": None, "content": ""},
+                              "systemTime": {"status": None, "content": ""},
+                              "cpuLow": {"status": None, "content": ""},
+                              "memLow": {"status": None, "content": ""},
+                              "boardCard": {"status": None, "content": ""},
+                              "tempLow": {"status": None, "content": ""},
+                              "firewallConnection": {"status": None, "content": ""}},
+                  "errLog": ""}
         prompt = {
             "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Unrecognized command|Invalid command|unknown command)[\s\S]+",

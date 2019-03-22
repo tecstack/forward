@@ -336,60 +336,6 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
         njInfo['content'] = result
         return njInfo
 
-    def showSyslog(self):
-        """show the system syslog server and logbuffer
-        example cmd:
-            display info-center
-
-        Returns:
-            logbuffer level and syslog server level
-        """
-        njInfo = {
-            'status': False,
-            'content': [],
-            'errLog': ''
-        }
-        prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
-            "error": "Invalid command[\s\S]+",
-        }
-        cmd = 'display info-center'
-        result = self.command(cmd=cmd, prompt=prompt)
-        if not result['status'] or result['state'] != 'success':
-            njInfo['status'] = result['errLog']
-            return njInfo
-
-        syslog_server_list = re.split('language.*',result['content'])
-        syslog_server_list.pop()
-        syslog_server_list_ = re.split('\n',syslog_server_list[0])
-        njInfo_ = {
-            'status':True,
-            'errLog':'',
-            'content':{}
-        }
-        njInfo_['content']['syslog_server'] = {}
-        syslog_server_ = re.findall('(\d+\.\d+\.\d+\.\d+)',syslog_server_list[0],re.M)
-        if syslog_server_:
-            for line in syslog_server_list_:
-                syslog_server = re.findall('(\d+\.\d+\.\d+\.\d+), channel number (\d)',line,re.M)
-                if syslog_server:
-                    _syslog_server_ = syslog_server[0][0]
-                    _syslog_level_ = syslog_server[0][1]
-                    njInfo_['content']['syslog_server'][_syslog_server_] = _syslog_level_
-        else:
-            njInfo_['content']['syslog_server']['NULL'] = 'NULL'
-
-        syslog_buffer_list = re.split('Log buffer',result['content'])
-        syslog_buffer_ = syslog_buffer_list[-1]
-        logbuffer = re.findall('channel number : (\d)',syslog_buffer_,re.M)
-        if logbuffer:
-            njInfo_['content']['logbuffer'] = logbuffer[0]
-        else:
-            njInfo_['content']['logbuffer'] = 'NULL'
-        njInfo['status'] = njInfo_['status']
-        njInfo['content'] = njInfo_['content']
-        return njInfo
-
     def aclGet(self, acl_name='LOGIN', acl_ip='1.1.1.5'):
         """show ip acl
 
@@ -402,7 +348,7 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Invalid command[\s\S]+",
         }
         acl = {}
@@ -449,6 +395,90 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
         njInfo['content'] = weeksUptime,daysUptime
         return njInfo
 
+    def usefulContent(self,mystr,matchContent):
+        '''
+        Args:
+            matchContent
+        Return:
+              useful content between 2nd lines of '----' and 3rd line of '-----'
+        input like:
+           System memory usage at 2018-04-13 09:41:18
+           -------------------------------------------------------------------------------
+            Slot     Total Memory(MB)   Used Memory(MB)   Used Percentage   Upper Limit
+           -------------------------------------------------------------------------------
+           1          173                77                44%               85%
+           2          173                77                44%               85%
+           3          173                77                44%               85%
+           -------------------------------------------------------------------------------
+        output:
+           1          173                77                44%               85%
+           2          173                77                44%               85%
+           3          173                77                44%               85%
+
+        '''
+        dash_count=3
+        content_match=False
+        usefulList=[]
+        mystr = mystr.split('\n')
+        mystr.pop(0)
+        mystr.pop(-1)
+        for line in mystr:
+          if re.findall(matchContent, line):
+            content_match=True
+            continue
+          if content_match==False :
+            continue
+          if  re.findall('----------',line):
+            dash_count=dash_count-1
+            continue
+          if dash_count==1:
+            usefulList.append(line) #print line
+            continue
+          elif dash_count == 0 :
+            content_match=False
+            dash_count=3
+        return usefulList
+
+    def usefulContent2(self,mystr,matchContent):
+        '''
+        Args:
+            matchContent
+        Return:
+              useful content between 1st lines of '----' and 2nd line of '-----'
+        input like:
+        PowerID  Online  Mode   State      Current(A)   Voltage(V)   RealPwr(W)
+        --------------------------------------------------------------------------
+        PWR1     Present AC     Supply     5.31         53.50        284.08
+        PWR2     Present AC     Supply     5.66         53.53        302.98
+        -------------------------------------------------------------------------------
+        output:
+        PWR1     Present AC     Supply     5.31         53.50        284.08
+        PWR2     Present AC     Supply     5.66         53.53        302.98
+
+        '''
+        dash_count=2
+        content_match=False
+        usefulList=[]
+        mystr = mystr.split('\n')
+        mystr.pop(0)
+        mystr.pop(-1)
+        for line in mystr:
+          if re.findall(matchContent, line):
+            content_match=True
+            continue
+          if content_match==False :
+            continue
+          if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
+            dash_count=dash_count-1
+            continue
+          if dash_count==1:
+            usefulList.append(line) #print line
+            continue
+          elif dash_count == 0 :
+            content_match=False
+            dash_count=2
+        return usefulList
+
     def showHardware(self):
         """show hardware statu
         Returns:
@@ -477,20 +507,20 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
         mystr.pop(0)
         mystr.pop(-1)
         for line in mystr:
-            if re.findall('Slot  Card  Sensor SensorName       Status', line):
-                contentMatch=True
-                continue
-            if contentMatch==False :
-                continue
-            if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
-                dashCount=dashCount-1
-                continue
-            if dashCount==1:
-                usefulList.append(line) #print line
-                continue
-            elif dashCount == 0 :
-                contentMatch=False
-                dashCount=2
+          if re.findall('Slot  Card  Sensor SensorName       Status', line):
+            contentMatch=True
+            continue
+          if contentMatch==False :
+            continue
+          if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
+            dashCount=dashCount-1
+            continue
+          if dashCount==1:
+            usefulList.append(line) #print line
+            continue
+          elif dashCount == 0 :
+            contentMatch=False
+            dashCount=2
         resultSensor = usefulList
 
         dashCount=2
@@ -500,20 +530,20 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
         mystr.pop(0)
         mystr.pop(-1)
         for line in mystr:
-            if re.findall('PowerID  Online  Mode   State      Current', line):
-                contentMatch=True
-                continue
-            if contentMatch==False :
-                continue
-            if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
-                dashCount=dashCount-1
-                continue
-            if dashCount==1:
-                usefulList.append(line) #print line
-                continue
-            elif dashCount == 0 :
-                contentMatch=False
-                dashCount=2
+          if re.findall('PowerID  Online  Mode   State      Current', line):
+            contentMatch=True
+            continue
+          if contentMatch==False :
+            continue
+          if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
+            dashCount=dashCount-1
+            continue
+          if dashCount==1:
+            usefulList.append(line) #print line
+            continue
+          elif dashCount == 0 :
+            contentMatch=False
+            dashCount=2
         reultTemperature = usefulList
 
         dashCount=2
@@ -523,20 +553,20 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
         mystr.pop(0)
         mystr.pop(-1)
         for line in mystr:
-            if re.findall('PowerID  Online  Mode   State      Current', line):
-                contentMatch=True
-                continue
-            if contentMatch==False :
-                continue
-            if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
-                dashCount=dashCount-1
-                continue
-            if dashCount==1:
-                usefulList.append(line) #print line
-                continue
-            elif dashCount == 0 :
-                contentMatch=False
-                dashCount=2
+          if re.findall('PowerID  Online  Mode   State      Current', line):
+            contentMatch=True
+            continue
+          if contentMatch==False :
+            continue
+          if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
+            dashCount=dashCount-1
+            continue
+          if dashCount==1:
+            usefulList.append(line) #print line
+            continue
+          elif dashCount == 0 :
+            contentMatch=False
+            dashCount=2
         resultPower = usefulList
 
         dashCount=2
@@ -546,20 +576,20 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
         mystr.pop(0)
         mystr.pop(-1)
         for line in mystr:
-            if re.findall('FanID   FanNum   Online   Register', line):
-                contentMatch=True
-                continue
-            if contentMatch==False :
-                continue
-            if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
-                dashCount=dashCount-1
-                continue
-            if dashCount==1:
-                usefulList.append(line) #print line
-                continue
-            elif dashCount == 0 :
-                contentMatch=False
-                dashCount=2
+          if re.findall('FanID   FanNum   Online   Register', line):
+            contentMatch=True
+            continue
+          if contentMatch==False :
+            continue
+          if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
+            dashCount=dashCount-1
+            continue
+          if dashCount==1:
+            usefulList.append(line) #print line
+            continue
+          elif dashCount == 0 :
+            contentMatch=False
+            dashCount=2
         result_fan = usefulList
 
         sensorNormal=True
@@ -568,13 +598,13 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
         fanNormal=True
         errorDevice = []
         for line in resultSensor:
-            if not re.findall('Normal', line): #health output for sensor: If a line include 'Normal', it is normal
-                sensorNormal=False
-                errorDevice.append(line)
+          if not re.findall('Normal', line): #health output for sensor: If a line include 'Normal', it is normal
+            sensorNormal=False
+            errorDevice.append(line)
         for line in reultTemperature:
-            if not re.findall('Normal', line): #health output for temperature: If a line include 'Normal', it is normal
-                temperatureNormal=False
-                errorDevice.append(line)
+          if not re.findall('Normal', line): #health output for temperature: If a line include 'Normal', it is normal
+            temperatureNormal=False
+            errorDevice.append(line)
         for line in resultPower:#health output for power: If a line include 'Present' and 'Supply' together, it is normal
             if re.findall('Present', line):
                 if not re.findall('Supply',line):
@@ -582,7 +612,7 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
                     errorDevice.append(line)
             if re.findall('FAN', line):
                 if not (re.findall('Registered', line)):
-                    fanNormal=False
+                    fanNormal = False
                     errorDevice.append(line)
         if not errorDevice:
             njInfo['content'] = 'check pass'
@@ -605,16 +635,15 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
             "success": "[\r\n]+\S+.+(>|\]) ?$",
             "error": "Invalid command[\s\S]+",
         }
-        memory_enough=True
-        cmd='display health | after 17 include System memory usage at'
+        memoryEnough = True
+        cmd = 'display health | after 17 include System memory usage at'
         result = self.command(cmd=cmd, prompt=prompt)
-        if not result['status'] or result['state'] !='success':
+        if not result['status'] or result['state'] != 'success':
             njInfo['errLog'] = result['errLog']
             return njInfo
-
-        dashCount=3
-        contentMatch=False
-        usefulList=[]
+        dashCount = 3
+        contentMatch = False
+        usefulList = []
         mystr = result['content'].split('\n')
         mystr.pop(0)
         mystr.pop(-1)
@@ -624,22 +653,21 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
                 continue
             if contentMatch==False :
                 continue
-            if  re.findall('----------',line):
-                dashCount=dashCount-1
+            if re.findall('----------',line):
+                dashCount = dashCount-1
                 continue
-            if dashCount==1:
-                usefulList.append(line) #print line
-                continue
+            if dashCount == 1:
+              usefulList.append(line)
+              continue
             elif dashCount == 0 :
-                contentMatch=False
-                dashCount=3
+              contentMatch = False
+              dashCount = 3
         resultMemory = usefulList
-
         # resultMemory=self.usefulContent(result['content'],'System memory usage at') #strip off unuseful line
         for line in resultMemory:
-            value=re.findall('(\d+)%', line)
-            if float(value[0])>= float(value[1]):
-                memoryEnough=False
+          value = re.findall('(\d+)%', line)
+          if float(value[0]) >= float(value[1]):
+            memoryEnough = False
         njInfo['status'] = True
         njInfo['content'] = memoryEnough
         return njInfo
@@ -658,15 +686,15 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
             "success": "[\r\n]+\S+.+(>|\]) ?$",
             "error": "Invalid command[\s\S]+",
         }
-        cpu_enough=True
-        cmd='display health | after 17 include System cpu usage at'
+        cpu_enough = True
+        cmd = 'display health | after 17 include System cpu usage at'
         result = self.command(cmd=cmd, prompt=prompt)
-        if not result['status'] or result['state'] !='success':
+        if not result['status'] or result['state'] != 'success':
             njInfo['errLog'] = result['errLog']
             return njInfo
-        dashCount=3
-        contentMatch=False
-        usefulList=[]
+        dashCount = 3
+        contentMatch = False
+        usefulList = []
         mystr = result['content'].split('\n')
         mystr.pop(0)
         mystr.pop(-1)
@@ -677,21 +705,20 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
             if contentMatch==False :
                 continue
             if  re.findall('----------',line):
-                dashCount=dashCount-1
+                dashCount = dashCount-1
                 continue
-            if dashCount==1:
-                usefulList.append(line) #print line
+            if dashCount == 1:
+                usefulList.append(line)
                 continue
             elif dashCount == 0 :
-                contentMatch=False
-                dashCount=3
+                contentMatch = False
+                dashCount = 3
         resultMemory = usefulList
-
         # result_cpu=self.usefulContent(result['content'],'System cpu usage at') #strip off unuseful line
         for line in resultCPU:
-            value=re.findall('(\d+)%', line)
-            if float(value[0])>= float(value[1]):
-                cpu_enough=False
+          value = re.findall('(\d+)%', line)
+          if float(value[0]) >= float(value[1]):
+            cpu_enough = False
         njInfo['status'] = True
         njInfo['content'] = cpu_enough,resultCPU
         return njInfo
@@ -712,41 +739,41 @@ Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
             "error": "Invalid command[\s\S]+",
         }
         # cpu_enough=True
-        cmdLocla='display stp bridge local'
-        cmdRoot='display stp bridge root'
-        resultLocal=self.command(cmd=cmdLocla, prompt=prompt)
-        resultRoot=self.command(cmd=cmdRoot, prompt=prompt)
-        if not resultLocal['status'] or resultLocal['state'] !='success':
+        cmdLocla = 'display stp bridge local'
+        cmdRoot = 'display stp bridge root'
+        resultLocal = self.command(cmd=cmdLocla, prompt=prompt)
+        resultRoot = self.command(cmd=cmdRoot, prompt=prompt)
+        if not resultLocal['status'] or resultLocal['state'] != 'success':
             njInfo['errLog'] = resultLocal['errLog']
             return njInfo
-        if not resultRoot['status'] or resultRoot['state'] !='success':
+        if not resultRoot['status'] or resultRoot['state'] != 'success':
             njInfo['errLog'] = resultRoot['errLog']
             return njInfo
-        resultLocal=resultLocal['content'].split('\n')
-        resultRoot=resultRoot['content'].split('\n')
+        resultLocal = resultLocal['content'].split('\n')
+        resultRoot = resultRoot['content'].split('\n')
         resultLocal.pop(0)
         resultLocal.pop(-1)
         resultRoot.pop(0)
         resultRoot.pop(-1)
-        rootBridge=''
-        spanning_tree_change=False
+        rootBridge = ''
+        spanning_tree_change = False
         for i in range(len(resultRoot)):
             if i <= 2:
                 continue
-            if rootBridge=='':
-                rootBridge=resultRoot[i].split()[1]
+            if rootBridge == '':
+                rootBridge = resultRoot[i].split()[1]
                 continue
-            if resultRoot[i].split()[1] != rootBridge:
-                spanning_tree_change=True
+            if not resultRoot[i].split()[1] == rootBridge:
+                spanning_tree_change = True
             else:
                 pass
         for i in range(len(resultLocal)):
-            if i <=2:
+            if i <= 2:
                 continue
-            if resultLocal[i].split()[1]!= rootBridge:
-                spanning_tree_change=True
+            if not resultLocal[i].split()[1] == rootBridge:
+                spanning_tree_change = True
             else:
                 pass
         njInfo['status'] = True
-        njInfo['content'] = rootBridge,spanning_tree_change
+        njInfo['content'] = rootBridge, spanning_tree_change
         return njInfo

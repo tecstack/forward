@@ -435,22 +435,17 @@ class BASEFORTINET(BASESSHV2):
         return njInfo
 
     def basicInfo(self, cmd="get system performance status"):
-        njInfo={
-                "status":True,
-                "content":{
-                        "noRestart": {"status":None,"content":""},
-                        "systemTime": {"status": None, "content": ""},
-                        "cpuLow": {"status": None, "content": ""},
-                        "memLow": {"status": None, "content": ""},
-                        "boardCard": {"status": None, "content": ""},
-                        "tempLow": {"status": None, "content": ""},
-                        "firewallConnection": {"status": None, "content": ""}},
-                "errLog":""
-                }
-        prompt = {
-            "success": "[\r\n]+\S+(>|\]|#) ?$",
-            "error": "([Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
-        }
+        njInfo = {"status": True,
+                  "content": {"noRestart": {"status": None, "content": ""},
+                              "systemTime": {"status": None, "content": ""},
+                              "cpuLow": {"status": None, "content": ""},
+                              "memLow": {"status": None, "content": ""},
+                              "boardCard": {"status": None, "content": ""},
+                              "tempLow": {"status": None, "content": ""},
+                              "firewallConnection": {"status": None, "content": ""}},
+                  "errLog": ""}
+        prompt = {"success": "[\r\n]+\S+(>|\]|#) ?$",
+                  "error": "([Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+"}
         tmp = self.privilegeMode()
         runningDate = -1
         if tmp["status"]:
@@ -514,8 +509,8 @@ class BASEFORTINET(BASESSHV2):
                     "state": line[2] + line[3],
                     "uptime": "",
                     "address": line[5],
-                    "interface": line[6]},
-                    "deadTime": line[4]
+                    "interface": line[6],
+                    "deadTime": line[4]}
                     )
             else:
                 # The line does not matched data of expection.

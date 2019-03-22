@@ -378,18 +378,15 @@ class BASEVENUSTECH(BASETELNET):
         return njInfo
 
     def basicInfo(self, cmd="show system uptime"):
-        njInfo={
-                "status":True,
-                "content":{
-                        "noRestart": {"status":None,"content":""},
-                        "systemTime": {"status": None, "content": ""},
-                        "cpuLow": {"status": None, "content": ""},
-                        "memLow": {"status": None, "content": ""},
-                        "boardCard": {"status": None, "content": ""},
-                        "tempLow": {"status": None, "content": ""},
-                        "firewallConnection": {"status": None, "content": ""}},
-                "errLog":""
-                }
+        njInfo = {"status": True,
+                  "content": {"noRestart": {"status": None, "content": ""},
+                              "systemTime": {"status": None, "content": ""},
+                              "cpuLow": {"status": None, "content": ""},
+                              "memLow": {"status": None, "content": ""},
+                              "boardCard": {"status": None, "content": ""},
+                              "tempLow": {"status": None, "content": ""},
+                              "firewallConnection": {"status": None, "content": ""}},
+                  "errLog": ""}
         prompt = {
             "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Unrecognized command|Invalid command)[\s\S]+",
@@ -457,8 +454,8 @@ class BASEVENUSTECH(BASETELNET):
                     "state": line[2] + line[3],
                     "uptime": "",
                     "address": line[5],
-                    "interface": line[6]},
-                    "deadTime": line[4]
+                    "interface": line[6],
+                    "deadTime": line[4]}
                     )
             else:
                 # The line does not matched data of expection.

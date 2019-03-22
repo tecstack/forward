@@ -108,7 +108,7 @@ class BASEFENGHUO(BASESSHV2):
                 return result
         # else, command line of the device is in general-mode.
         # Start switching to privilege-mode.
-        sendEnable = self.command("enable", prompt={"password": "[pP]assword.*", "noPassword": "[\r\n]+\S+.+# ?$"})
+        sendEnable = self.command("enable", prompt={"password": "[pP]assword.*", "noPassword": "[\r\n]+\S+# ?$"})
         if sendEnable["state"] == "noPassword":
             # The device not required a password,thus switch is successful.
             result["status"] = True
@@ -119,7 +119,7 @@ class BASEFENGHUO(BASESSHV2):
             return result
         # If device required a password,then send a password to device.
         sendPassword = self.command(self.privilegePw, prompt={"password": "[pP]assword.*",
-                                                              "noPassword": "[\r\n]+\S+.+# ?$"})
+                                                              "noPassword": "[\r\n]+\S+# ?$"})
         if sendPassword["state"] == "password":
             # Password error,switch is failed.
             result["errLog"] = "Password of the privilege mode is wrong."
@@ -427,22 +427,17 @@ class BASEFENGHUO(BASESSHV2):
             return result
 
     def basicInfo(self, cmd="show version"):
-        njInfo={
-                "status":True,
-                "content":{
-                        "noRestart": {"status":None,"content":""},
-                        "systemTime": {"status": None, "content": ""},
-                        "cpuLow": {"status": None, "content": ""},
-                        "memLow": {"status": None, "content": ""},
-                        "boardCard": {"status": None, "content": ""},
-                        "tempLow": {"status": None, "content": ""},
-                        "firewallConnection": {"status": None, "content": ""}},
-                "errLog":""
-                }
-        prompt = {
-            "success": "[\r\n]+\S+(>|\]|#) ?$",
-            "error": "([Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
-        }
+        njInfo = {"status": True,
+                  "content": {"noRestart": {"status": None, "content": ""},
+                              "systemTime": {"status": None, "content": ""},
+                              "cpuLow": {"status": None, "content": ""},
+                              "memLow": {"status": None, "content": ""},
+                              "boardCard": {"status": None, "content": ""},
+                              "tempLow": {"status": None, "content": ""},
+                              "firewallConnection": {"status": None, "content": ""}},
+                  "errLog": ""}
+        prompt = {"success": "[\r\n]+\S+(>|\]|#) ?$",
+                  "error": "([Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+"}
         tmp = self.privilegeMode()
         runningDate = -1
         if tmp["status"]:

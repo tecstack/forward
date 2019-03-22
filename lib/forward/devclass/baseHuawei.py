@@ -47,7 +47,7 @@ class BASEHUAWEI(BASESSHV2):
                            prompt={"success": "Are you sure to continue\?\[Y/N\] ?$",
                                    "error": "Error:Incomplete command[\s\S]+"})
         if tmp["state"] == "success":
-            continueCommandResult = self.command("Y", prompt={"success": "successfully[\s\S]+[\r\n]+\S+.+> ?$"})
+            continueCommandResult = self.command("Y", prompt={"success": "successfully[\s\S]+[\r\n]+\S+> ?$"})
             if continueCommandResult["state"] == "success":
                 # Successfully.
                 result["status"] = True
@@ -74,7 +74,7 @@ class BASEHUAWEI(BASESSHV2):
         # Get the current position before switch to general mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
         if self.mode > 1:
-            tmp = self.command("return", prompt={"success": "[\r\n]+\S+.+> ?$"})
+            tmp = self.command("return", prompt={"success": "[\r\n]+\S+> ?$"})
             if tmp["state"] == "success":
                 result["status"] = True
                 self.mode = 1
@@ -103,8 +103,8 @@ class BASEHUAWEI(BASESSHV2):
             # else,go into privilege-mode.
         # else, command line of the device is in general-mode.
         # Start switching to privilege-mode.
-        sendEnableResult = self.command("system-view", prompt={"success": "[\r\n]+\S+.+\] ?$",
-                                                               "error": "[\r\n]+\S+.+> ?$"})
+        sendEnableResult = self.command("system-view", prompt={"success": "[\r\n]+\S+\] ?$",
+                                                               "error": "[\r\n]+\S+> ?$"})
         if sendEnableResult["state"] == "success":
             # The device not required a password,thus switch is successful.
             result["status"] = True
@@ -126,7 +126,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "display current-configuration | i log"
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -170,7 +170,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "dis current-configuration | i ntp"
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -193,7 +193,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "dis current-configuration | i snmp"
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -586,11 +586,11 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
             # "error": "(Invalid|Error|Illegal|marker|Incomplete)[\s\S]+",
         }
         prompt2 = {
-            "success": "{cmd2}[\r\n]+\S+.+Vlanif{vlan_id}\] ?$".format(vlan_id=vlan_id, cmd2=cmd2),
+            "success": "{cmd2}[\r\n]+\S+Vlanif{vlan_id}\] ?$".format(vlan_id=vlan_id, cmd2=cmd2),
             "error": "(Invalid|Error|Illegal|marker|Incomplete)[\s\S]+",
         }
         prompt3 = {
-            "success": "{cmd3}[\r\n]+\S+.+Vlanif{vlan_id}\] ?$".format(vlan_id=vlan_id, cmd3=cmd3),
+            "success": "{cmd3}[\r\n]+\S+Vlanif{vlan_id}\] ?$".format(vlan_id=vlan_id, cmd3=cmd3),
             "error": "(Invalid|Error|Illegal|marker|Incomplete)[\s\S]+",
         }
         # Running cmd1.
@@ -622,18 +622,15 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
         return result
 
     def basicInfo(self, cmd="display version"):
-        njInfo={
-                "status":True,
-                "content":{
-                        "noRestart": {"status":None,"content":""},
-                        "systemTime": {"status": None, "content": ""},
-                        "cpuLow": {"status": None, "content": ""},
-                        "memLow": {"status": None, "content": ""},
-                        "boardCard": {"status": None, "content": ""},
-                        "tempLow": {"status": None, "content": ""},
-                        "firewallConnection": {"status": None, "content": ""}},
-                "errLog":""
-                }
+        njInfo = {"status": True,
+                  "content": {"noRestart": {"status": None, "content": ""},
+                              "systemTime": {"status": None, "content": ""},
+                              "cpuLow": {"status": None, "content": ""},
+                              "memLow": {"status": None, "content": ""},
+                              "boardCard": {"status": None, "content": ""},
+                              "tempLow": {"status": None, "content": ""},
+                              "firewallConnection": {"status": None, "content": ""}},
+                  "errLog": ""}
         prompt = {
             "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Unrecognized command|Invalid command)[\s\S]+",

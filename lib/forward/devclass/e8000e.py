@@ -188,7 +188,7 @@ class E8000E(BASEHUAWEI):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Invalid command[\s\S]+",
         }
         tResult = self.command(cmd='display temperature', prompt=prompt)
@@ -274,7 +274,7 @@ class E8000E(BASEHUAWEI):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Invalid command[\s\S]+",
         }
         cpuEnough = True
@@ -327,7 +327,7 @@ class E8000E(BASEHUAWEI):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Invalid command[\s\S]+",
         }
         memoryEnough = True
@@ -381,7 +381,7 @@ class E8000E(BASEHUAWEI):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         if ip is None:
@@ -415,7 +415,7 @@ class E8000E(BASEHUAWEI):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         if sIP is None:
@@ -457,7 +457,7 @@ class E8000E(BASEHUAWEI):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         if pType is None:
@@ -491,7 +491,7 @@ class E8000E(BASEHUAWEI):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         if pType is None:
@@ -531,7 +531,7 @@ class E8000E(BASEHUAWEI):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         if sZone is None:
@@ -586,7 +586,7 @@ address-set %s service-set %s' % (sZone, dZone, bound, sourceAddress, destAddres
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         if ip is None:
@@ -636,7 +636,7 @@ address-set %s service-set %s' % (sZone, dZone, bound, sourceAddress, destAddres
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         if startIP is None:
@@ -691,7 +691,7 @@ address-set %s service-set %s' % (sZone, dZone, bound, sourceAddress, destAddres
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         if pType is None:
@@ -736,7 +736,7 @@ address-set %s service-set %s' % (sZone, dZone, bound, sourceAddress, destAddres
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         if pType is None:
@@ -786,7 +786,7 @@ address-set %s service-set %s' % (sZone, dZone, bound, sourceAddress, destAddres
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         if sZone is None:

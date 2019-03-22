@@ -608,7 +608,7 @@ class BASECISCO(BASESSHV2):
         else:
             cmd = "vlan {vlan_id}\rname {name}".format(vlan_id=vlan_id, name=name)
         prompt = {
-            "success": "[\r\n]+\S+.+config\-vlan\)(#|>) ?$",
+            "success": "[\r\n]+\S+config\-vlan\)(#|>) ?$",
             "error": "[\r\n]+(Invalid|Error)[\s\S]+",
         }
         tmp = self.command(cmd, prompt=prompt)
@@ -636,7 +636,7 @@ class BASECISCO(BASESSHV2):
             return tmp
         cmd = "no vlan {vlan_id}".format(vlan_id=vlan_id)
         prompt = {
-            "success": "[\r\n]+\S+.+config\)(#|>) ?$",
+            "success": "[\r\n]+\S+config\)(#|>) ?$",
         }
         tmp = self.command(cmd, prompt=prompt)
         if not self.vlanExist(vlan_id)["status"]:
@@ -855,7 +855,7 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
                     "uptime": line[4],
                     "address": line[5],
                     "interface": line[6],
-                    "deadTime": "",}
+                    "deadTime": ""}
                     )
             else:
                 # The line does not matched data of expection.

@@ -60,6 +60,5 @@ class N5548(BASECISCO):
                                  password=password,
                                  addCommand='user {username} password {password} role network-admin\n')
 
-
     def basicInfo(self):
         return BASECISCO.basicInfo(self, "show version")

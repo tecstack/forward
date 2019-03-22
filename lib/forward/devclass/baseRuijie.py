@@ -48,7 +48,7 @@ class BASERUIJIE(BASESSHV2):
         # Excute a command.
         data = self.command("write",
                             prompt={"success": "\[OK\][\s\S]+[\r\n]+\S+(>|#) ?$",
-                                    "error": "Unknown command[\s\S]+[\r\n]+\S+.+(>|#).*(>|#) ?$"})
+                                    "error": "Unknown command[\s\S]+[\r\n]+\S+(>|#).*(>|#) ?$"})
         if data["state"] == "success":
             result["content"] = "The configuration was saved successfully."
             result["status"] = True
@@ -75,7 +75,7 @@ class BASERUIJIE(BASESSHV2):
             # If value of the mode is 2,start switching to configure-mode.
             sendConfig = self.command("config term",
                                       prompt={"success": "[\r\n]+\S+\(config\)# ?$",
-                                              "error": "Unknown command[\s\S]+[\r\n]+\S+.+(>|#) ?$"})
+                                              "error": "Unknown command[\s\S]+[\r\n]+\S+(>|#) ?$"})
             if sendConfig["state"] == "success":
                 # switch to config-mode was successful.
                 result["status"] = True
@@ -521,18 +521,15 @@ class BASERUIJIE(BASESSHV2):
             return result
 
     def basicInfo(self, cmd="show version"):
-        njInfo={
-                "status":True,
-                "content":{
-                        "noRestart": {"status":None,"content":""},
-                        "systemTime": {"status": None, "content": ""},
-                        "cpuLow": {"status": None, "content": ""},
-                        "memLow": {"status": None, "content": ""},
-                        "boardCard": {"status": None, "content": ""},
-                        "tempLow": {"status": None, "content": ""},
-                        "firewallConnection": {"status": None, "content": ""}},
-                "errLog":""
-                }
+        njInfo = {"status": True,
+                  "content": {"noRestart": {"status": None, "content": ""},
+                              "systemTime": {"status": None, "content": ""},
+                              "cpuLow": {"status": None, "content": ""},
+                              "memLow": {"status": None, "content": ""},
+                              "boardCard": {"status": None, "content": ""},
+                              "tempLow": {"status": None, "content": ""},
+                              "firewallConnection": {"status": None, "content": ""}},
+                  "errLog": ""}
         prompt = {
             "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Invalid input|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
