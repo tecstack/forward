@@ -35,7 +35,7 @@ class E8000E(BASEHUAWEI):
         }
         cmd = "display  vlan"
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -80,7 +80,7 @@ class E8000E(BASEHUAWEI):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         cmd = 'dis cur'
@@ -104,7 +104,7 @@ class E8000E(BASEHUAWEI):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Invalid command[\s\S]+",
         }
         cmd = 'display current-configuration | include sysname'
@@ -130,7 +130,7 @@ class E8000E(BASEHUAWEI):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Invalid command[\s\S]+",
         }
         cmd = 'display version '
@@ -161,7 +161,7 @@ class E8000E(BASEHUAWEI):
             'errLog': ''
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Invalid command[\s\S]+",
         }
         cmd = 'display clock'

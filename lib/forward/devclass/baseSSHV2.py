@@ -216,7 +216,6 @@ class BASESSHV2(object):
             # Mathing specify key
             for key in prompt:
                 if re.search(prompt[key], re.sub(self.moreFlag, "", result["content"])):
-
                     # Found it
                     result["state"] = key
                     isBreak = True

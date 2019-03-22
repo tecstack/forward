@@ -45,7 +45,7 @@ line, Q to quit, other key to next page....')
         # Get the current position Before switch to privileged mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
         if self.mode >= 2:
-            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+.+# ?$",
+            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+# ?$",
                                                      "eror": "Unrecognized[\s\S]+"})
             if not exitResult["state"] == "success":
                 result["errLog"] = "Demoted from configuration-mode to privilege-mode failed."
@@ -98,7 +98,7 @@ line, Q to quit, other key to next page....')
             return result
         else:
             # If value of the mode is 2,start switching to configure-mode.
-            sendConfig = self.command("config term", prompt={"success": "[\r\n]+\S+.+\(config\)# ?$",
+            sendConfig = self.command("config term", prompt={"success": "[\r\n]+\S+\(config\)# ?$",
                                                              "error": "Unrecognized[\s\S]+"})
             if sendConfig["state"] == "success":
                 # switch to config-mode was successful.
@@ -127,7 +127,7 @@ line, Q to quit, other key to next page....')
         # Excute a command.
         data = self.command("write running-config startup-config", prompt=prompt)
         if data["state"] == "success":
-            data = self.command("y", prompt={"success": "successfully[\s\S]+[\r\n]+\S+.+(#|>) ?$",
+            data = self.command("y", prompt={"success": "successfully[\s\S]+[\r\n]+\S+(#|>) ?$",
                                              "error": "Unrecognized[\s\S]+"})
             if data["state"] == "success":
                 result["content"] = "The configuration was saved successfully.[%s]" % data["content"]
@@ -150,7 +150,7 @@ line, Q to quit, other key to next page....')
         }
         cmd = "show version"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -171,7 +171,7 @@ line, Q to quit, other key to next page....')
         }
         cmd = "show vlan"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -236,7 +236,7 @@ line, Q to quit, other key to next page....')
             "content": [],
             "errLog": ""
         }
-        result = self.command("show run snmp", prompt={"success": "[\r\n]+\S+.+(#|>) ?$",
+        result = self.command("show run snmp", prompt={"success": "[\r\n]+\S+(#|>) ?$",
                                                                   "eror": "Unrecognized[\s\S]+"})
         if result["state"] == "success":
             tmp = re.findall("snmp-server host (\d+\.\d+\.\d+\.\d+).*?udp-port (\d+)",
@@ -260,7 +260,7 @@ line, Q to quit, other key to next page....')
         }
         cmd = "show ip route"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -296,7 +296,7 @@ line, Q to quit, other key to next page....')
             "content": [],
             "errLog": ""
         }
-        result = self.command("show run syslog", prompt={"success": "[\r\n]+\S+.+(#|>) ?$",
+        result = self.command("show run syslog", prompt={"success": "[\r\n]+\S+(#|>) ?$",
                                                          "eror": "Unrecognized[\s\S]+"})
         if result["state"] == "success":
             tmp = re.findall("logging (\d+\.\d+\.\d+\.\d+)",
@@ -317,7 +317,7 @@ line, Q to quit, other key to next page....')
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -389,7 +389,7 @@ line, Q to quit, other key to next page....')
         }
         cmd = "show running-config   | include  ntp"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -416,7 +416,7 @@ line, Q to quit, other key to next page....')
                 "errLog":""
                 }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "([Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
         }
         tmp = self.privilegeMode()

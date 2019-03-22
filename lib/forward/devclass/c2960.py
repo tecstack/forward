@@ -56,7 +56,7 @@ class C2960(BASECISCO):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         tmp = self.privilegeMode()

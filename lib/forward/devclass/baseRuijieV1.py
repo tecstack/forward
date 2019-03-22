@@ -144,7 +144,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = '''show run | include  ntp'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -170,7 +170,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = '''show run | include  logging'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -199,7 +199,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = '''show run | include  snmp'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -225,7 +225,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = "show  version"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -246,7 +246,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = "show  vlan"
         prompt = {
-            "success": "[\r\n]+\S+.+(>|#|\$) *$",
+            "success": "[\r\n]+\S+(>|#|\$) *$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -297,7 +297,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = "show ip route"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -362,7 +362,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -482,7 +482,7 @@ class BASERUIJIE(BASESSHV1):
             return tmp
         cmd = "vlan {vlan_id}\rname {description}".format(vlan_id=vlan_id, description=description)
         prompt = {
-            "success": "[\r\n]+\S+.+config\-vlan\)(#|>) ?$",
+            "success": "[\r\n]+\S+config\-vlan\)(#|>) ?$",
             "error": "Invalid[\s\S]+config\)(#|>) ?$",
         }
         tmp = self.command(cmd, prompt=prompt)
@@ -509,7 +509,7 @@ class BASERUIJIE(BASESSHV1):
             return tmp
         cmd = "no vlan {vlan_id}".format(vlan_id=vlan_id)
         prompt = {
-            "success": "[\r\n]+\S+.+config\)(#|>) ?$",
+            "success": "[\r\n]+\S+config\)(#|>) ?$",
         }
         tmp = self.command(cmd, prompt=prompt)
         if not self.vlanExist(vlan_id)["status"]:
@@ -535,7 +535,7 @@ class BASERUIJIE(BASESSHV1):
                 "errLog":""
                 }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Invalid input|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
         }
         tmp = self.privilegeMode()

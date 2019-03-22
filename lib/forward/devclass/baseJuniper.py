@@ -266,7 +266,7 @@ class BASEJUNIPER(BASETELNET):
             "errLog": ""
         }
         # If value of the mode is 2,start switching to configure-mode.
-        sendConfig = self.command("configure", prompt={"success": "[\r\n]+\S+.+# ?$",
+        sendConfig = self.command("configure", prompt={"success": "[\r\n]+\S+# ?$",
                                                        "error": "unknown command[\s\S]+\S+.+> ?$"})
         if sendConfig["state"] == "success":
             # switch to config-mode was successful.
@@ -339,7 +339,7 @@ class BASEJUNIPER(BASETELNET):
             return tmp
         cmd = "show interfaces extensive"
         prompt = {
-            "success": "[\r\n]+\S+.+> ?$",
+            "success": "[\r\n]+\S+> ?$",
             "error": "unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -424,7 +424,7 @@ class BASEJUNIPER(BASETELNET):
             return tmp
         cmd = "show route"
         prompt = {
-            "success": "[\r\n]+\S+.+> ?$",
+            "success": "[\r\n]+\S+> ?$",
             "error": "unknown command[\s\S]+",
         }
         # Get name of routes.
@@ -473,7 +473,7 @@ class BASEJUNIPER(BASETELNET):
         if tmp["status"] is False:
             return tmp
         prompt = {
-            "success": "[\r\n]+\S+.+> ?$",
+            "success": "[\r\n]+\S+> ?$",
             "error": "unknown command[\s\S]+",
         }
         result = self.command("show configuration snmp ", prompt=prompt)
@@ -515,7 +515,7 @@ class BASEJUNIPER(BASETELNET):
         if tmp["status"] is False:
             return tmp
         prompt = {
-            "success": "[\r\n]+\S+.+> ?$",
+            "success": "[\r\n]+\S+> ?$",
             "error": "unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -540,7 +540,7 @@ class BASEJUNIPER(BASETELNET):
         if tmp["status"] is False:
             return tmp
         prompt = {
-            "success": "[\r\n]+\S+.+> ?$",
+            "success": "[\r\n]+\S+> ?$",
             "error": "unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -565,7 +565,7 @@ class BASEJUNIPER(BASETELNET):
         if tmp["status"] is False:
             return tmp
         prompt = {
-            "success": "[\r\n]+\S+.+> ?$",
+            "success": "[\r\n]+\S+> ?$",
             "error": "unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -628,7 +628,7 @@ class BASEJUNIPER(BASETELNET):
                 "errLog":""
                 }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Unrecognized command|Invalid command|unknown command)[\s\S]+",
         }
         tmp = self.privilegeMode()
@@ -665,4 +665,108 @@ class BASEJUNIPER(BASETELNET):
                 return result
         else:
             return tmp
+        return njInfo
+
+    def showVRRP(self, cmd="show vrrp"):
+        njInfo = {
+            "status": True,
+            "content": [],
+            "errLog": ""
+        }
+
+        prompt = {
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
+            "error": "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            return tmp
+        result = self.command(cmd, prompt)
+        for line in result["content"].split("\r\n"):
+            dataLine = line.split()
+            try:
+                if len(dataLine) == 2:
+                    njInfo["content"][-1]["type"] += "/" + dataLine[0]
+                    njInfo["content"][-1]["address"] += "/" + dataLine[1]
+                    continue
+                njInfo["content"].append({
+                    "vr-state": dataLine[3],
+                    "vr-mode": dataLine[4],
+                    "timer": dataLine[5] + dataLine[6],
+                    "type": dataLine[7],
+                    "interface": dataLine[0],
+                    "group": dataLine[2],
+                    "prio": "",
+                    "p": "",
+                    "state": dataLine[1],
+                    "active": "",
+                    "standby-addr": "",
+                    "group-addr": "",
+                    "address": dataLine[8]}
+                    )
+
+            except Exception:
+                pass
+        return njInfo
+
+    def showBGP(self, cmd="show bgp neighbor"):
+        njInfo = {
+            "status": True,
+            "content": [],
+            "errLog": ""
+        }
+        prompt = {
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
+            "error": "[\r\n]+\S+(>|\]|#) ?$",
+        }
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            return tmp
+        result = self.command(cmd, prompt)
+        for dataLine in re.findall("Peer[\s\S]+?Queue", result["content"]):
+            data = {"description": "",
+                    "state": "",
+                    "type": "",
+                    "last-error": "",
+                    "last-state": "",
+                    "last-event": "",
+                    "peer-id": "",
+                    "local-id": "",
+                    "keepalive-interval": "",
+                    "local": "",
+                    "peer": ""}
+            tmp = re.search(" Description: (.*)", dataLine)
+            if tmp:
+                data["description"] = tmp.group(1).strip()
+            tmp = re.search(" State: ([\S]+)", dataLine)
+            if tmp:
+                data["state"] = tmp.group(1).strip()
+            tmp = re.search(" Type: ([\S]+)", dataLine)
+            if tmp:
+                data["type"] = tmp.group(1).strip()
+            tmp = re.search(" Last Error: ([\S]+)", dataLine)
+            if tmp:
+                data["last-error"] = tmp.group(1).strip()
+            tmp = re.search(" Last State: ([\S]+)", dataLine)
+            if tmp:
+                data["last-state"] = tmp.group(1).strip()
+            tmp = re.search("Last Event: (.*)", dataLine)
+            if tmp:
+                data["last-event"] = tmp.group(1).strip()
+            tmp = re.search("Peer: ([\S]+)", dataLine)
+            if tmp:
+                data["peer"] = tmp.group(1).strip()
+            tmp = re.search(" Local: ([\S]+)", dataLine)
+            if tmp:
+                data["local"] = tmp.group(1).strip()
+            tmp = re.search(" Peer ID: ([\S]+)", dataLine)
+            if tmp:
+                data["peer-id"] = tmp.group(1).strip()
+            tmp = re.search(" Local ID: ([\S]+)", dataLine)
+            if tmp:
+                data["local-id"] = tmp.group(1).strip()
+            tmp = re.search(" Keepalive Interval: ([0-9]+)", dataLine)
+            if tmp:
+                data["keepalive-interval"] = tmp.group(1).strip()
+            njInfo["content"].append(data)
         return njInfo

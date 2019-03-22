@@ -148,7 +148,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "dis version"
         prompt = {
-            "success": "[sS]oftware[\s\S]+[\r\n]+\S+(>|\]) ?$",
+            "success": "[\s\S]+[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -214,7 +214,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "display  vlan"
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -287,7 +287,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         cmd = "display  ip routing-table"
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -324,7 +324,7 @@ class BASEHUAWEI(BASESSHV2):
         cmd = "display interface"
         # There are Special characters in some descriptions.
         prompt = {
-            "success": "\r\n\r\n\S+.+(>|\]) ?$",
+            "success": "\r\n\r\n\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -460,7 +460,7 @@ class BASEHUAWEI(BASESSHV2):
         else:
             cmd = "vlan {vlan_id}\rname {name}".format(vlan_id=vlan_id, name=name)
         prompt = {
-            "success": "[\r\n]+\S+.+vlan{vlan_id}\] ?$".format(vlan_id=vlan_id),
+            "success": "[\r\n]+\S+vlan{vlan_id}\] ?$".format(vlan_id=vlan_id),
             "error": "Error:[\s\S]+",
         }
         # runing command of vlan.
@@ -489,7 +489,7 @@ class BASEHUAWEI(BASESSHV2):
             return tmp
         cmd = "undo vlan {vlan_id}".format(vlan_id=vlan_id)
         prompt = {
-            "success": "{cmd}[\r\n]+\S+.+\] ?$".format(vlan_id=vlan_id, cmd=cmd),
+            "success": "{cmd}[\r\n]+\S+\] ?$".format(vlan_id=vlan_id, cmd=cmd),
             "error": "(Error):[\s\S]+",
         }
         tmp = self.command(cmd, prompt=prompt)
@@ -537,7 +537,7 @@ class BASEHUAWEI(BASESSHV2):
             return tmp
         cmd = "undo interface vlanif {vlan_id}".format(vlan_id=vlan_id)
         prompt = {
-            "success": "[\r\n]+\S+.+(\]|>) ?$",
+            "success": "[\r\n]+\S+(\]|>) ?$",
         }
         tmp = self.command(cmd, prompt=prompt)
         if not self.interfaceVlanExist(vlan_id)["status"]:
@@ -581,8 +581,8 @@ class BASEHUAWEI(BASESSHV2):
 thus can't create interface-vlan.".format(vlan_id=vlan_id)
             return result
         prompt1 = {
-            "success": "[\r\n]+\S+.+Vlanif{vlan_id}\] ?$".format(vlan_id=vlan_id),
-            "error": "[\r\n]+\S+.+\] ?$",
+            "success": "[\r\n]+\S+Vlanif{vlan_id}\] ?$".format(vlan_id=vlan_id),
+            "error": "[\r\n]+\S+\] ?$",
             # "error": "(Invalid|Error|Illegal|marker|Incomplete)[\s\S]+",
         }
         prompt2 = {
@@ -635,7 +635,7 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
                 "errLog":""
                 }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Unrecognized command|Invalid command)[\s\S]+",
         }
         tmp = self.privilegeMode()
@@ -672,4 +672,39 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
                 return result
         else:
             return tmp
+        return njInfo
+
+    def showOSPF(self, cmd="display ospf peer  brief"):
+        njInfo = {
+            "status": True,
+            "content": [],
+            "errLog": ""
+        }
+
+        prompt = {
+            "success": "[\r\n]+\S+(>|\]) ?$",
+            "error": "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            return tmp
+        result = self.command(cmd, prompt)
+        dataLine = re.findall("[0-9]{1,3}.*", result["content"])
+        if len(dataLine) == 0:
+            return njInfo
+        for line in dataLine:
+            line = line.split()
+            if len(line) == 4:
+                njInfo["content"].append({
+                    "neighbor-id": line[2],
+                    "pri": "",
+                    "state": line[3],
+                    "uptime": "",
+                    "address": line[0],
+                    "deadTime": "",
+                    "interface": line[1]},
+                    )
+            else:
+                # The line does not matched data of expection.
+                continue
         return njInfo

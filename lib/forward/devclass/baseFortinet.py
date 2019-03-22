@@ -37,7 +37,7 @@ class BASEFORTINET(BASESSHV2):
         }
         cmd = '''end'''
         prompt = {
-            "success": "end\r\r\n\r\n\S+.+(#|>) ?$",
+            "success": "end\r\r\n\r\n\S+(#|>) ?$",
             "normal": "Unknown action[\s\S]+",
         }
         result = self.command(cmd, prompt=prompt)
@@ -56,7 +56,7 @@ class BASEFORTINET(BASESSHV2):
         }
         cmd = '''end'''
         prompt = {
-            "success": "end\r\r\n\r\n\S+.+(#|>) ?$",
+            "success": "end\r\r\n\r\n\S+(#|>) ?$",
             "normal": "Unknown action[\s\S]+",
         }
         result = self.command(cmd, prompt=prompt)
@@ -75,7 +75,7 @@ class BASEFORTINET(BASESSHV2):
         }
         cmd = '''end'''
         prompt = {
-            "success": "end\r\r\n\r\n\S+.+(#|>) ?$",
+            "success": "end\r\r\n\r\n\S+(#|>) ?$",
             "normal": "Unknown action[\s\S]+",
         }
         result = self.command(cmd, prompt=prompt)
@@ -102,7 +102,7 @@ class BASEFORTINET(BASESSHV2):
         syslog3
         """
         prompt = {
-            "success": "end[\r\n]+\S+.+(#|>) ?$",
+            "success": "end[\r\n]+\S+(#|>) ?$",
             "error": "Return code \-61[\s\S]+",
         }
         i = 0
@@ -133,7 +133,7 @@ class BASEFORTINET(BASESSHV2):
         }
         cmd = '''show full-configuration  system ntp'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unknown action[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -155,7 +155,7 @@ class BASEFORTINET(BASESSHV2):
         }
         cmd = '''show full-configuration  system  snmp community'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unknown action[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -177,7 +177,7 @@ class BASEFORTINET(BASESSHV2):
         }
         cmd = "show full-configuration  system interface"
         prompt = {
-            "success": "[\r\n]+\S+.*(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -279,7 +279,7 @@ class BASEFORTINET(BASESSHV2):
         }
         cmd = "show full-configuration  system interface"
         prompt = {
-            "success": "[\r\n]+\S+.*(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unrecognized[\s\S]",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -328,7 +328,7 @@ class BASEFORTINET(BASESSHV2):
         }
         cmd = "get system  status"
         prompt = {
-            "success": "Release[\s\S]+[\r\n]+\S+.+(#|>) ?$",
+            "success": "Release[\s\S]+[\r\n]+\S+(#|>) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -349,7 +349,7 @@ class BASEFORTINET(BASESSHV2):
         }
         cmd = "get router  info routing-table  all"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unrecognized[\s\S]+[\r\n]+[\S]+.+(#|>) ?$",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -448,7 +448,7 @@ class BASEFORTINET(BASESSHV2):
                 "errLog":""
                 }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "([Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
         }
         tmp = self.privilegeMode()
@@ -485,4 +485,39 @@ class BASEFORTINET(BASESSHV2):
                 return result
         else:
             return tmp
+        return njInfo
+
+    def showOSPF(self, cmd="get router info ospf neighbor"):
+        njInfo = {
+            "status": True,
+            "content": [],
+            "errLog": ""
+        }
+
+        prompt = {
+            "success": "[\r\n]+\S+(>|#) ?$",
+            "error": "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            return tmp
+        result = self.command(cmd, prompt)
+        dataLine = re.findall("[0-9]{1,3}.*", result["content"])
+        if len(dataLine) == 0:
+            return njInfo
+        for line in dataLine:
+            line = line.split()
+            if len(line) == 7:
+                njInfo["content"].append({
+                    "neighbor-id": line[0],
+                    "pri": line[1],
+                    "state": line[2] + line[3],
+                    "uptime": "",
+                    "address": line[5],
+                    "interface": line[6]},
+                    "deadTime": line[4]
+                    )
+            else:
+                # The line does not matched data of expection.
+                continue
         return njInfo

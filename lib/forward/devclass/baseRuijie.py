@@ -74,7 +74,7 @@ class BASERUIJIE(BASESSHV2):
         else:
             # If value of the mode is 2,start switching to configure-mode.
             sendConfig = self.command("config term",
-                                      prompt={"success": "[\r\n]+\S+.+\(config\)# ?$",
+                                      prompt={"success": "[\r\n]+\S+\(config\)# ?$",
                                               "error": "Unknown command[\s\S]+[\r\n]+\S+.+(>|#) ?$"})
             if sendConfig["state"] == "success":
                 # switch to config-mode was successful.
@@ -95,7 +95,7 @@ class BASERUIJIE(BASESSHV2):
         # Get the current position Before switch to privileged mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
         if self.mode >= 2:
-            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            exitResult = self.command("end", prompt={"success": "[\r\n]+\S+(#|>|\]) ?$",
                                                      "error": "(#|>)"})
             if not exitResult["state"] == "success":
                 result["errLog"] = "Demoted from configuration-mode to privilege-mode failed."
@@ -141,7 +141,7 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = '''show run | include  ntp'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -167,7 +167,7 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = '''show run | include  logging'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -196,7 +196,7 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = '''show run | include  snmp'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -222,7 +222,7 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = "show  version"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -243,7 +243,7 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = "show  vlan"
         prompt = {
-            "success": "[\r\n]+\S+.+(>|#|\$) *$",
+            "success": "[\r\n]+\S+(>|#|\$) *$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -294,7 +294,7 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = "show ip route"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -359,7 +359,7 @@ class BASERUIJIE(BASESSHV2):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -481,7 +481,7 @@ class BASERUIJIE(BASESSHV2):
             return tmp
         cmd = "vlan {vlan_id}\rname {name}".format(vlan_id=vlan_id, name=name)
         prompt = {
-            "success": "[\r\n]+\S+.+config\-vlan\)(#|>) ?$",
+            "success": "[\r\n]+\S+config\-vlan\)(#|>) ?$",
             "error": "Invalid[\s\S]+config\)(#|>) ?$",
         }
         tmp = self.command(cmd, prompt=prompt)
@@ -508,7 +508,7 @@ class BASERUIJIE(BASESSHV2):
             return tmp
         cmd = "no vlan {vlan_id}".format(vlan_id=vlan_id)
         prompt = {
-            "success": "[\r\n]+\S+.+config\)(#|>) ?$",
+            "success": "[\r\n]+\S+config\)(#|>) ?$",
         }
         tmp = self.command(cmd, prompt=prompt)
         if not self.vlanExist(vlan_id)["status"]:
@@ -534,7 +534,7 @@ class BASERUIJIE(BASESSHV2):
                 "errLog":""
                 }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Invalid input|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
         }
         tmp = self.privilegeMode()

@@ -158,7 +158,7 @@ class BASELINUX(BASESSHV2):
                 "errLog":""
                 }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(command not found|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
         }
         runningDate = -1

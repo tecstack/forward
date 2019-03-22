@@ -135,7 +135,7 @@ class BASEVENUSTECH(BASETELNET):
         }
         cmd = "show version"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -157,7 +157,7 @@ class BASEVENUSTECH(BASETELNET):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\r\n]+\S+.+# ?$",
+            "success": "[\r\n]+\S+# ?$",
             "error": "Unknown command[\s\S]+",
         }
         # Swtich to privilege-mode before getting the information of the interfaces.
@@ -241,7 +241,7 @@ class BASEVENUSTECH(BASETELNET):
         }
         cmd = "show ntp config"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unknown command[\s\S]+",
         }
         # Swtich to privilege-mode before getting the ntp informations.
@@ -266,7 +266,7 @@ class BASEVENUSTECH(BASETELNET):
         }
         cmd = "show run snmp"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unknown command[\s\S]+",
         }
         # Swtich to privilege-mode before getting the snmp informations.
@@ -291,7 +291,7 @@ class BASEVENUSTECH(BASETELNET):
         }
         cmd = "show run syslog"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unknown command[\s\S]+",
         }
         # Swtich to privilege-mode before getting the snmp informations.
@@ -319,7 +319,7 @@ class BASEVENUSTECH(BASETELNET):
         }
         cmd = "show ip route"
         prompt = {
-            "success": "[\r\n]+\S+.+# ?$",
+            "success": "[\r\n]+\S+# ?$",
             "error": "Unknown command[\s\S]+",
         }
         # Swtich to privilege-mode before getting the routing informations.
@@ -391,7 +391,7 @@ class BASEVENUSTECH(BASETELNET):
                 "errLog":""
                 }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Unrecognized command|Invalid command)[\s\S]+",
         }
         tmp = self.privilegeMode()
@@ -428,4 +428,39 @@ class BASEVENUSTECH(BASETELNET):
                 return result
         else:
             return tmp
+        return njInfo
+
+    def showOSPF(self, cmd="show ip ospf  neighbor"):
+        njInfo = {
+            "status": True,
+            "content": [],
+            "errLog": ""
+        }
+
+        prompt = {
+            "success": "[\r\n]+\S+(>|#) ?$",
+            "error": "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            return njInfo
+        result = self.command(cmd, prompt)
+        dataLine = re.findall("[0-9]{1,3}.*", result["content"])
+        if len(dataLine) == 0:
+            return njInfo
+        for line in dataLine:
+            line = line.split()
+            if len(line) == 8:
+                njInfo["content"].append({
+                    "neighbor-id": line[0],
+                    "pri": line[1],
+                    "state": line[2] + line[3],
+                    "uptime": "",
+                    "address": line[5],
+                    "interface": line[6]},
+                    "deadTime": line[4]
+                    )
+            else:
+                # The line does not matched data of expection.
+                continue
         return njInfo

@@ -149,7 +149,7 @@ class BASEZTE(BASESSHV2):
         }
         cmd = "show ntp status"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -171,7 +171,7 @@ class BASEZTE(BASESSHV2):
             "errLog": ""
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command("show snmp config", prompt=prompt)
@@ -197,7 +197,7 @@ class BASEZTE(BASESSHV2):
         }
         cmd = "show  vlan"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -229,7 +229,7 @@ class BASEZTE(BASESSHV2):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -308,7 +308,7 @@ class BASEZTE(BASESSHV2):
         }
         cmd = "show logging configuration"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -329,7 +329,7 @@ class BASEZTE(BASESSHV2):
         }
         cmd = "show ip vrf brief"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         # Get name of routes.
@@ -381,7 +381,7 @@ class BASEZTE(BASESSHV2):
                 "errLog":""
                 }
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
         }
         tmp = self.privilegeMode()

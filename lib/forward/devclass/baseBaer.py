@@ -61,7 +61,7 @@ class BASEBAER(BASESSHV2):
         *A:NFJD-PSC-S-SR7750-1>config# service
         *A:NFJD-PSC-S-SR7750-1>config>service#
         """
-        result = self.command("exit all", prompt={"success": "[\r\n]+\S+.+# ?$"})
+        result = self.command("exit all", prompt={"success": "[\r\n]+\S+# ?$"})
         if result["state"] == "success":
             if re.search("[\r\n]+\S+.+>config>[a-z>]+# ?$", result["content"]):
                 njInfo["errLog"] = "Switch to privilegeMode is faild. current located config mode."
@@ -82,7 +82,7 @@ class BASEBAER(BASESSHV2):
         tmp = self.privilegeMode()
         if tmp["status"] is False:
             return tmp
-        result = self.command("config", prompt={"success": "[\r\n]+\S+.+>config# ?$"})
+        result = self.command("config", prompt={"success": "[\r\n]+\S+>config# ?$"})
         if result["state"] == "success":
             self.mode == 3
             njInfo["status"] = True
@@ -97,7 +97,7 @@ class BASEBAER(BASESSHV2):
             "content": "",
             "errLog": ""
         }
-        result = self.command("show version", prompt={"success": "[\r\n]+\S+.+# ?$",
+        result = self.command("show version", prompt={"success": "[\r\n]+\S+# ?$",
                                                       "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             # TiMOS-C-10.0.R12 cpm/hops ALCATEL SR 7750 Copyright (c) 2000-2013 Alcatel-Lucent. --> TiMOS-C-10.0.R12
@@ -118,7 +118,7 @@ class BASEBAER(BASESSHV2):
             "content": [],
             "errLog": ""
         }
-        result = self.command("show router  route-table", prompt={"success": "[\r\n]+\S+.+# ?$",
+        result = self.command("show router  route-table", prompt={"success": "[\r\n]+\S+# ?$",
                                                                   "eror": "Bad command[\s\S]+"})
         """
         Dest Prefix[Flags]                            Type    Proto     Age        Pref
@@ -172,7 +172,7 @@ class BASEBAER(BASESSHV2):
             'errLog': ''
         }
         cmd = "show port detail"
-        result = self.command(cmd, prompt={"success": "[\r\n]+\S+.+# ?$",
+        result = self.command(cmd, prompt={"success": "[\r\n]+\S+# ?$",
                                            "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             reg = "Description        :[\s\S]+?========================================"
@@ -282,7 +282,7 @@ class BASEBAER(BASESSHV2):
                          "port": ""}],
             "errLog": ""
         }
-        result = self.command("show log snmp-trap-group", prompt={"success": "[\r\n]+\S+.+# ?$",
+        result = self.command("show log snmp-trap-group", prompt={"success": "[\r\n]+\S+# ?$",
                                                                   "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             tmp = re.findall("\d+\.\d+\.\d+\.\d+:\d+", result["content"])
@@ -303,7 +303,7 @@ class BASEBAER(BASESSHV2):
             "content": "",
             "errLog": ""
         }
-        result = self.command("show log  syslog", prompt={"success": "[\r\n]+\S+.+# ?$",
+        result = self.command("show log  syslog", prompt={"success": "[\r\n]+\S+# ?$",
                                                           "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             tmp = re.findall("[\r\n]+\d+\s+(\d+\.\d+\.\d+\.\d+)\s+\d+", result["content"])
@@ -324,7 +324,7 @@ class BASEBAER(BASESSHV2):
             "content": "",
             "errLog": ""
         }
-        result = self.command("show system ntp", prompt={"success": "[\r\n]+\S+.+# ?$",
+        result = self.command("show system ntp", prompt={"success": "[\r\n]+\S+# ?$",
                                                          "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             tmp = re.findall("\d+\.\d+\.\d+\.\d+", result["content"])
@@ -345,7 +345,7 @@ class BASEBAER(BASESSHV2):
             "content": [],
             "errLog": ""
         }
-        result = self.command("show service sap-using", prompt={"success": "[\r\n]+\S+.+# ?$",
+        result = self.command("show service sap-using", prompt={"success": "[\r\n]+\S+# ?$",
                                                                 "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             for line in result["content"].split("\r\n"):
@@ -384,7 +384,7 @@ class BASEBAER(BASESSHV2):
                               "firewallConnection": {"status": None, "content": ""}},
                   "errLog": ""}
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
         }
         tmp = self.privilegeMode()

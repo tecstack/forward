@@ -37,7 +37,7 @@ class BASEDEPP(BASESSHV2):
         cmd = "show running-config  | include  ntp"
         prompt = {
             # Problems caused by special characters cannot be added with host prompt
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -73,7 +73,7 @@ class BASEDEPP(BASESSHV2):
         cmd = "show run | include target-host"
         prompt = {
             # Problems caused by special characters cannot be added with host prompt
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -117,7 +117,7 @@ class BASEDEPP(BASESSHV2):
         }
         cmd = "show vlan"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -170,7 +170,7 @@ class BASEDEPP(BASESSHV2):
         }
         cmd = "show ip route"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -231,7 +231,7 @@ class BASEDEPP(BASESSHV2):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]|\$) ?$",
+            "success": "[\r\n]+\S+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)

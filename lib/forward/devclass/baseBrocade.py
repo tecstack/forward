@@ -41,7 +41,7 @@ class BASEBROCADE(BASESSHV2):
             return result
         # Excute a command.
         data = self.command("write  memory sync",
-                            prompt={"success": "startup-config done[\s\S]+[\r\n]+\S+.+# ?$",
+                            prompt={"success": "startup-config done[\s\S]+[\r\n]+\S+# ?$",
                                     "error": "need to configure config-sync peer before issuing this command[\S\s]+"})
         if data["state"] is None:
             result["errLog"] = "Failed save configuration, \
@@ -154,7 +154,7 @@ class BASEBROCADE(BASESSHV2):
         }
         cmd = "show vlan"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -189,7 +189,7 @@ class BASEBROCADE(BASESSHV2):
             "errLog": ""
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command("show  running-config   | include  snmp", prompt=prompt)
@@ -215,7 +215,7 @@ class BASEBROCADE(BASESSHV2):
         }
         cmd = "show run ntp"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -237,7 +237,7 @@ class BASEBROCADE(BASESSHV2):
         }
         cmd = '''show running-config  | include  logging'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -261,7 +261,7 @@ class BASEBROCADE(BASESSHV2):
         }
         cmd = "show ip route"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -318,7 +318,7 @@ class BASEBROCADE(BASESSHV2):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -399,7 +399,7 @@ class BASEBROCADE(BASESSHV2):
                               "firewallConnection": {"status": None, "content": ""}},
                   "errLog": ""}
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Invalid input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
         }
         tmp = self.privilegeMode()

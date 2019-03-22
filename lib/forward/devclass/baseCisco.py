@@ -133,7 +133,7 @@ class BASECISCO(BASESSHV2):
         }
         cmd = "show run ntp"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         tmp = self.privilegeMode()
@@ -158,7 +158,7 @@ class BASECISCO(BASESSHV2):
         }
         cmd = '''show running-config  |  i log'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         tmp = self.privilegeMode()
@@ -183,7 +183,7 @@ class BASECISCO(BASESSHV2):
         }
         cmd = '''show run | i  "snmp-server host"'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         tmp = self.privilegeMode()
@@ -232,7 +232,7 @@ class BASECISCO(BASESSHV2):
         }
         cmd = "show vlan"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         """
@@ -311,7 +311,7 @@ class BASECISCO(BASESSHV2):
         }
         cmd = "show routing"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         tmp = self.privilegeMode()
@@ -365,7 +365,7 @@ class BASECISCO(BASESSHV2):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid command[\s\S]+",
         }
         tmp = self.privilegeMode()
@@ -680,7 +680,7 @@ class BASECISCO(BASESSHV2):
             return tmp
         cmd = "no interface vlan {vlan_id}".format(vlan_id=vlan_id)
         prompt = {
-            "success": "[\r\n]+\S+.+config\)(#|>) ?$",
+            "success": "[\r\n]+\S+config\)(#|>) ?$",
         }
         tmp = self.command(cmd, prompt=prompt)
         if not self.interfaceVlanExist(vlan_id)["status"]:
@@ -724,16 +724,16 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
             # Failed to enter configuration mode
             return tmp
         prompt1 = {
-            "success": "[\r\n]+\S+.+config\-if\)# ?$",
-            "error": "[\r\n]+\S+.+config\)# ?$",
+            "success": "[\r\n]+\S+config\-if\)# ?$",
+            "error": "[\r\n]+\S+config\)# ?$",
             # "error": "(Invalid|Error|Illegal|marker|Incomplete)[\s\S]+",
         }
         prompt2 = {
-            "success": "{cmd2}[\r\n]+\S+.+config\-if\)# ?$".format(cmd2=cmd2),
+            "success": "{cmd2}[\r\n]+\S+config\-if\)# ?$".format(cmd2=cmd2),
             "error": "(Invalid|Error|Illegal|marker|Incomplete)[\s\S]+",
         }
         prompt3 = {
-            "success": "{cmd3}[\r\n]+\S+.+config\-if\)# ?$".format(cmd3=cmd3),
+            "success": "{cmd3}[\r\n]+\S+config\-if\)# ?$".format(cmd3=cmd3),
             "error": "(Invalid|Error|Illegal|marker|Incomplete)[\s\S]+",
         }
         # Running cmd1.
@@ -775,7 +775,7 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
                               "firewallConnection": {"status": None, "content": ""}},
                   "errLog": ""}
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
         }
         tmp = self.privilegeMode()
@@ -835,7 +835,7 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
         }
 
         prompt = {
-            "success": "[\r\n]+\S+.+(>|\]|#) ?$",
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
             "error": "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
         }
         tmp = self.privilegeMode()
@@ -854,9 +854,47 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
                     "state": line[2] + line[3],
                     "uptime": line[4],
                     "address": line[5],
-                    "interface": line[6]}
+                    "interface": line[6],
+                    "deadTime": "",}
                     )
             else:
                 # The line does not matched data of expection.
                 continue
+        return njInfo
+
+    def showVRRP(self, cmd="show hsrp brief"):
+        njInfo = {
+            "status": True,
+            "content": [],
+            "errLog": ""
+        }
+
+        prompt = {
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
+            "error": "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            return tmp
+        result = self.command(cmd, prompt)
+        for line in result["content"].split("\r\n"):
+            dataLine = line.split()
+            try:
+                njInfo["content"].append({
+                    "vr-state": "",
+                    "vr-mode": "",
+                    "timer": "",
+                    "type": "",
+                    "interface": dataLine[0],
+                    "group": dataLine[1],
+                    "prio": dataLine[2],
+                    "p": dataLine[3],
+                    "state": dataLine[4],
+                    "active": dataLine[5],
+                    "standby-addr": dataLine[6],
+                    "group-addr": dataLine[7],
+                    "address": dataLine[8]}
+                    )
+            except Exception:
+                pass
         return njInfo
