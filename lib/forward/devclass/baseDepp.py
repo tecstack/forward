@@ -259,7 +259,9 @@ class BASEDEPP(BASESSHV2):
                 # Get state of line protocol of the interface and remove extra character.
                 lineInfo['lineState'] = re.search("line.*is (.*)", _interfaceInfo).group(1).strip()
                 # Get description of the interface.
-                lineInfo['description'] = re.search("Description:(.*)", _interfaceInfo).group(1).strip()
+                tmp = re.search("Description:(.*)", _interfaceInfo)
+                if tmp:
+                    lineInfo['description'] = re.search("Description:(.*)", _interfaceInfo).group(1).strip()
                 # Get MUT of the interface.
                 tmp = re.search("MTU        : ([0-9]+)", _interfaceInfo)
                 if tmp:
