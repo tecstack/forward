@@ -224,7 +224,7 @@ class BASESSHV2(object):
             if isBreak is True:
                 break
         # Delete page break
-        result["content"] = re.sub("\r\n.*?\r *?\r", "\r\n", result["content"])
+        result["content"] = re.sub("\r\n.*?\r +?\r", "\r\n", result["content"])
         # Clearing special characters
         result["content"] = re.sub(" *---- More ----\x1b\[42D                                          \x1b\[42D",
                                    "",
