@@ -46,25 +46,27 @@ class BASEH3C(BASESSHV2):
             return tmp
         # Excute a command.
         tmp = self.command("save",
-                           prompt={"success": "Are you sure to continue\?\[Y/N\] ?$",
+                           prompt={"success": "Are you sure\? \[Y/N\]: ?$",
                                    "error": "Error:Incomplete command[\s\S]+"})
         if tmp["state"] == "success":
-            continueCommandResult = self.command("Y", prompt={"success": "successfully[\s\S]+[\r\r\n]+\S+> ?$"})
-            if continueCommandResult["state"] == "success":
-                # Successfully.
-                result["status"] = True
+            tmp = self.command("Y", prompt={"success": "press the enter key\): ?$"})
+            if tmp["state"] == "success":
+                tmp = self.command("", prompt={"success": "overwrite\? \[Y/N\]: ?$"})
+                if tmp["state"] == "success":
+                    tmp = self.command("Y", prompt={"success": "successfully\.[\r\n]+<\S+>?$"})
+                    if tmp["state"] == "success":
+                        result["status"] = True
+                        result["content"] = tmp["content"]
+                    else:
+                        result["errLog"] = "That save configuration is failed.related information: [{content}]".format(content=tmp["content"])
+                else:
+                    result["errLog"] = "That save configuration is failed.related information: [{content}]".format(content=tmp["content"])
+
             else:
-                # Failed.
-                result["errLog"] = "Failed save configuration,\
-                                   relate-information: [{content}]".format(content=continueCommandResult["content"])
-                result["status"] = False
-        elif tmp["state"] == "error":
-            result["errLog"] = "The command failed to execute.info: [{content}]".format(content=tmp["content"])
+                result["errLog"] = "Failed save configuration,related information: [{content}]".format(content=tmp["content"])
         else:
             result["errLog"] = "Failed save configuration, \
                                Info: [{content}] , [{errLog}]".format(content=tmp["content"], errLog=tmp["errLog"])
-            result["content"] = "The configuration was saved successfully."
-            result["status"] = True
         return result
 
     def generalMode(self):
@@ -758,7 +760,7 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
         }
         cmdA = "object-group service {serviceName}".format(serviceName=serviceName)
         promptA = {
-            "success": "[\r\n]+\S+\] ?$",
+            "success": "[\r\n]+\S+{serviceName}\] ?$".format(serviceName="-obj-grp-service-" + serviceName)
         }
         tmp = self.privilegeMode()
         if tmp["status"] is False:
@@ -1073,13 +1075,15 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
                 return tmp
             destinationObjectGroupIPName = tmp["content"]
         tmp = self.isExistObjectGroupService(configuration)
+        serviceName = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
         if not tmp["status"]:
             # Create object-group-service if that is not exist.
-            serviceName = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
             tmp = self.createObjectGroupService(configuration, serviceName)
             if not tmp["status"]:
                 return tmp
         configurationB = "rule {ruleID} pass source-ip {sourceObjectGroupIPName} destination-ip {destinationObjectGroupIPName} service {serviceName} counting ".format(ruleID=ruleID, sourceObjectGroupIPName=sourceObjectGroupIPName, destinationObjectGroupIPName=destinationObjectGroupIPName, serviceName=serviceName)
         comment = "rule {ruleID} comment {comment}".format(comment=comment, ruleID=ruleID)
         tmp = self.addObjectPolicyIP(policyName, configurationB, comment)
+        if tmp["status"] is True:
+            tmp = self.commit()
         return tmp
