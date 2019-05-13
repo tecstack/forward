@@ -23,6 +23,7 @@
 import re
 import logging
 import time
+import random
 from forward.devclass.baseSSHV2 import BASESSHV2
 from forward.utils.forwardError import ForwardError
 from forward.utils.paraCheck import checkIP
@@ -723,7 +724,7 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
         tmp = self.privilegeMode()
         if tmp["status"] is False:
             raise IOError(tmp["errLog"])
-        objectGroupName = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
+        objectGroupName = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()) + "." + str(random.randint(100000, 999999))
         cmd = "object-group ip address {objectGroupName}".format(objectGroupName=objectGroupName)
         prompt = {
             "success": "[\r\n]+\S+{objectGroup}\] ?$".format(objectGroup="-obj-grp-ip-" + objectGroupName)
@@ -1075,7 +1076,7 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
                 return tmp
             destinationObjectGroupIPName = tmp["content"]
         tmp = self.isExistObjectGroupService(configuration)
-        serviceName = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
+        serviceName = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()) + "." + str(random.randint(100000, 999999))
         if not tmp["status"]:
             # Create object-group-service if that is not exist.
             tmp = self.createObjectGroupService(configuration, serviceName)
