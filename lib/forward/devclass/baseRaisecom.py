@@ -407,3 +407,16 @@ class BASERAISECOM(BASESSHV2):
         else:
             return tmp
         return njInfo
+
+    def showRun(self):
+        cmd = "show run"
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            # Switch failure.
+            return tmp
+        njInfo = self.command(cmd, prompt={"success": "[\r\n]+\S+# ?$"})
+        if not njInfo["state"] == "success":
+            njInfo["status"] = False
+        else:
+            njInfo["content"] = "\r\n".join(njInfo["content"].split("\r\n")[1:-1])
+        return njInfo

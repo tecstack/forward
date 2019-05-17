@@ -767,3 +767,16 @@ class BASEJUNIPER(BASETELNET):
                 data["keepalive-interval"] = tmp.group(1).strip()
             njInfo["content"].append(data)
         return njInfo
+
+    def showRun(self):
+        cmd = " show configuration"
+        tmp = self.generalMode()
+        if not tmp["status"]:
+            # Switch failure.
+            return tmp
+        njInfo = self.command(cmd, prompt={"success": "[\r\n]+\S+(#|>|\]) ?$"})
+        if not njInfo["state"] == "success":
+            njInfo["status"] = False
+        else:
+            njInfo["content"] = "\r\n".join(njInfo["content"].split("\r\n")[1:-1])
+        return njInfo

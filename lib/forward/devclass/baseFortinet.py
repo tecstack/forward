@@ -516,3 +516,16 @@ class BASEFORTINET(BASESSHV2):
                 # The line does not matched data of expection.
                 continue
         return njInfo
+
+    def showRun(self):
+        cmd = "show full-configuration"
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            # Switch failure.
+            return tmp
+        njInfo = self.command(cmd, prompt={"success": "[\r\n]+\S+# ?$"})
+        if not njInfo["state"] == "success":
+            njInfo["status"] = False
+        else:
+            njInfo["content"] = "\r\n".join(njInfo["content"].split("\r\n")[1:-1])
+        return njInfo

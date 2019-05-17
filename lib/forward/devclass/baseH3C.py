@@ -1088,3 +1088,16 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
         if tmp["status"] is True:
             tmp = self.commit()
         return tmp
+
+    def showRun(self):
+        cmd = "display current-configuration"
+        tmp = self.generalMode()
+        if not tmp["status"]:
+            # Switch failure.
+            return tmp
+        njInfo = self.command(cmd, prompt={"success": "[\r\n]+\S+> ?$"})
+        if not njInfo["state"] == "success":
+            njInfo["status"] = False
+        else:
+            njInfo["content"] = "\r\r\n".join(njInfo["content"].split("\r\r\n")[1:-1])
+        return njInfo

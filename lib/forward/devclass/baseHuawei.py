@@ -705,3 +705,16 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
                 # The line does not matched data of expection.
                 continue
         return njInfo
+
+    def showRun(self):
+        cmd = "display current-configuration"
+        tmp = self.generalMode()
+        if not tmp["status"]:
+            # Switch failure.
+            return tmp
+        njInfo = self.command(cmd, prompt={"success": "[\r\n]+\S+> ?$"})
+        if not njInfo["state"] == "success":
+            njInfo["status"] = False
+        else:
+            njInfo["content"] = "\r\n".join(njInfo["content"].split("\r\n")[1:-1])
+        return njInfo
