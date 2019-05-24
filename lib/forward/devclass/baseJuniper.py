@@ -481,11 +481,6 @@ class BASEJUNIPER(BASETELNET):
             # Separate information from each configuration section
             allSection = re.findall("trap-group[\s\S]+?\r\n\}", result["content"])
             # everyone of configuration.
-            """targets {
-                        172.16.147.34;
-                                172.16.147.35;
-                     }
-            """
             for section in allSection:
                 # Get port of the snmp server.
                 tmp = re.search("destination-port (\d+)", section)

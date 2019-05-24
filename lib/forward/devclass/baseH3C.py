@@ -853,7 +853,7 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
 
     def isExistObjectGroupIPAddress(self, hostList=[]):
         """
-        @param hostList: ['10.0.0.1','172.16.1.1-172.1.5']
+        @param hostList: ['10.0.0.1','10.0.0.2-10.0.0.3']
         njInfo = {"status":True,"content":"object-group-name"}
         """
         if not isinstance(hostList, list):
@@ -962,8 +962,8 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
                                            "destinationPort": None,  # '80' or '80-90'
                                            "destinationPortType": "eq/gt/lt/range"}):
         """
-        @sourcdeHost:     list type, ex: ["10.0.0.1","172.16.1.1-172.16.1.5","192.168.1.1"];
-        @destinationHost: list type, ex: ["10.0.0.1","172.16.1.1-172.16.1.5","192.168.1.1"];
+        @sourcdeHost:     list type, ex: ["10.0.0.1",".10.0.0.3-10.0.0.5","192.168.1.1"];
+        @destinationHost: list type, ex: ["10.0.0.1","10.0.0.2-10.0.0.5","192.168.1.1"];
         @policyName:      string type , ex: TestName;
         @comment:         strying type, ex: test-comment;
         @ serviceParam:   dict type, ex:
@@ -987,9 +987,9 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
             if re.search("^ *$", policyName):
                 raise IOError("policyName's format should not be empty")
         if not isinstance(sourceHost, list):
-            raise IOError("sourceHost's formate should is a list,ex: ['10.0.0.1','172.16.1.1-172.1.10']")
+            raise IOError("sourceHost's formate should is a list,ex: ['10.0.0.1','10.0.0.1-10.0.0.3']")
         elif not isinstance(destinationHost, list):
-            raise IOError("destinationHost's formate should is a list,ex: ['10.0.0.1','172.16.1.1-172.1.10']")
+            raise IOError("destinationHost's formate should is a list,ex: ['10.0.0.1','10.0.0.1-10.0.0.3']")
         elif not isinstance(serviceParam, dict):
             raise IOError("serviceParam's formate should is a dict.plase use help(createSecurityPolicy) to see details.")
         else:

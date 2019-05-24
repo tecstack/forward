@@ -287,8 +287,8 @@ class BASEBAER(BASESSHV2):
         if result["state"] == "success":
             tmp = re.findall("\d+\.\d+\.\d+\.\d+:\d+", result["content"])
             """
-            90        172.21.31.103:162
-            90        172.21.31.103:16222
+            90        192.168.1.1:162
+            90        192.168.1.2:16222
             """
             if tmp.__len__() > 0:
                 njInfo["content"] = [{"ip": group.split(":")[0], "port": group.split(":")[-1]} for group in tmp]
@@ -308,7 +308,7 @@ class BASEBAER(BASESSHV2):
         if result["state"] == "success":
             tmp = re.findall("[\r\n]+\d+\s+(\d+\.\d+\.\d+\.\d+)\s+\d+", result["content"])
             """
-            1      172.21.11.109                                   514         warning
+            1      10.0.0.1                                   514         warning
             """
             if tmp.__len__() > 0:
                 njInfo["content"] = tmp
@@ -329,7 +329,7 @@ class BASEBAER(BASESSHV2):
         if result["state"] == "success":
             tmp = re.findall("\d+\.\d+\.\d+\.\d+", result["content"])
             """
-            Clock Source       : 172.20.152.1
+            Clock Source       : 10.0.0.1
             """
             if tmp.__len__() > 0:
                 njInfo["content"] = tmp

@@ -858,7 +858,7 @@ class BASEDEPP(BASESSHV2):
                    interface="",
                    addressPool="",
                    sourceIP={"type": "0",
-                             "name": "GL-CSPC-VM-172.20.255.104"},
+                             "name": "XXXXXXX-10.0.0.1"},
                    destinationIP={"type": 0,
                                   "name": ""},
                    service={"type": 0,
