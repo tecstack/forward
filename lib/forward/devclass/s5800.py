@@ -27,61 +27,6 @@ class S5800(BASEFENGHUO):
     """This is a manufacturer of fenghuo, so it is integrated with BASEFENGHUO library.
     """
 
-    def createVlan(self, vlan):
-        """Create a Vlan.
-        """
-        info = {"status": False,
-                "content": "",
-                "errLog": ""}
-        """Warning: that vlan should be checked
-           by the 'self.isvlan(vlan) method
-           before setting up the vlan"""
-        # swith to config mode
-        info = self._configMode()
-        if not info["status"]:
-            raise ForwardError(info["errLog"])
-        try:
-            # enter vlan
-            self.shell.send("vlan {vlan}\n".format(vlan=vlan))
-            # Host prompt is modified
-            info["content"] = ""
-            while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024).decode()
-            self.getPrompt()
-            if not re.search('vlan.*{vlan}'.format(vlan=vlan), self.prompt):
-                raise ForwardError("Failed to enter vlan mode,command:vlan {vlan}".format(vlan=vlan))
-            # exit vlan,switch to config mode
-            self.shell.send("quit\n")
-            # Host prompt is modified
-            info["content"] = ""
-            while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
-                info['content'] += self.shell.recv(1024).decode()
-            # Get host prompt.
-            self.getPrompt()
-            # Failure to search for Vlan information.
-            if re.search('vlan.*{vlan}'.format(vlan=vlan), self.prompt):
-                raise ForwardError("Failed to exit vlan mode,command:quit")
-            # Save the configuration.
-            tmp = self._commit()
-            if not tmp["status"]:
-                raise ForwardError("The configuration command has been executed,\
-                                    but the save configuration failed!")
-            else:
-                # Check is Vlan.
-                tmp = self.isVlan(vlan)
-                if not tmp["status"]:
-                    # check vlan
-                    raise ForwardError("Vlan has been set and has been saved, but the final\
-                                        check found no configuration, so failed.\
-                                        show vlan {vlan} verbose: [{content}]".format(vlan=vlan, content=tmp["errLog"]))
-                else:
-                    # create successed. exit config mode
-                    info["status"] = True
-        except Exception as e:
-            info["errLog"] = str(e)
-            info["status"] = False
-        return info
-
     def isVlanInPort(self, vlan=None, port=None):
         """Check that the Vlan exists in the port.
         """

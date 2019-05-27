@@ -61,7 +61,7 @@ class BASEBAER(BASESSHV2):
         *A:NFJD-PSC-S-SR7750-1>config# service
         *A:NFJD-PSC-S-SR7750-1>config>service#
         """
-        result = self.command("exit all", prompt={"success": "[\r\n]+\S+.+# ?$"})
+        result = self.command("exit all", prompt={"success": "[\r\n]+\S+# ?$"})
         if result["state"] == "success":
             if re.search("[\r\n]+\S+.+>config>[a-z>]+# ?$", result["content"]):
                 njInfo["errLog"] = "Switch to privilegeMode is faild. current located config mode."
@@ -82,7 +82,7 @@ class BASEBAER(BASESSHV2):
         tmp = self.privilegeMode()
         if tmp["status"] is False:
             return tmp
-        result = self.command("config", prompt={"success": "[\r\n]+\S+.+>config# ?$"})
+        result = self.command("config", prompt={"success": "[\r\n]+\S+>config# ?$"})
         if result["state"] == "success":
             self.mode == 3
             njInfo["status"] = True
@@ -97,7 +97,7 @@ class BASEBAER(BASESSHV2):
             "content": "",
             "errLog": ""
         }
-        result = self.command("show version", prompt={"success": "[\r\n]+\S+.+# ?$",
+        result = self.command("show version", prompt={"success": "[\r\n]+\S+# ?$",
                                                       "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             # TiMOS-C-10.0.R12 cpm/hops ALCATEL SR 7750 Copyright (c) 2000-2013 Alcatel-Lucent. --> TiMOS-C-10.0.R12
@@ -118,7 +118,7 @@ class BASEBAER(BASESSHV2):
             "content": [],
             "errLog": ""
         }
-        result = self.command("show router  route-table", prompt={"success": "[\r\n]+\S+.+# ?$",
+        result = self.command("show router  route-table", prompt={"success": "[\r\n]+\S+# ?$",
                                                                   "eror": "Bad command[\s\S]+"})
         """
         Dest Prefix[Flags]                            Type    Proto     Age        Pref
@@ -172,7 +172,7 @@ class BASEBAER(BASESSHV2):
             'errLog': ''
         }
         cmd = "show port detail"
-        result = self.command(cmd, prompt={"success": "[\r\n]+\S+.+# ?$",
+        result = self.command(cmd, prompt={"success": "[\r\n]+\S+# ?$",
                                            "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             reg = "Description        :[\s\S]+?========================================"
@@ -282,13 +282,13 @@ class BASEBAER(BASESSHV2):
                          "port": ""}],
             "errLog": ""
         }
-        result = self.command("show log snmp-trap-group", prompt={"success": "[\r\n]+\S+.+# ?$",
+        result = self.command("show log snmp-trap-group", prompt={"success": "[\r\n]+\S+# ?$",
                                                                   "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             tmp = re.findall("\d+\.\d+\.\d+\.\d+:\d+", result["content"])
             """
-            90        172.21.31.103:162
-            90        172.21.31.103:16222
+            90        192.168.1.1:162
+            90        192.168.1.2:16222
             """
             if tmp.__len__() > 0:
                 njInfo["content"] = [{"ip": group.split(":")[0], "port": group.split(":")[-1]} for group in tmp]
@@ -303,12 +303,12 @@ class BASEBAER(BASESSHV2):
             "content": "",
             "errLog": ""
         }
-        result = self.command("show log  syslog", prompt={"success": "[\r\n]+\S+.+# ?$",
+        result = self.command("show log  syslog", prompt={"success": "[\r\n]+\S+# ?$",
                                                           "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             tmp = re.findall("[\r\n]+\d+\s+(\d+\.\d+\.\d+\.\d+)\s+\d+", result["content"])
             """
-            1      172.21.11.109                                   514         warning
+            1      10.0.0.1                                   514         warning
             """
             if tmp.__len__() > 0:
                 njInfo["content"] = tmp
@@ -324,12 +324,12 @@ class BASEBAER(BASESSHV2):
             "content": "",
             "errLog": ""
         }
-        result = self.command("show system ntp", prompt={"success": "[\r\n]+\S+.+# ?$",
+        result = self.command("show system ntp", prompt={"success": "[\r\n]+\S+# ?$",
                                                          "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             tmp = re.findall("\d+\.\d+\.\d+\.\d+", result["content"])
             """
-            Clock Source       : 172.20.152.1
+            Clock Source       : 10.0.0.1
             """
             if tmp.__len__() > 0:
                 njInfo["content"] = tmp
@@ -345,8 +345,8 @@ class BASEBAER(BASESSHV2):
             "content": [],
             "errLog": ""
         }
-        result = self.command("show service sap-using description", prompt={"success": "[\r\n]+\S+.+# ?$",
-                                                                            "eror": "Bad command[\s\S]+"})
+        result = self.command("show service sap-using", prompt={"success": "[\r\n]+\S+# ?$",
+                                                                "eror": "Bad command[\s\S]+"})
         if result["state"] == "success":
             for line in result["content"].split("\r\n"):
                 lineInfo = {"id": "",
@@ -371,4 +371,67 @@ class BASEBAER(BASESSHV2):
             njInfo["status"] = True
         else:
             njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def basicInfo(self, cmd="show uptime"):
+        njInfo = {"status": True,
+                  "content": {"noRestart": {"status": None, "content": ""},
+                              "systemTime": {"status": None, "content": ""},
+                              "cpuLow": {"status": None, "content": ""},
+                              "memLow": {"status": None, "content": ""},
+                              "boardCard": {"status": None, "content": ""},
+                              "tempLow": {"status": None, "content": ""},
+                              "firewallConnection": {"status": None, "content": ""}},
+                  "errLog": ""}
+        prompt = {
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
+            "error": "(Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        runningDate = -1
+        if tmp["status"]:
+            result = self.command(cmd=cmd, prompt=prompt)
+            if result["state"] == "success":
+                dataLine = re.search(" up ?time:? .+(day|year|week).*", result["content"], flags=re.IGNORECASE)
+                if dataLine is not None:
+                    tmp = re.search("([0-9]+) year", dataLine.group())
+                    if tmp:
+                        runningDate += int(tmp.group(1)) * 365
+                    tmp = re.search("([0-9]+) week", dataLine.group())
+                    if tmp:
+                        runningDate += int(tmp.group(1)) * 7
+                    tmp = re.search("([0-9]+) day", dataLine.group())
+                    if tmp:
+                        runningDate += int(tmp.group(1))
+                    # Weather running-time of the device is more than 7 days
+                    if runningDate > 7:
+                        njInfo["content"]["noRestart"]["status"] = True
+                    elif runningDate == -1:
+                        pass
+                    else:
+                        njInfo["content"]["noRestart"]["status"] = False
+                    # Return detail to Forward.
+                    njInfo["content"]["noRestart"]["content"] = dataLine.group().strip()
+                else:
+                    # Forward did't find the uptime of the device.
+                    pass
+            else:
+                # That forwarder execute the command is failed.
+                result["status"] = False
+                return result
+        else:
+            return tmp
+        return njInfo
+
+    def showRun(self):
+        cmd = "admin display-config"
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            # Switch failure.
+            return tmp
+        njInfo = self.command(cmd, prompt={"success": "[\r\n]+\S+# ?$"})
+        if not njInfo["state"] == "success":
+            njInfo["status"] = False
+        else:
+            njInfo["content"] = "\r\n".join(njInfo["content"].split("\r\n")[1:-1])
         return njInfo

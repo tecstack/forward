@@ -63,3 +63,19 @@ def int_to_mask(mask_int):
 def mask_to_int(mask):
     # 255.255.255.0 --> 24
     return sum(bin(int(i)).count('1') for i in mask.split('.'))
+
+
+def checkIP(ip):
+    seg = ip.split(".")
+    if len(seg) != 4:
+        return False
+    else:
+        return True
+    for i in seg:
+        try:
+            i = int(i)
+            if i < 0 or i > 255:
+                return False
+        except Exception:
+            return False
+    return True

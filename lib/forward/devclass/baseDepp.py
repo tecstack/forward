@@ -37,7 +37,7 @@ class BASEDEPP(BASESSHV2):
         cmd = "show running-config  | include  ntp"
         prompt = {
             # Problems caused by special characters cannot be added with host prompt
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -73,7 +73,7 @@ class BASEDEPP(BASESSHV2):
         cmd = "show run | include target-host"
         prompt = {
             # Problems caused by special characters cannot be added with host prompt
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -117,7 +117,7 @@ class BASEDEPP(BASESSHV2):
         }
         cmd = "show vlan"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -170,7 +170,7 @@ class BASEDEPP(BASESSHV2):
         }
         cmd = "show ip route"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -223,7 +223,7 @@ class BASEDEPP(BASESSHV2):
             njInfo["errLog"] = result["errLog"]
         return njInfo
 
-    def showInterfaces(self):
+    def showInterface(self):
         njInfo = {
             'status': False,
             'content': [],
@@ -231,7 +231,7 @@ class BASEDEPP(BASESSHV2):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]|\$) ?$",
+            "success": "[\r\n]+\S+(#|>|\]|\$) ?$",
             "error": "Unknown command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -259,7 +259,9 @@ class BASEDEPP(BASESSHV2):
                 # Get state of line protocol of the interface and remove extra character.
                 lineInfo['lineState'] = re.search("line.*is (.*)", _interfaceInfo).group(1).strip()
                 # Get description of the interface.
-                lineInfo['description'] = re.search("Description:(.*)", _interfaceInfo).group(1).strip()
+                tmp = re.search("Description:(.*)", _interfaceInfo)
+                if tmp:
+                    lineInfo['description'] = re.search("Description:(.*)", _interfaceInfo).group(1).strip()
                 # Get MUT of the interface.
                 tmp = re.search("MTU        : ([0-9]+)", _interfaceInfo)
                 if tmp:
@@ -545,7 +547,7 @@ class BASEDEPP(BASESSHV2):
 
     def createServiceObject(self, name, protocol=None, sRange=None,
                             dRange=None, vsysName="PublicSystem",
-                            applyTime=None):
+                            applyTime=None, **kws):
         # load module of suds.
         from suds.client import Client
         """
@@ -851,8 +853,25 @@ class BASEDEPP(BASESSHV2):
                 result["errLog"] = "Unknow error."
         return result
 
-    def createSNAT(self, name, interface=None, addressPool="", enable=True, vsysName="PublicSystem",
+    def createSNAT(self,
+                   name,
+                   interface="",
+                   addressPool="",
+                   sourceIP={"type": "0",
+                             "name": "XXXXXXX-10.0.0.1"},
+                   destinationIP={"type": 0,
+                                  "name": ""},
+                   service={"type": 0,
+                            "name": "ECHO-reply"},
+                   enable=True,
+                   vsysName="PublicSystem",
                    applyTime=None):
+        """
+        @param name(str):    The name of SNAT.
+        @param interface(str): The name of export interface,eg:"vlan1,vlan2,vlan3",maxomum is 16
+        @param addressPool(str): The address pool,eg: "" for using export-address
+                                 or "#" for using None-NAT  or "192.168.1.1,192.168.1.2,..1.7" ,maximum is 7
+        """
         result = {
             'status': False,
             'content': '',
@@ -873,6 +892,9 @@ class BASEDEPP(BASESSHV2):
              "name": name,
              "interface": interface,
              "addressPool": addressPool,
+             "sourceIpObjects": sourceIP,
+             "destinationIpObjects": destinationIP,
+             "serverObjects": service,
              "enable": enable}
         try:
             client.service.createSnat(p)
@@ -884,7 +906,7 @@ class BASEDEPP(BASESSHV2):
             elif num == 506:
                 result["errLog"] = "Specify parameters error,the configuration-name already exist,or vsysName not exist"
             else:
-                result["errLog"] = "Unknow error."
+                result["errLog"] = "Unknow error[%s]." % str(e)
         return result
 
     def updateSecurityPolicy(self, name, action=None,
@@ -1268,3 +1290,62 @@ class BASEDEPP(BASESSHV2):
             else:
                 result["errLog"] = "Unknow error."
         return result
+
+    def basicInfo(self, cmd="show version"):
+        njInfo = {"status": True,
+                  "content": {"noRestart": {"status": None, "content": ""},
+                              "systemTime": {"status": None, "content": ""},
+                              "cpuLow": {"status": None, "content": ""},
+                              "memLow": {"status": None, "content": ""},
+                              "boardCard": {"status": None, "content": ""},
+                              "tempLow": {"status": None, "content": ""},
+                              "firewallConnection": {"status": None, "content": ""}},
+                  "errLog": ""}
+        prompt = {
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
+            "error": "([Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+        }
+        runningDate = -1
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            dataLine = re.search(" [Uu]ptime:? .+(day|year|week).*", result["content"])
+            if dataLine is not None:
+                tmp = re.search("([0-9]+) year", dataLine.group())
+                if tmp:
+                    runningDate += int(tmp.group(1)) * 365
+                tmp = re.search("([0-9]+) week", dataLine.group())
+                if tmp:
+                    runningDate += int(tmp.group(1)) * 7
+                tmp = re.search("([0-9]+) day", dataLine.group())
+                if tmp:
+                    runningDate += int(tmp.group(1))
+                # Weather running-time of the device is more than 7 days
+                if runningDate > 7:
+                    njInfo["content"]["noRestart"]["status"] = True
+                elif runningDate == -1:
+                    pass
+                else:
+                    njInfo["content"]["noRestart"]["status"] = False
+                # Return detail to Forward.
+                njInfo["content"]["noRestart"]["content"] = dataLine.group().strip()
+            else:
+                # Forward did't find the uptime of the device.
+                pass
+        else:
+            # That forwarder execute the command is failed.
+            result["status"] = False
+            return result
+        return njInfo
+
+    def showRun(self):
+        cmd = "show run"
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            # Switch failure.
+            return tmp
+        njInfo = self.command(cmd, prompt={"success": "[\r\n]+\S+(#|>|\]) ?$"})
+        if not njInfo["state"] == "success":
+            njInfo["status"] = False
+        else:
+            njInfo["content"] = "\r\n".join(njInfo["content"].split("\r\n")[1:-1])
+        return njInfo

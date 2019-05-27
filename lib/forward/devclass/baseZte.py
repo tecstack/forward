@@ -83,7 +83,7 @@ class BASEZTE(BASESSHV2):
         }
         # Get the current position Before switch to privileged mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
-        if self.mode > 2:
+        if self.mode >= 2:
             exitResult = self.command("end", prompt={"success": "[\r\n]+\S+# ?$"})
             if not exitResult["state"] == "success":
                 result["errLog"] = "Demoted from configuration-mode to privilege-mode failed."
@@ -93,10 +93,6 @@ class BASEZTE(BASESSHV2):
                 self.mode = 2
                 result["status"] = True
                 return result
-        elif self.mode == 2:
-            # The device is currently in privilege-mode ,so there is no required to switch.
-            result["status"] = True
-            return result
         # else, command line of the device is in general-mode.
         # Start switching to privilege-mode.
         sendEnable = self.command("enable", prompt={"password": "[pP]assword.*", "noPassword": "[\r\n]+\S+# ?$"})
@@ -153,7 +149,7 @@ class BASEZTE(BASESSHV2):
         }
         cmd = "show ntp status"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -175,7 +171,7 @@ class BASEZTE(BASESSHV2):
             "errLog": ""
         }
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command("show snmp config", prompt=prompt)
@@ -201,7 +197,7 @@ class BASEZTE(BASESSHV2):
         }
         cmd = "show  vlan"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -233,7 +229,7 @@ class BASEZTE(BASESSHV2):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -312,7 +308,7 @@ class BASEZTE(BASESSHV2):
         }
         cmd = "show logging configuration"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -333,7 +329,7 @@ class BASEZTE(BASESSHV2):
         }
         cmd = "show ip vrf brief"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Invalid input[\s\S]+",
         }
         # Get name of routes.
@@ -369,4 +365,67 @@ class BASEZTE(BASESSHV2):
             njInfo["status"] = True
         else:
             njInfo["errLog"] = result["errLog"]
+        return njInfo
+
+    def basicInfo(self, cmd="show version"):
+        njInfo = {"status": True,
+                  "content": {"noRestart": {"status": None, "content": ""},
+                              "systemTime": {"status": None, "content": ""},
+                              "cpuLow": {"status": None, "content": ""},
+                              "memLow": {"status": None, "content": ""},
+                              "boardCard": {"status": None, "content": ""},
+                              "tempLow": {"status": None, "content": ""},
+                              "firewallConnection": {"status": None, "content": ""}},
+                  "errLog": ""}
+        prompt = {
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
+            "error": "(Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        runningDate = -1
+        if tmp["status"]:
+            result = self.command(cmd=cmd, prompt=prompt)
+            if result["state"] == "success":
+                dataLine = re.search(" [Uu]ptime:? .+(day|year|week).*", result["content"])
+                if dataLine is not None:
+                    tmp = re.search("([0-9]+) year", dataLine.group())
+                    if tmp:
+                        runningDate += int(tmp.group(1)) * 365
+                    tmp = re.search("([0-9]+) week", dataLine.group())
+                    if tmp:
+                        runningDate += int(tmp.group(1)) * 7
+                    tmp = re.search("([0-9]+) day", dataLine.group())
+                    if tmp:
+                        runningDate += int(tmp.group(1))
+                    # Weather running-time of the device is more than 7 days
+                    if runningDate > 7:
+                        njInfo["content"]["noRestart"]["status"] = True
+                    elif runningDate == -1:
+                        pass
+                    else:
+                        njInfo["content"]["noRestart"]["status"] = False
+                    # Return detail to Forward.
+                    njInfo["content"]["noRestart"]["content"] = dataLine.group().strip()
+                else:
+                    # Forward did't find the uptime of the device.
+                    pass
+            else:
+                # That forwarder execute the command is failed.
+                result["status"] = False
+                return result
+        else:
+            return tmp
+        return njInfo
+
+    def showRun(self):
+        cmd = "show run"
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            # Switch failure.
+            return tmp
+        njInfo = self.command(cmd, prompt={"success": "[\r\n]+\S+# ?$"})
+        if not njInfo["state"] == "success":
+            njInfo["status"] = False
+        else:
+            njInfo["content"] = "\r\n".join(njInfo["content"].split("\r\n")[1:-1])
         return njInfo

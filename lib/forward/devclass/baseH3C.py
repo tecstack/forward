@@ -17,18 +17,21 @@
 
 """
 -----Introduction-----
-[Core][forward] Base device class for huawei basic device method, by using paramiko module.
+[Core][forward] Base device class for H3C basic device method, by using paramiko module.
 """
 
 import re
 import logging
+import time
+import random
 from forward.devclass.baseSSHV2 import BASESSHV2
 from forward.utils.forwardError import ForwardError
 from forward.utils.paraCheck import checkIP
+from forward.utils.deviceListSplit import DEVICELIST
 
 
-class BASEHUAWEI(BASESSHV2):
-    """This is a manufacturer of huawei, using the
+class BASEH3C(BASESSHV2):
+    """This is a manufacturer of h3c, using the
     SSHV2 version of the protocol, so it is integrated with BASESSHV2 library.
     """
     def commit(self):
@@ -44,25 +47,27 @@ class BASEHUAWEI(BASESSHV2):
             return tmp
         # Excute a command.
         tmp = self.command("save",
-                           prompt={"success": "Are you sure to continue\?\[Y/N\] ?$",
+                           prompt={"success": "Are you sure\? \[Y/N\]: ?$",
                                    "error": "Error:Incomplete command[\s\S]+"})
         if tmp["state"] == "success":
-            continueCommandResult = self.command("Y", prompt={"success": "successfully[\s\S]+[\r\n]+\S+> ?$"})
-            if continueCommandResult["state"] == "success":
-                # Successfully.
-                result["status"] = True
+            tmp = self.command("Y", prompt={"success": "press the enter key\): ?$"})
+            if tmp["state"] == "success":
+                tmp = self.command("", prompt={"success": "overwrite\? \[Y/N\]: ?$"})
+                if tmp["state"] == "success":
+                    tmp = self.command("Y", prompt={"success": "successfully\.[\r\n]+<\S+>?$"})
+                    if tmp["state"] == "success":
+                        result["status"] = True
+                        result["content"] = tmp["content"]
+                    else:
+                        result["errLog"] = "That save configuration is failed.related information: [{content}]".format(content=tmp["content"])
+                else:
+                    result["errLog"] = "That save configuration is failed.related information: [{content}]".format(content=tmp["content"])
+
             else:
-                # Failed.
-                result["errLog"] = "Failed save configuration,\
-                                   relate-information: [{content}]".format(content=continueCommandResult["content"])
-                result["status"] = False
-        elif tmp["state"] == "error":
-            result["errLog"] = "The command failed to execute.info: [{content}]".format(content=tmp["content"])
+                result["errLog"] = "Failed save configuration,related information: [{content}]".format(content=tmp["content"])
         else:
             result["errLog"] = "Failed save configuration, \
                                Info: [{content}] , [{errLog}]".format(content=tmp["content"], errLog=tmp["errLog"])
-            result["content"] = "The configuration was saved successfully."
-            result["status"] = True
         return result
 
     def generalMode(self):
@@ -221,7 +226,7 @@ class BASEHUAWEI(BASESSHV2):
         if result["state"] == "success":
             currentSection = "vlanName"
             isContinueLine = False
-            for _vlanInfo in result["content"].split("\r\n"):
+            for _vlanInfo in result["content"].split("\r\r\n"):
                 if re.search("\-\-\-\-", _vlanInfo):
                     continue
                 if re.search("^[0-9]", _vlanInfo) and currentSection == "vlanName":
@@ -292,7 +297,7 @@ class BASEHUAWEI(BASESSHV2):
         }
         result = self.command(cmd=cmd, prompt=prompt)
         if result["state"] == "success":
-            for _interfaceInfo in result["content"].split("\r\n"):
+            for _interfaceInfo in result["content"].split("\r\r\n"):
                 # record the route table.
                 lineInfo = {"net": "",
                             "mask": "",
@@ -324,7 +329,7 @@ class BASEHUAWEI(BASESSHV2):
         cmd = "display interface"
         # There are Special characters in some descriptions.
         prompt = {
-            "success": "\r\n\r\n\S+(>|\]) ?$",
+            "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Unrecognized command[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -677,7 +682,6 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
             "content": [],
             "errLog": ""
         }
-
         prompt = {
             "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
@@ -706,6 +710,385 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
                 continue
         return njInfo
 
+    def createObjectGroupIPAddress(self, host=[]):
+        njInfo = {
+            "status": True,
+            "content": [],
+            "errLog": ""
+        }
+        if isinstance(host, list):
+            if len(host) == 0:
+                raise IOError("hosts's value should not be empty.")
+        else:
+            raise IOError("host's formate is incorrect.")
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            raise IOError(tmp["errLog"])
+        objectGroupName = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()) + "." + str(random.randint(100000, 999999))
+        cmd = "object-group ip address {objectGroupName}".format(objectGroupName=objectGroupName)
+        prompt = {
+            "success": "[\r\n]+\S+{objectGroup}\] ?$".format(objectGroup="-obj-grp-ip-" + objectGroupName)
+        }
+        # Mode of entry into object-group-ip-address
+        result = self.command(cmd, prompt)
+        if not result["state"] == "success":
+            raise IOError(result["errLog"])
+        # Create object-group ip address
+        i = 0
+        for ip in host:
+            if re.search("\-", ip):
+                ipA, ipB = ip.split("-")
+                cmd = "{i} network host address {ipA} {ipB}".format(i=i, ipA=ipA, ipB=ipB)
+            else:
+                cmd = "{i} network host address {ip}".format(i=i, ip=ip)
+            i += 1
+            result = self.command(cmd, prompt)
+            errLine = "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command|Wrong|Too many)"
+            if not result["state"] == "success" or re.search(errLine, result["content"], flags=re.IGNORECASE):
+                raise IOError(result["content"])
+        njInfo = {"status": True, "content": objectGroupName}
+        return njInfo
+
+    def createObjectGroupService(self, configuration, serviceName):
+        """
+        @ parame configuration: 'service udp source gt 0 destination eq 30002' or 'service udp source gt 0 destination eq 30002'
+        @ parame serviceName: name of object-group-service.
+        """
+        njInfo = {
+            "status": False,
+            "content": "",
+            "errLog": ""
+        }
+        cmdA = "object-group service {serviceName}".format(serviceName=serviceName)
+        promptA = {
+            "success": "[\r\n]+\S+{serviceName}\] ?$".format(serviceName="-obj-grp-service-" + serviceName)
+        }
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            raise IOError(tmp["errLog"])
+        result = self.command(cmdA, promptA)
+        if not result["state"] == "success":
+            raise IOError(result["errLog"])
+        promptB = {
+            "success": "[\r\n]+\S+{serviceName}\] ?$".format(serviceName="-obj-grp-service-" + serviceName)
+        }
+        result = self.command(configuration, promptB)
+        errLine = "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command|Wrong|Too many)"
+        if not result["state"] == "success" or re.search(errLine, result["content"]):
+            raise IOError(result["errLog"])
+        njInfo = {"status": True, "content": serviceName}
+        return njInfo
+
+    def isExistObjectGroupService(self, configuration):
+        """
+        @ parame configuration: 'service udp source gt 0 destination eq 30002' or 'service udp source gt 0 destination eq 30002'
+        """
+        njInfo = {
+            "status": False,
+            "content": "",
+            "errLog": "The object-group is not exist."
+        }
+        prompt = {
+            "success": "[\r\n]+\S+\] ?$",
+        }
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            raise IOError(tmp["errLog"])
+        cmd = '''display object-group service'''
+        result = self.command(cmd, prompt)
+        if not result["state"] == "success":
+            raise IOError(result["errLog"])
+        serviceName = None
+        for line in result["content"].split("\r\n"):
+            tmp = re.search("Service object group (\S+):", line)
+            # Get name of object-group's service
+            if tmp:
+                serviceName = tmp.group(1)
+                continue
+            # Match configuration
+            if re.search(configuration, line):
+                njInfo = {"status": True, "content": serviceName}
+                break
+        return njInfo
+
+    def isExistObjectPolicyIP(self, policyName):
+        """
+        @parame policyName: any string
+        """
+        njInfo = {
+            "status": False,
+            "content": "",
+            "errLog": "The object-group-policy {policyName} is not exist.".format(policyName=policyName)
+        }
+        prompt = {
+            "success": "[\r\n]+\S+\] ?$",
+        }
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            raise IOError(tmp["errLog"])
+        cmd = "display object-policy ip"
+        tmp = self.command(cmd=cmd, prompt=prompt)
+        if not tmp["state"] == "success":
+            raise IOError(tmp["errLog"])
+        cmdA = "object-policy ip {policyName}".format(policyName=policyName)
+        cmdB = "display this"
+        promptA = {
+            "success": "[\r\n]+\S+\-object-policy-ip-{policyName}\] ?$".format(policyName=policyName),
+        }
+        if re.search("Object-policy ip {policyName}".format(policyName=policyName), tmp["content"]):
+            tmp = self.command(cmdA, promptA)
+            if not tmp["state"] == "success":
+                raise IOError(tmp["errLog"])
+            # Get list of rules.
+            tmp = self.command(cmdB, promptA)
+            if not tmp["state"] == "success":
+                raise IOError(tmp["errLog"])
+            ruleID = 0
+            for line in tmp["content"].split("\r\r\n"):
+                result = re.search("rule ([0-9]+)", line)
+                if result:
+                    ruleID = int(result.group(1)) + 1
+            njInfo = {"status": True, "content": ruleID}
+        return njInfo
+
+    def isExistObjectGroupIPAddress(self, hostList=[]):
+        """
+        @param hostList: ['10.0.0.1','10.0.0.2-10.0.0.3']
+        njInfo = {"status":True,"content":"object-group-name"}
+        """
+        if not isinstance(hostList, list):
+            raise IOError("The parameter's formate is incorrect.Its formate should is ['10.,0.0.1','192.168.1.1','192.168.2.100-192.168.2.200']")
+        hostList = DEVICELIST(hostList).getIpList()
+        hostList = sorted(hostList)
+        njInfo = {
+            "status": False,
+            "content": "",
+            "errLog": "The object-group ip is not exist."
+        }
+        prompt = {
+            "success": "[\r\n]+\S+(>|\]) ?$",
+            "error": "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            raise IOError(tmp["errLog"])
+        cmd = '''dis object-group ip address | include "Ip address object group"'''
+        result = self.command(cmd, prompt)
+        if not result["state"] == "success":
+            return result
+        allGroups = []
+        # Getting all groups of object.
+        for line in result["content"].split("\r\n"):
+            tmp = re.search("Ip address object group (\S+):", line)
+            if tmp:
+                allGroups.append(tmp.group(1))
+        # Enter a mode of object-group,and then get hosts of all.
+        # example: {"object-group-a":["10.0.0.1","10.0.0.2"]}
+        allObjectIP = {}
+        for group in allGroups:
+            cmdA = "object-group ip address {objectGroup}".format(objectGroup=group)
+            prompt = {
+                "success": "[\r\n]+\S+{objectGroup}\] ?$".format(objectGroup="-obj-grp-ip-" + group)
+            }
+            # Enter a mode of object-group
+            tmp = self.command(cmd=cmdA, prompt=prompt)
+            if not tmp["state"] == "success":
+                raise IOError(tmp["errLog"])
+            cmdB = "dis this"
+            # Get datas of object-group
+            tmp = self.command(cmd=cmdB, prompt=prompt)
+            if not tmp["state"] == "success":
+                raise IOError(tmp["errLog"])
+            hosts = []
+            for line in tmp["content"].split("\r\n"):
+                # Get single ip.
+                info = re.search("[0-9]+ network host address ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})", line)
+                if info:
+                    hosts.append(info.group(1))
+                    continue
+                # Get ip range.
+                info = re.search("[0-9]+ network range ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}) ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})", line)
+                if info:
+                    iplist = [info.group(1) + "-" + info.group(2)]
+                    hosts.append(DEVICELIST(iplist).getIpList())
+            cmdC = "quit"
+            promptC = {
+                "success": "[\r\n]+\S+\] ?$"
+            }
+            tmp = self.command(cmd=cmdC, prompt=promptC)
+            if not tmp["state"] == "success":
+                raise IOError(tmp["errLog"])
+            allObjectIP[group] = hosts
+        # Match whether there are existing object-group.
+        for group, value in allObjectIP.items():
+            if hostList == sorted(value):
+                njInfo = {"status": True, "content": group}
+                break
+        return njInfo
+
+    def addObjectPolicyIP(self, policyName, configuration, comment):
+        tmp = self.privilegeMode()
+        if tmp["status"] is False:
+            raise IOError(tmp["errLog"])
+        cmdA = "object-policy ip {policyName}".format(policyName=policyName)
+        promptA = {
+            "success": "[\r\n]+\S+\-object-policy-ip-{policyName}\] ?$".format(policyName=policyName),
+        }
+        errLine = "(Invalid Input|Bad command|[Uu]nknown command|Unrecognized command|Invalid command|Wrong|Too many)"
+        tmp = self.command(cmdA, promptA)
+        if not tmp["state"] == "success":
+            return tmp
+        # Create rule
+        tmp = self.command(configuration, promptA)
+        if not tmp["state"] == "success" or re.search(errLine, tmp["content"]):
+            raise IOError(tmp["content"])
+        # set comment
+        tmp = self.command(comment, promptA)
+        if not tmp["state"] == "success":
+            if re.search(errLine, tmp["content"]):
+                raise IOError(tmp["content"])
+            else:
+                return tmp
+        return tmp
+
+    def createSecurityPolicy(self,
+                             sourceHost=[],
+                             destinationHost=[],
+                             policyName=None,
+                             comment="",
+                             serviceParam={"protocol": "tcp/udp",
+                                           "sourcePort": None,  # '80' or '80-90'
+                                           "sourcePortType": "eq/gt/lt/range",
+                                           "destinationPort": None,  # '80' or '80-90'
+                                           "destinationPortType": "eq/gt/lt/range"}):
+        """
+        @sourcdeHost:     list type, ex: ["10.0.0.1",".10.0.0.3-10.0.0.5","192.168.1.1"];
+        @destinationHost: list type, ex: ["10.0.0.1","10.0.0.2-10.0.0.5","192.168.1.1"];
+        @policyName:      string type , ex: TestName;
+        @comment:         strying type, ex: test-comment;
+        @ serviceParam:   dict type, ex:
+                          {"protocol":"tcp",
+                           "sourcePort":None or '890' or '900-999',
+                           "sourcePortType":"eq" or "lt" or "gt" or "range",
+                           "destinationPort":None or '890' or '900-999',
+                           "destinationPortType":"eq" or "lt" or "gt" or "range",
+                          }
+        return {"status":False/True,"content":"...","errLog":"Cause failed facotr"}
+        """
+        # Check whether parameters meet thee requirements.
+        if not isinstance(comment, str):
+            raise IOError("comment's formate should be a string and not be empty.")
+        else:
+            if re.search("^ *$", comment):
+                raise IOError("comment's format should not be empty")
+        if not isinstance(policyName, str):
+            raise IOError("policyName's format should be a string and not be empty")
+        else:
+            if re.search("^ *$", policyName):
+                raise IOError("policyName's format should not be empty")
+        if not isinstance(sourceHost, list):
+            raise IOError("sourceHost's formate should is a list,ex: ['10.0.0.1','10.0.0.1-10.0.0.3']")
+        elif not isinstance(destinationHost, list):
+            raise IOError("destinationHost's formate should is a list,ex: ['10.0.0.1','10.0.0.1-10.0.0.3']")
+        elif not isinstance(serviceParam, dict):
+            raise IOError("serviceParam's formate should is a dict.plase use help(createSecurityPolicy) to see details.")
+        else:
+            if serviceParam.has_key("protocol"):
+                if (not serviceParam["protocol"] == "tcp") and (not serviceParam["protocol"] == "udp"):
+                    raise IOError("serviceParam's formate is incorrect.plase use help(createSecurityPolicy) to see details.")
+            else:
+                raise IOError("serviceParam's formate should is a dict and incloude key of protocol.plase use help(createSecurityPolicy) to see details.")
+            if serviceParam.has_key("sourcePort"):
+                if (not isinstance(serviceParam["sourcePort"], str)) and (not serviceParam["sourcePort"] is None):
+                    raise IOError("serviceParam's formate is incorrect.plase use help(createSecurityPolicy) to see details.")
+            else:
+                raise IOError("serviceParam's formate is incorrect.plase use help(createSecurityPolicy) to see details.")
+            if serviceParam["sourcePort"] is not None:
+                if serviceParam.has_key("sourcePortType"):
+                    if (not serviceParam["sourcePortType"] == "eq") and (not serviceParam["sourcePortType"] == "gt") and (not serviceParam["sourcePortType"] == "lt") and (not serviceParam["sourcePortType"] == "range"):
+                        raise IOError("serviceParam's formate is incorrect.plase use help(createSecurityPolicy) to see details.")
+                else:
+                    raise IOError("serviceParam's formate is incorrect.plase use help(createSecurityPolicy) to see details.")
+            else:
+                if serviceParam.has_key("sourcePortType"):
+                    raise IOError("Since serviceParame['sourcePort'] is None,serviceParam['sourcePortType'] should not be exist.")
+            if serviceParam.has_key("destinationPort"):
+                if (not isinstance(serviceParam["destinationPort"], str)) and (not serviceParam["destinationPort"] is None):
+                    raise IOError("serviceParam's formate is incorrect.plase use help(createSecurityPolicy) to see details.")
+            else:
+                raise IOError("serviceParam's formate is incorrect.plase use help(createSecurityPolicy) to see details.")
+            if not serviceParam["destinationPort"] is None:
+                if serviceParam.has_key("destinationPortType"):
+                    if (not serviceParam["destinationPortType"] == "eq") and (not serviceParam["destinationPortType"] == "gt") and (not serviceParam["destinationPortType"] == "lt") and (not serviceParam["destinationPortType"] == "range"):
+                        raise IOError("serviceParam's formate is incorrect.plase use help(createSecurityPolicy) to see details.")
+                else:
+                    raise IOError("serviceParam's formate is incorrect.plase use help(createSecurityPolicy) to see details.")
+            else:
+                if serviceParam.has_key("destinationPortType"):
+                    raise IOError("Since serviceParame['destinationPort'] is None,serviceParam['destinationPortType'] should not be exist.")
+        # Check the service section.
+        if serviceParam["sourcePort"] is None:
+            sourceSection = ""
+        else:
+            if serviceParam["sourcePortType"] == "range":
+                if not re.search("^[0-9]+\-[0-9]+$", serviceParam["sourcePort"]):
+                    raise IOError("sourcePort's format of serviceParam is incorrect.")
+                portA, portB = serviceParam["sourcePort"].split("-")
+                sourceSection = "source range {portA} {portB}".format(portA=portA, portB=portB)
+            else:
+                if not re.search("^[0-9]+$", serviceParam["sourcePort"]):
+                    raise IOError("sourcePort's format of serviceParam is incorrect.")
+                sourceSection = "source {sourcePortType} {port}".format(sourcePortType=serviceParam["sourcePortType"], port=serviceParam["sourcePort"])
+        if serviceParam["destinationPort"] is None:
+            destinationSection = ""
+        else:
+            if serviceParam["destinationPortType"] == "range":
+                if not re.search("^[0-9]+\-[0-9]+$", serviceParam["destinationPort"]):
+                    raise IOError("destinationPort's format of serviceParam is incorrect.")
+                portA, portB = serviceParam["destinationPort"].split("-")
+                destinationSection = "destination range {portA} {portB}".format(portA=portA, portB=portB)
+            else:
+                if not re.search("^[0-9]+$", serviceParam["destinationPort"]):
+                    raise IOError("destinationPort's format of serviceParam is incorrect.")
+                destinationSection = "destination {destinationPortType} {port}".format(destinationPortType=serviceParam["destinationPortType"], port=serviceParam["destinationPort"])
+        configuration = "0 service {protocol} {sourceSection} {destinationSection}".format(protocol=serviceParam["protocol"], sourceSection=sourceSection, destinationSection=destinationSection)
+        # Check whether the object-policy is exist.
+        tmp = self.isExistObjectPolicyIP(policyName)
+        if not tmp["status"]:
+            return tmp
+        ruleID = tmp["content"]
+        result = self.isExistObjectGroupIPAddress(sourceHost)
+        # Create object-group-ip-address of sourceHost if the object-group is not exist.
+        if result["status"] is True:
+            sourceObjectGroupIPName = result["content"]
+        else:
+            tmp = self.createObjectGroupIPAddress(sourceHost)
+            if tmp["status"] is False:
+                return tmp
+            sourceObjectGroupIPName = tmp["content"]
+        result = self.isExistObjectGroupIPAddress(destinationHost)
+        # Create object-group-ip-address of destinationHost if the object-group is not exist.
+        if result["status"] is True:
+            destinationObjectGroupIPName = result["content"]
+        else:
+            tmp = self.createObjectGroupIPAddress(destinationHost)
+            if tmp["status"] is False:
+                return tmp
+            destinationObjectGroupIPName = tmp["content"]
+        tmp = self.isExistObjectGroupService(configuration)
+        serviceName = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()) + "." + str(random.randint(100000, 999999))
+        if not tmp["status"]:
+            # Create object-group-service if that is not exist.
+            tmp = self.createObjectGroupService(configuration, serviceName)
+            if not tmp["status"]:
+                return tmp
+        configurationB = "rule {ruleID} pass source-ip {sourceObjectGroupIPName} destination-ip {destinationObjectGroupIPName} service {serviceName} counting ".format(ruleID=ruleID, sourceObjectGroupIPName=sourceObjectGroupIPName, destinationObjectGroupIPName=destinationObjectGroupIPName, serviceName=serviceName)
+        comment = "rule {ruleID} comment {comment}".format(comment=comment, ruleID=ruleID)
+        tmp = self.addObjectPolicyIP(policyName, configurationB, comment)
+        if tmp["status"] is True:
+            tmp = self.commit()
+        return tmp
+
     def showRun(self):
         cmd = "display current-configuration"
         tmp = self.generalMode()
@@ -716,5 +1099,5 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
         if not njInfo["state"] == "success":
             njInfo["status"] = False
         else:
-            njInfo["content"] = "\r\n".join(njInfo["content"].split("\r\n")[1:-1])
+            njInfo["content"] = "\r\r\n".join(njInfo["content"].split("\r\r\n")[1:-1])
         return njInfo

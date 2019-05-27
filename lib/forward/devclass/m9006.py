@@ -1,3 +1,5 @@
+# coding:utf-8
+#
 # This file is part of Forward.
 #
 # Forward is free software: you can redistribute it and/or modify
@@ -12,3 +14,17 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+-----Introduction-----
+[Core][forward] Device class for M9006.
+"""
+from forward.devclass.baseH3C import BASEH3C
+import re
+import string
+
+
+class M9006(BASEH3C):
+    """This is a manufacturer of h3c, it is integrated with BASEH3C library.
+    """
+    pass

@@ -97,7 +97,7 @@ class BASERUIJIE(BASESSHV1):
         }
         # Get the current position Before switch to privileged mode.
         # Demotion,If device currently mode-level greater than 2, It only need to execute `end`.
-        if self.mode > 2:
+        if self.mode >= 2:
             exitResult = self.command("end", prompt={"success": "[\r\n]+\S+(#|>|\]) ?$",
                                                      "error": "(#|>)"})
             if not exitResult["state"] == "success":
@@ -108,10 +108,6 @@ class BASERUIJIE(BASESSHV1):
                 self.mode = 2
                 result["status"] = True
                 return result
-        elif self.mode == 2:
-            # The device is currently in privilege-mode ,so there is no required to switch.
-            result["status"] = True
-            return result
         # else, command line of the device is in general-mode.
         # Start switching to privilege-mode.
         sendEnable = self.command("enable", prompt={"password": "[pP]assword.*",
@@ -148,7 +144,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = '''show run | include  ntp'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -174,7 +170,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = '''show run | include  logging'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>) ?$",
+            "success": "[\r\n]+\S+(#|>) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -203,7 +199,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = '''show run | include  snmp'''
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -229,7 +225,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = "show  version"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         result = self.command(cmd=cmd, prompt=prompt)
@@ -250,7 +246,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = "show  vlan"
         prompt = {
-            "success": "[\r\n]+\S+.+(>|#|\$) *$",
+            "success": "[\r\n]+\S+(>|#|\$) *$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -301,7 +297,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = "show ip route"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -366,7 +362,7 @@ class BASERUIJIE(BASESSHV1):
         }
         cmd = "show interface"
         prompt = {
-            "success": "[\r\n]+\S+.+(#|>|\]) ?$",
+            "success": "[\r\n]+\S+(#|>|\]) ?$",
             "error": "Unrecognized[\s\S]+",
         }
         # Before you execute the show command, you must go into privilege mode
@@ -446,3 +442,136 @@ class BASERUIJIE(BASESSHV1):
         except pexpect.TIMEOUT:
             # No legacy data.
             return ''
+
+    def vlanExist(self, vlan_id):
+        # Check if the vlan exists.
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        vlan_id = str(vlan_id)
+        vlan_list = self.showVlan()
+        # check
+        if not vlan_list["status"]:
+            return vlan_list
+        for line in vlan_list["content"]:
+            if vlan_id == line["id"]:
+                result["status"] = True
+                return result
+        result["errLog"] = "Vlan {vlan_id} doest not exist.".format(vlan_id=vlan_id)
+        return result
+
+    def createVlan(self, vlan_id, description="None"):
+        """
+        @param vlan_id: vlan-id,
+        @param description: description of vlan.
+
+        """
+        # Crate vlan.
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        vlan_id = str(vlan_id)
+        # Enter config-mode.
+        tmp = self.configMode()
+        if not tmp["status"]:
+            # Failed to enter configuration mode
+            return tmp
+        cmd = "vlan {vlan_id}\rname {description}".format(vlan_id=vlan_id, description=description)
+        prompt = {
+            "success": "[\r\n]+\S+config\-vlan\)(#|>) ?$",
+            "error": "Invalid[\s\S]+config\)(#|>) ?$",
+        }
+        tmp = self.command(cmd, prompt=prompt)
+        if tmp["state"] == "success":
+            # The vlan was created successfuly, then to save configration if save is True.
+            result["content"] = "The vlan {vlan_id} was created.".format(vlan_id=vlan_id)
+            result["status"] = True
+            return result
+        else:
+            result["errLog"] = tmp["content"]
+            return result
+
+    def deleteVlan(self, vlan_id):
+        # Delete vlan.
+        result = {
+            "status": False,
+            "content": {},
+            "errLog": ""
+        }
+        # Enter config-mode.
+        tmp = self.configMode()
+        if not tmp["status"]:
+            # Failed to enter configuration mode
+            return tmp
+        cmd = "no vlan {vlan_id}".format(vlan_id=vlan_id)
+        prompt = {
+            "success": "[\r\n]+\S+config\)(#|>) ?$",
+        }
+        tmp = self.command(cmd, prompt=prompt)
+        if not self.vlanExist(vlan_id)["status"]:
+            # The vlan was deleted successfuly, then to save configration if save is True.
+            result["content"] = "The vlan {vlan_id} was deleted.".format(vlan_id=vlan_id)
+            result["status"] = True
+            return result
+        else:
+            result["errLog"] = "The vlan {vlan_id} was not deleted.".format(vlan_id=vlan_id)
+            return result
+
+    def basicInfo(self, cmd="show version"):
+        njInfo = {"status": True,
+                  "content": {"noRestart": {"status": None, "content": ""},
+                              "systemTime": {"status": None, "content": ""},
+                              "cpuLow": {"status": None, "content": ""},
+                              "memLow": {"status": None, "content": ""},
+                              "boardCard": {"status": None, "content": ""},
+                              "tempLow": {"status": None, "content": ""},
+                              "firewallConnection": {"status": None, "content": ""}},
+                  "errLog": ""}
+        prompt = {
+            "success": "[\r\n]+\S+(>|\]|#) ?$",
+            "error": "(Invalid input|[Uu]nknown command|Unrecognized command|Invalid command)[\s\S]+",
+        }
+        tmp = self.privilegeMode()
+        runningDate = -1
+        if tmp["status"]:
+            result = self.command(cmd=cmd, prompt=prompt)
+            if result["state"] == "success":
+                dataLine = re.search("[Uu]ptime +: +([0-9]+).*", result["content"])
+                if dataLine is not None:
+                    runningDate = int(dataLine.group(1))
+                    # Weather running-time of the device is more than 7 days
+                    if runningDate > 7:
+                        njInfo["content"]["noRestart"]["status"] = True
+                    elif runningDate == -1:
+                        pass
+                    else:
+                        njInfo["content"]["noRestart"]["status"] = False
+                    # Return detail to Forward.
+                    njInfo["content"]["noRestart"]["content"] = dataLine.group().strip()
+                else:
+                    # Forward did't find the uptime of the device.
+                    pass
+            else:
+                # That forwarder execute the command is failed.
+                result["status"] = False
+                return result
+        else:
+            return tmp
+        return njInfo
+
+    def showRun(self):
+        cmd = "show run"
+        tmp = self.privilegeMode()
+        if not tmp["status"]:
+            # Switch failure.
+            return tmp
+        njInfo = self.command(cmd, prompt={"success": "[\r\n]+\S+# ?$"})
+        if not njInfo["state"] == "success":
+            njInfo["status"] = False
+        else:
+            njInfo["content"] = "\r\n".join(njInfo["content"].split("\r\n")[1:-1])
+        return njInfo

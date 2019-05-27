@@ -19,6 +19,7 @@
 -----Introduction-----
 [Core][forward] Device class for n5548.
 """
+import re
 from forward.devclass.baseCisco import BASECISCO
 
 
@@ -58,3 +59,6 @@ class N5548(BASECISCO):
                                  username=username,
                                  password=password,
                                  addCommand='user {username} password {password} role network-admin\n')
+
+    def basicInfo(self):
+        return BASECISCO.basicInfo(self, "show version")

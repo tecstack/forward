@@ -284,16 +284,26 @@ class BASETELNET(object):
             elif i[0] == 1:
                 # Find the prompt-1
                 result["state"] = prompt.items()[0][0]
-                break
+                # Matching page break
+                if re.search(self.moreFlag, result["content"].split("\r\n")[-1]):
+                    continue
+                else:
+                    break
             elif i[0] == 2:
                 # Find the prompt-2
                 result["state"] = prompt.items()[1][0]
-                break
+                # Matching page break
+                if re.search(self.moreFlag, result["content"].split("\r\n")[-1]):
+                    continue
+                else:
+                    break
             elif i[0] == -1:
                 # Timeout
                 result["errLog"] = '[Forward Error]: receive timeout,prompt is invalid.'
                 return result
         result["status"] = True
+        # Delete page break
+        result["content"] = re.sub("\r\n.*?\r *?\r", "\r\n", result["content"])
         result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
         # remove the More charactor
         result["content"] = re.sub(' \-\-More\(CTRL\+C break\)\-\- (\x00|\x08){0,} +(\x00|\x08){0,}', "",

@@ -48,7 +48,7 @@ class BASESSHV1(object):
         # Multiple identical characters may appear
         self.basePrompt = r"(>|#|\]|\$) *$"
         self.prompt = ''
-        self.moreFlag = '(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+|\(Q to quit\)'
+        self.moreFlag = '(< *)?(\-)+( |\()?[Mm]ore.*(\)| )?(\-)+( *>)?|\(Q to quit\)'
         self.mode = 1
 
         """
@@ -318,17 +318,27 @@ class BASESSHV1(object):
             if i == 1:
                 # Find the prompt-1
                 result["state"] = prompt.items()[0][0]
-                break
+                # Matching page break
+                if re.search(self.moreFlag, result["content"].split("\r\n")[-1]):
+                    continue
+                else:
+                    break
             if i == 2:
                 # Find the prompt-2
                 result["state"] = prompt.items()[1][0]
-                break
+                # Matching page break
+                if re.search(self.moreFlag, result["content"].split("\r\n")[-1]):
+                    continue
+                else:
+                    break
             if i == 0:
                 # Get More then result
                 self.channel.send(" ")
         result["status"] = True
         # Replenish prompt
         result["content"] += self.channel.after
+        # Delete page break
+        result["content"] = re.sub("\r\n.*?\r *?\r", "\r\n", result["content"])
         # Delete special characters caused by More split screen.
         result["content"] = re.sub("<--- More --->\\r +\\r", "", result["content"])
         # remove the More charactor

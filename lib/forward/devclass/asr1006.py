@@ -19,7 +19,7 @@
 -----Introduction-----
 [Core][forward] Device class for ASR1006.
 """
-
+import re
 from forward.devclass.baseCisco import BASECISCO
 
 
