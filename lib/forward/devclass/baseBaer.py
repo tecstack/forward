@@ -57,9 +57,9 @@ class BASEBAER(BASESSHV2):
             "errLog": ""
         }
         """
-        *A:NFJD-PSC-S-SR7750-1# configure
-        *A:NFJD-PSC-S-SR7750-1>config# service
-        *A:NFJD-PSC-S-SR7750-1>config>service#
+        *A:XXX-XXC-X-XXX-1# configure
+        *A:XXX-XXX-X-XXX-1>config# service
+        *A:XXX-XX-X-XXXXX-1>config>service#
         """
         result = self.command("exit all", prompt={"success": "[\r\n]+\S+# ?$"})
         if result["state"] == "success":
