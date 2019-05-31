@@ -43,7 +43,7 @@ class VYOSLINUX(BCLINUX7):
             """The result returned is similar to 'show version\r\n\x1b[?1h\x1b=\r
                Version:      VyOS 1.1.7\x1b[m\r\nDescription:  VyOS 1.1.7 (helium
                )\x1b[m\r\nCopyright: 0.29\x1b[m\r\n\x1b[m\r\n\r\x1b[K\x1b[?1l
-               \x1b>vyos@nfjd-sdn-fwvm-253-153:~$
+               \x1b>vyos@nxx-sdn-fwvm-253-153:~$
                Because of this type of device, special character information
                will be generated after executing the command, so delete it here.
             """
