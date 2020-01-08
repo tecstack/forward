@@ -25,6 +25,7 @@
 | <a href="#showLog">showLog</a> | 查看SYSLOG服务器地址信息 |
 | <a href="#showSnmp">showSnmp</a> | 查看SNMP服务端地址信息 |
 | <a href="#showInterface">showInterface</a> | 查看Interface列表信息 |
+| <a href="#showRun">showRun</a> | 查看设备整体配置信息 |
 
 ## 接口详情
 
@@ -388,4 +389,31 @@
 	>>> instance.login()
 	>>> instance.showInterface()
 	>>> {"status":True,"content":[{...},{...}],"errLog":""}
+
+---
+
+* <a name="showRun">showRun</a>
+
+	查看设备整体的配置信息。
+	
+
+	* 调用参数
+	
+		无。
+
+	* 返回参数
+
+		| 字段 | 类型 | 描述 | 样例 |
+		| --- | --- | --- | --- |
+		| status | bool | 调用该接口是否成功 | False | 
+		| content | list | 调用该接口所产生的正确内容输出,但可能为空，这取决于所执行命令的结果 | Version...SoftWare...|
+		| errLog |  str | 调用该接口所产生的错误内容或Forward的错误提示信息 | 命令执行失败 |
+
+	* 案例
+	
+	``` Python
+	>>> instance=......
+	>>> instance.login()
+	>>> instance.showRun()
+	>>> {"status":True,"content":"Version...SoftWare...","errLog":""}
 
