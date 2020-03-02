@@ -17,14 +17,12 @@
 
 """
 -----Introduction-----
-[Core][forward] Device class for M9006.
+[Core][forward] Device class for fg3800.
 """
-from forward.devclass.baseH3C import BASEH3C
-# import re
-# import string
+from forward.devclass.baseFortinet import BASEFORTINET
 
 
-class M9006(BASEH3C):
-    """This is a manufacturer of h3c, it is integrated with BASEH3C library.
+class FG3800(BASEFORTINET):
+    """This is a manufacturer of fortinet, so it is integrated with BASEFORTINET library.
     """
     pass

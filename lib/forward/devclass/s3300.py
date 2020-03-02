@@ -34,7 +34,7 @@ class S3300(BASEMAIPU):
         """
         BASEMAIPU.__init__(self, *args, **kws)
         self.moreFlag = re.escape('....press ENTER to next \
-line, Q to quit, other key to next page....')
+        line, Q to quit, other key to next page....')
 
     def _recv(self, _prompt):
         """A message returned after the receiving device has executed the command.

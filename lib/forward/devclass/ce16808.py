@@ -17,14 +17,12 @@
 
 """
 -----Introduction-----
-[Core][forward] Device class for M9006.
+[Core][forward] Device class for ce16808.
 """
-from forward.devclass.baseH3C import BASEH3C
-# import re
-# import string
+from forward.devclass.baseHuawei import BASEHUAWEI
 
 
-class M9006(BASEH3C):
-    """This is a manufacturer of h3c, it is integrated with BASEH3C library.
+class CE16808(BASEHUAWEI):
+    """This is a manufacturer of huawei, so it is integrated with BASEHUAWEI library.
     """
     pass

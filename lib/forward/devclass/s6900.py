@@ -17,14 +17,14 @@
 
 """
 -----Introduction-----
-[Core][forward] Device class for M9006.
+[Core][forward] Device class for s6900.
 """
 from forward.devclass.baseH3C import BASEH3C
 # import re
 # import string
 
 
-class M9006(BASEH3C):
+class S6900(BASEH3C):
     """This is a manufacturer of h3c, it is integrated with BASEH3C library.
     """
     pass

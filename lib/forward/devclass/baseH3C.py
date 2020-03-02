@@ -25,7 +25,7 @@ import logging
 import time
 import random
 from forward.devclass.baseSSHV2 import BASESSHV2
-from forward.utils.forwardError import ForwardError
+# from forward.utils.forwardError import ForwardError
 from forward.utils.paraCheck import checkIP
 from forward.utils.deviceListSplit import DEVICELIST
 
@@ -583,7 +583,7 @@ class BASEH3C(BASESSHV2):
         if not self.vlanExist(vlan_id)["status"]:
             # no exists.
             result["errLog"] = "The vlan({vlan_id}) does not exists,\
-thus can't create interface-vlan.".format(vlan_id=vlan_id)
+            thus can't create interface-vlan.".format(vlan_id=vlan_id)
             return result
         prompt1 = {
             "success": "[\r\n]+\S+Vlanif{vlan_id}\] ?$".format(vlan_id=vlan_id),
@@ -696,15 +696,17 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
         for line in dataLine:
             line = line.split()
             if len(line) == 4:
-                njInfo["content"].append({
-                    "neighbor-id": line[2],
-                    "pri": "",
-                    "state": line[3],
-                    "uptime": "",
-                    "address": line[0],
-                    "deadTime": "",
-                    "interface": line[1]},
-                    )
+                njInfo["content"].append(
+                    {
+                        "neighbor-id": line[2],
+                        "pri": "",
+                        "state": line[3],
+                        "uptime": "",
+                        "address": line[0],
+                        "deadTime": "",
+                        "interface": line[1]
+                    }
+                )
             else:
                 # The line does not matched data of expection.
                 continue
@@ -1100,4 +1102,26 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
             njInfo["status"] = False
         else:
             njInfo["content"] = "\r\r\n".join(njInfo["content"].split("\r\r\n")[1:-1])
+        return njInfo
+
+    def showHostname(self):
+        # cmd = 'display current-configuration | i sysname'
+        njInfo = {
+            'status': False,
+            'content': "",
+            'errLog': ''
+        }
+        cmd = "display current-configuration | i sysname"
+        prompt = {
+            "success": "[\r\n]+\S+(>|\]) ?$",
+            "error": "Unrecognized command[\s\S]+",
+        }
+        result = self.command(cmd=cmd, prompt=prompt)
+        if result["state"] == "success":
+            tmp = result["content"].split()
+            if tmp:
+                njInfo["content"] = tmp[1]
+            njInfo["status"] = True
+        else:
+            njInfo["errLog"] = result["errLog"]
         return njInfo

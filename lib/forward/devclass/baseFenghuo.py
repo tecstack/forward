@@ -21,7 +21,7 @@
 """
 import re
 from forward.devclass.baseSSHV2 import BASESSHV2
-from forward.utils.forwardError import ForwardError
+# from forward.utils.forwardError import ForwardError
 
 
 class BASEFENGHUO(BASESSHV2):
@@ -289,8 +289,8 @@ class BASEFENGHUO(BASESSHV2):
                         "via": "",
                     }
                     tmp = re.search("([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/([0-9]{1,2})\s+\
-([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\s+([0-9]+/[0-9]+)\s+\
-(\S+)\s+(\S+)", _interfaceInfo)
+                    ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\s+([0-9]+/[0-9]+)\s+\
+                    (\S+)\s+(\S+)", _interfaceInfo)
                     if tmp:
                         lineInfo["net"] = tmp.group(1)
                         lineInfo["mask"] = tmp.group(2)

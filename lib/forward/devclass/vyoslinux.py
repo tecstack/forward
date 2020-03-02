@@ -51,7 +51,7 @@ class VYOSLINUX(BCLINUX7):
             # resultPattern = '[\r\n]+([\s\S]*)[\r\n]+' + self.prompt
             resultPatternOld = '[\r\n]+([\s\S]*)[\r\n]+' + self.prompt
             resultPattern = "[\r\n]+([\s\S]*)({character1_1}|{character1_2}|{character1_\
-3}|{character1_4}){character2}".format(
+            3}|{character1_4}){character2}".format(
                             character1_1=re.escape("\x1b[m\r\n\x1b[m\r\n\r\x1b[K\x1b[?1l\x1b>"),
                             character1_2=re.escape('\x1b[m\r\n\r\x1b[K\x1b[?1l\x1b>'),
                             character1_3=re.escape('\x1b[?1h\x1b=\r\r\x1b[K\x1b[?1l\x1b>'),

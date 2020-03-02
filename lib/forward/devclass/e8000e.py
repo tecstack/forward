@@ -553,8 +553,8 @@ class E8000E(BASEHUAWEI):
             njInfo["errLog"] = "[Forward Error] Please specify a parameter for the service."
             return njInfo
         cmd = 'display policy interzone %s \
-%s %s source address-set %s destination \
-address-set %s service-set %s' % (sZone, dZone, bound, sourceAddress, destAddress, service)
+        %s %s source address-set %s destination \
+        address-set %s service-set %s' % (sZone, dZone, bound, sourceAddress, destAddress, service)
         result = self.command(cmd=cmd, prompt=prompt)
         if not result['status'] or result['state'] != 'success':
             njInfo['errLog'] = result['errLog']

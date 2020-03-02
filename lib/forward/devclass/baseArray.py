@@ -14,17 +14,38 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 """
 -----Introduction-----
-[Core][forward] Device class for M9006.
+[Core][forward] Device class for Array.
 """
-from forward.devclass.baseH3C import BASEH3C
+from forward.devclass.baseSSHV2 import BASESSHV2
 # import re
-# import string
 
 
-class M9006(BASEH3C):
-    """This is a manufacturer of h3c, it is integrated with BASEH3C library.
+class BASEARRAY(BASESSHV2):
+    """This is a manufacturer of baer, using the
+    SSHV2 version of the protocol, so it is integrated with BASESSHV2 library.
     """
-    pass
+    def generalMode(self):
+        pass
+
+    def privilegeMode(self):
+        pass
+
+    def showLog(self):
+        pass
+
+    def showVersion(self):
+        pass
+
+    def showNtp(self):
+        pass
+
+    def showInterface(self):
+        pass
+
+    def showRun(self):
+        pass
+
+    def showHostname(self):
+        pass

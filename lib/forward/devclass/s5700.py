@@ -16,14 +16,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 -----Introduction-----
-[Core][forward] Device class for S5800.
+[Core][forward] Device class for s5700.
 """
 from forward.devclass.baseFenghuo import BASEFENGHUO
 from forward.utils.forwardError import ForwardError
 import re
 
 
-class S5800(BASEFENGHUO):
+class S5700(BASEFENGHUO):
     """This is a manufacturer of fenghuo, so it is integrated with BASEFENGHUO library.
     """
 

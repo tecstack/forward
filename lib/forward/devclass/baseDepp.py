@@ -21,7 +21,7 @@
 """
 from forward.devclass.baseSSHV2 import BASESSHV2
 import re
-import os
+# import os
 
 
 class BASEDEPP(BASESSHV2):

@@ -23,7 +23,7 @@
 import re
 import logging
 from forward.devclass.baseSSHV2 import BASESSHV2
-from forward.utils.forwardError import ForwardError
+# from forward.utils.forwardError import ForwardError
 from forward.utils.paraCheck import checkIP
 
 
@@ -578,7 +578,7 @@ class BASEHUAWEI(BASESSHV2):
         if not self.vlanExist(vlan_id)["status"]:
             # no exists.
             result["errLog"] = "The vlan({vlan_id}) does not exists,\
-thus can't create interface-vlan.".format(vlan_id=vlan_id)
+            thus can't create interface-vlan.".format(vlan_id=vlan_id)
             return result
         prompt1 = {
             "success": "[\r\n]+\S+Vlanif{vlan_id}\] ?$".format(vlan_id=vlan_id),
@@ -692,15 +692,17 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
         for line in dataLine:
             line = line.split()
             if len(line) == 4:
-                njInfo["content"].append({
-                    "neighbor-id": line[2],
-                    "pri": "",
-                    "state": line[3],
-                    "uptime": "",
-                    "address": line[0],
-                    "deadTime": "",
-                    "interface": line[1]},
-                    )
+                njInfo["content"].append(
+                    {
+                        "neighbor-id": line[2],
+                        "pri": "",
+                        "state": line[3],
+                        "uptime": "",
+                        "address": line[0],
+                        "deadTime": "",
+                        "interface": line[1]
+                    }
+                )
             else:
                 # The line does not matched data of expection.
                 continue

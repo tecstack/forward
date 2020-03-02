@@ -23,7 +23,7 @@
 
 import re
 from forward.devclass.baseSSHV2 import BASESSHV2
-from forward.utils.forwardError import ForwardError
+# from forward.utils.forwardError import ForwardError
 from forward.utils.paraCheck import checkIP
 
 
@@ -716,7 +716,7 @@ class BASECISCO(BASESSHV2):
         if not self.vlanExist(vlan_id)["status"]:
             # no exists.
             result["errLog"] = "The vlan({vlan_id}) does not exists,\
-thus can't create interface-vlan.".format(vlan_id=vlan_id)
+            thus can't create interface-vlan.".format(vlan_id=vlan_id)
             return result
         # Enter config-mode.
         tmp = self.configMode()
@@ -848,15 +848,17 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
         for line in dataLine:
             line = line.split()
             if len(line) == 7:
-                njInfo["content"].append({
-                    "neighbor-id": line[0],
-                    "pri": line[1],
-                    "state": line[2] + line[3],
-                    "uptime": line[4],
-                    "address": line[5],
-                    "interface": line[6],
-                    "deadTime": ""}
-                    )
+                njInfo["content"].append(
+                    {
+                        "neighbor-id": line[0],
+                        "pri": line[1],
+                        "state": line[2] + line[3],
+                        "uptime": line[4],
+                        "address": line[5],
+                        "interface": line[6],
+                        "deadTime": ""
+                    }
+                )
             else:
                 # The line does not matched data of expection.
                 continue
@@ -880,21 +882,23 @@ thus can't create interface-vlan.".format(vlan_id=vlan_id)
         for line in result["content"].split("\r\n"):
             dataLine = line.split()
             try:
-                njInfo["content"].append({
-                    "vr-state": "",
-                    "vr-mode": "",
-                    "timer": "",
-                    "type": "",
-                    "interface": dataLine[0],
-                    "group": dataLine[1],
-                    "prio": dataLine[2],
-                    "p": dataLine[3],
-                    "state": dataLine[4],
-                    "active": dataLine[5],
-                    "standby-addr": dataLine[6],
-                    "group-addr": dataLine[7],
-                    "address": dataLine[8]}
-                    )
+                njInfo["content"].append(
+                    {
+                        "vr-state": "",
+                        "vr-mode": "",
+                        "timer": "",
+                        "type": "",
+                        "interface": dataLine[0],
+                        "group": dataLine[1],
+                        "prio": dataLine[2],
+                        "p": dataLine[3],
+                        "state": dataLine[4],
+                        "active": dataLine[5],
+                        "standby-addr": dataLine[6],
+                        "group-addr": dataLine[7],
+                        "address": dataLine[8]
+                    }
+                )
             except Exception:
                 pass
         return njInfo

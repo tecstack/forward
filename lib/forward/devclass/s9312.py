@@ -184,7 +184,7 @@ class S9312(BASEHUAWEI):
             # Keyword search.
             if not re.search('Trunk{port}'.format(port=port), self.prompt):
                 raise ForwardError("Failed to enter port mode,command:interface \
-Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
+            Eth-Trunk {port} [{info}]".format(port=port, info=info["content"]))
             # set vlan
             info["content"] = ""
             self.shell.send("{cmd}\n".format(cmd=cmd))
