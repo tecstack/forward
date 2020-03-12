@@ -20,7 +20,7 @@ Author: Wang Zhe, Cheung Kei-Chuen
 """
 
 import telnetlib
-import re
+# import re
 
 
 class NJTELNETWraper(telnetlib.Telnet):

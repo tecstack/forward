@@ -22,7 +22,7 @@
 import re
 import pexpect
 from forward.devclass.baseSSHV1 import BASESSHV1
-from forward.utils.forwardError import ForwardError
+# from forward.utils.forwardError import ForwardError
 
 
 class BASERUIJIE(BASESSHV1):

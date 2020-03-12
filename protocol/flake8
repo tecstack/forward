@@ -1,4 +1,4 @@
 [flake8]
-exclude = unittests,build,tests,migrations,.git,.tox,docs,*egg,env,instance,callback
-ignore = E402, E123, F401, W605, E501, W601
-max-line-length = 120
+exclude=unittests,build,tests,migrations,.git,.tox,docs,*egg,env,instance,callback
+ignore=E402,E123,F401,W605,E501,W601
+max-line-length=120

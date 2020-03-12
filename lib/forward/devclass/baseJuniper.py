@@ -681,21 +681,23 @@ class BASEJUNIPER(BASETELNET):
                     njInfo["content"][-1]["type"] += "/" + dataLine[0]
                     njInfo["content"][-1]["address"] += "/" + dataLine[1]
                     continue
-                njInfo["content"].append({
-                    "vr-state": dataLine[3],
-                    "vr-mode": dataLine[4],
-                    "timer": dataLine[5] + dataLine[6],
-                    "type": dataLine[7],
-                    "interface": dataLine[0],
-                    "group": dataLine[2],
-                    "prio": "",
-                    "p": "",
-                    "state": dataLine[1],
-                    "active": "",
-                    "standby-addr": "",
-                    "group-addr": "",
-                    "address": dataLine[8]}
-                    )
+                njInfo["content"].append(
+                    {
+                        "vr-state": dataLine[3],
+                        "vr-mode": dataLine[4],
+                        "timer": dataLine[5] + dataLine[6],
+                        "type": dataLine[7],
+                        "interface": dataLine[0],
+                        "group": dataLine[2],
+                        "prio": "",
+                        "p": "",
+                        "state": dataLine[1],
+                        "active": "",
+                        "standby-addr": "",
+                        "group-addr": "",
+                        "address": dataLine[8]
+                    }
+                )
 
             except Exception:
                 pass

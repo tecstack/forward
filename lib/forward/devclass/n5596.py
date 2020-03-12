@@ -19,7 +19,7 @@
 -----Introduction-----
 [Core][forward] Device class for n5596.
 """
-import re
+# import re
 from forward.devclass.baseCisco import BASECISCO
 
 

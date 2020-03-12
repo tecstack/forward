@@ -20,7 +20,7 @@
 """
 import re
 from forward.devclass.baseHuawei import BASEHUAWEI
-from forward.utils.sshv2 import sshv2
+# from forward.utils.sshv2 import sshv2
 
 
 class NE40EX8(BASEHUAWEI):

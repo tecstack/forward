@@ -26,6 +26,7 @@ import re
 
 class SR7750(BASEBAER):
     """This is a manufacturer of baer, so it is integrated with BASEBAER library."""
+
     def showInterfacePower(self, port):
         njInfo = {
             'status': False,
@@ -89,16 +90,17 @@ class SR7750(BASEBAER):
             "error": "Unknown command[\s\S]+",
         }
         logInfo = {
-            'status':True,
-            'errLog':'',
-            'content':{}
+            'status': True,
+            'errLog': '',
+            'content': {}
         }
         cmd = 'show log syslog'
         result = self.command(cmd=cmd, prompt=prompt)
         if not result['status'] or result['state'] != 'success':
             njInfo['errLog'] = result['errLog']
             return njInfo
-        syslogList= re.findall('(\d+\.\d+\.\d+\.\d+)\s+\d+\s+(\w+)', result['content'])
+        syslogList = re.findall(
+            '(\d+\.\d+\.\d+\.\d+)\s+\d+\s+(\w+)', result['content'])
         logInfo['content']['syslog_server'] = {}
         for serinfo in syslogList:
             logInfo['content']['syslog_server'][serinfo[0]] = serinfo[1]

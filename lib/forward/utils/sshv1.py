@@ -16,10 +16,10 @@
 -----Introduction-----
 [Core][forward] Function for sshv1, by using pexpect module.
 """
-import os
-import sys
-import re
-from forward.utils.forwardError import ForwardError
+# import os
+# import sys
+# import re
+# from forward.utils.forwardError import ForwardError
 import pexpect
 
 

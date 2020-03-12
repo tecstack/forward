@@ -19,7 +19,7 @@
 -----Introduction-----
 [Core][forward] Device class for n7018.
 """
-import re
+# import re
 from forward.devclass.baseCisco import BASECISCO
 
 

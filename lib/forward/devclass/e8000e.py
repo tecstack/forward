@@ -21,7 +21,7 @@
 """
 from forward.devclass.baseHuawei import BASEHUAWEI
 import re
-import string
+# import string
 
 
 class E8000E(BASEHUAWEI):

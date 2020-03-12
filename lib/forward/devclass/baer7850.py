@@ -98,7 +98,7 @@ class BAER7850(BASEBAER):
         if not result['status'] or result['state'] != 'success':
             njInfo['errLog'] = result['errLog']
             return njInfo
-        syslogList= re.findall('(\d+\.\d+\.\d+\.\d+)\s+\d+\s+(\w+)', result['content'])
+        syslogList = re.findall('(\d+\.\d+\.\d+\.\d+)\s+\d+\s+(\w+)', result['content'])
         logInfo['content']['syslog_server'] = {}
         for serinfo in syslogList:
             logInfo['content']['syslog_server'][serinfo[0]] = serinfo[1]
@@ -116,15 +116,11 @@ class BAER7850(BASEBAER):
             'errLog': ''
         }
         cmd = "show system information"
-        prompt = {
-            "success": "[\r\n]+\S+(>|\]) ?$",
-            "error": "Unrecognized command[\s\S]+",
-        }
-        result = self.command(cmd=cmd, prompt=prompt)
-        if result["state"] == "success":
-            tmp = result["content"].split()
+        result = self.execute(cmd=cmd)
+        if result["status"] is True:
+            tmp = re.search("System Name.*:(.*)", result["content"], flags=re.IGNORECASE)
             if tmp:
-                njInfo["content"] = tmp[1]
+                njInfo["content"] = tmp.group(1).strip()
             njInfo["status"] = True
         else:
             njInfo["errLog"] = result["errLog"]

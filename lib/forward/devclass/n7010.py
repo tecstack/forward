@@ -19,9 +19,9 @@
 -----Introduction-----
 [Core][forward] Device class for n7010.
 """
-import datetime
-import time
-import re
+# import datetime
+# import time
+# import re
 from forward.devclass.baseCisco import BASECISCO
 
 

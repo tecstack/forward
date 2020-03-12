@@ -22,11 +22,13 @@
 from forward.devclass.baseHuawei import BASEHUAWEI
 from forward.utils.forwardError import ForwardError
 import re
+import string
 
 
 class S9312(BASEHUAWEI):
     """This is a manufacturer of huawei, so it is integrated with BASEHUAWEI library.
     """
+
     def isVlan(self, vlan):
         """Check if the Vlan exists.
         """
@@ -60,7 +62,8 @@ class S9312(BASEHUAWEI):
                 "content": "",
                 "errLog": ""}
         if (vlan is None) or (ascription is None):
-            raise ForwardError("You must specify the `vlan` and `ascription` parameters")
+            raise ForwardError(
+                "You must specify the `vlan` and `ascription` parameters")
         """Warning: that vlan should be checked
            by the 'self.isvlan(vlan) method
            before setting up the vlan"""
@@ -77,11 +80,13 @@ class S9312(BASEHUAWEI):
             # Get host prompt
             self.getPrompt()
             if not re.search('.*-vlan', self.prompt):
-                raise ForwardError("Failed to enter vlan mode,command:vlan {vlan}".format(vlan=vlan))
+                raise ForwardError(
+                    "Failed to enter vlan mode,command:vlan {vlan}".format(vlan=vlan))
             # set host's ascription
             info["content"] = ""
             # Send command.
-            self.shell.send("name {ascription}\n".format(ascription=ascription))
+            self.shell.send("name {ascription}\n".format(
+                ascription=ascription))
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
                 info['content'] += self.shell.recv(1024).decode()
             # Get host prompt.
@@ -118,17 +123,20 @@ class S9312(BASEHUAWEI):
             raise ForwardError(tmp['errLog'])
         # else ,successed
         while True:
-            tmp = self.execute("display current-configuration interface Eth-Trunk")
+            tmp = self.execute(
+                "display current-configuration interface Eth-Trunk")
             if not tmp["status"]:
                 raise ForwardError(tmp["errLog"])
             if re.search("Command is in use by", tmp["content"]):
                 # Recheck
                 continue
             # Keyword search.
-            data = re.search("#[\r\n]+(interface Eth-Trunk{port}[\r\n]+[\s\S]*?)#".format(port=port), tmp["content"])
+            data = re.search(
+                "#[\r\n]+(interface Eth-Trunk{port}[\r\n]+[\s\S]*?)#".format(port=port), tmp["content"])
             if not data:
                 # No configuration found
-                raise ForwardError("Not found port(port) info".format(port=port))
+                raise ForwardError(
+                    "Not found port(port) info".format(port=port))
             try:
                 if re.search("port trunk allow-pass vlan .*{vlan}".format(vlan=vlan), data.group(1)):
                     # found it.
@@ -153,21 +161,26 @@ class S9312(BASEHUAWEI):
         if (vlan is None) or (port is None):
             raise ForwardError('Specify the `vlan` and `port` parameters')
         # get parameter
-        tmp = self.execute("display cur interface Eth-Trunk {port}".format(port=port))
+        tmp = self.execute(
+            "display cur interface Eth-Trunk {port}".format(port=port))
         if not tmp["status"]:
             raise ForwardError(tmp["errLog"])
         # search parameter
-        data = re.search("#[\r\n]+(interface Eth-Trunk{port}[\r\n]+[\s\S]*?)#".format(port=port), tmp["content"])
+        data = re.search(
+            "#[\r\n]+(interface Eth-Trunk{port}[\r\n]+[\s\S]*?)#".format(port=port), tmp["content"])
         if not data:
-            raise ForwardError("Not found port(port) [{info}]".format(port=port, info=tmp["content"]))
+            raise ForwardError("Not found port(port) [{info}]".format(
+                port=port, info=tmp["content"]))
         else:
             # Keyword search.
             data = re.search("(port trunk allow-pass vlan.*)", data.group(1))
             if not data:
-                raise ForwardError("`Port turnk allow-pass vlan ...` is not found")
+                raise ForwardError(
+                    "`Port turnk allow-pass vlan ...` is not found")
             else:
                 # remove the end '\n' and '\r'
-                cmd = "{parameter} {vlan}".format(parameter=data.group(1).strip("\r\n"), vlan=vlan)
+                cmd = "{parameter} {vlan}".format(
+                    parameter=data.group(1).strip("\r\n"), vlan=vlan)
         # switch to config mode
         tmp = self._configMode()
         if not tmp["status"]:
@@ -220,7 +233,8 @@ class S9312(BASEHUAWEI):
         if not tmp:
             raise ForwardError(tmp["errLog"])
         # Execute command.
-        tmp = self.execute("display current-configuration interface Vlanif {vlan}".format(vlan=vlan))
+        tmp = self.execute(
+            "display current-configuration interface Vlanif {vlan}".format(vlan=vlan))
         if not tmp["status"]:
             raise ForwardError(tmp["errLog"])
         # If the above fails, exit immediately
@@ -242,7 +256,8 @@ class S9312(BASEHUAWEI):
                 "errLog": ""}
         # Parameters check.
         if (vlan is None) or (ascription is None) or (ip is None):
-            raise ForwardError("You must specify `vlan` and `ascription` and `ip` parameters")
+            raise ForwardError(
+                "You must specify `vlan` and `ascription` and `ip` parameters")
         # Reset gateway ip address
         ip = re.sub('[0-9]+$', '254', ip)
         # switch to config mode
@@ -259,10 +274,12 @@ class S9312(BASEHUAWEI):
             # Get new host prompt.
             self.getPrompt()
             if not re.search('Vlanif', self.prompt):
-                raise ForwardError("Failed to enter Vlanif mode,command:port Vlanif {vlan}".format(vlan=vlan))
+                raise ForwardError(
+                    "Failed to enter Vlanif mode,command:port Vlanif {vlan}".format(vlan=vlan))
             # set ascription
             info["content"] = ""
-            self.shell.send("description {ascription}\n".format(ascription=ascription))
+            self.shell.send("description {ascription}\n".format(
+                ascription=ascription))
             while not re.search(self.basePrompt, info['content'].split('\n')[-1]):
                 info['content'] += self.shell.recv(1024).decode
             # Get new host prompt.
@@ -275,7 +292,8 @@ class S9312(BASEHUAWEI):
                 info['content'] += self.shell.recv(1024).decode
             # Check
             if re.search("Error: The specified IP address is invalid", info["content"]):
-                raise ForwardError("Error: The specified IP address is invalid,IP should be a network segment")
+                raise ForwardError(
+                    "Error: The specified IP address is invalid,IP should be a network segment")
             # Get new host prompt.
             self.getPrompt()
             # save the configuration
@@ -311,7 +329,7 @@ class S9312(BASEHUAWEI):
             port = re.findall('\d+\S+', port)[0]
             cmd = 'display transceiver interface XGigabitEthernet ' + port + ' verbose '
         elif port.startswith('Gi'):
-            port = re.findall('\d+\S+',port)[0]
+            port = re.findall('\d+\S+', port)[0]
             cmd = 'display transceiver interface GigabitEthernet ' + port + ' verbose '
         _result = self.command(cmd=cmd, prompt=prompt)
         if not _result['status'] or _result['state'] != 'success':
@@ -351,7 +369,7 @@ class S9312(BASEHUAWEI):
             "success": "[\r\n]+\S+(>|\]) ?$",
             "error": "Invalid command[\s\S]+",
         }
-        acl = {}
+        # acl = {}
         acl_name = re.sub(' *', '', acl_name)
         cmd = "display current-configuration | begin user-interface"
         result = self.command(cmd=cmd, prompt=prompt)
@@ -388,14 +406,15 @@ class S9312(BASEHUAWEI):
         result = self.command(cmd=cmd, prompt=prompt)
         if not result['status'] or result['state'] != 'success':
             njInfo['status'] = result['errLog']
-        uptime=re.search('Switch uptime is\s+(\d+)\s+weeks, (\d+)\s+days',result['content'])
+        uptime = re.search(
+            'Switch uptime is\s+(\d+)\s+weeks, (\d+)\s+days', result['content'])
         weeksUptime = uptime.groups()[0]
-        daysUptime= uptime.groups()[1]
+        daysUptime = uptime.groups()[1]
         njInfo['status'] = True
-        njInfo['content'] = weeksUptime,daysUptime
+        njInfo['content'] = weeksUptime, daysUptime
         return njInfo
 
-    def usefulContent(self,mystr,matchContent):
+    def usefulContent(self, mystr, matchContent):
         '''
         Args:
             matchContent
@@ -416,30 +435,30 @@ class S9312(BASEHUAWEI):
            3          173                77                44%               85%
 
         '''
-        dash_count=3
-        content_match=False
-        usefulList=[]
+        dash_count = 3
+        content_match = False
+        usefulList = []
         mystr = mystr.split('\n')
         mystr.pop(0)
         mystr.pop(-1)
         for line in mystr:
-          if re.findall(matchContent, line):
-            content_match=True
-            continue
-          if content_match==False :
-            continue
-          if  re.findall('----------',line):
-            dash_count=dash_count-1
-            continue
-          if dash_count==1:
-            usefulList.append(line) #print line
-            continue
-          elif dash_count == 0 :
-            content_match=False
-            dash_count=3
+            if re.findall(matchContent, line):
+                content_match = True
+                continue
+            if content_match is False:
+                continue
+            if re.findall('----------', line):
+                dash_count = dash_count - 1
+                continue
+            if dash_count == 1:
+                usefulList.append(line)  # print line
+                continue
+            elif dash_count == 0:
+                content_match = False
+                dash_count = 3
         return usefulList
 
-    def usefulContent2(self,mystr,matchContent):
+    def usefulContent2(self, mystr, matchContent):
         '''
         Args:
             matchContent
@@ -456,27 +475,27 @@ class S9312(BASEHUAWEI):
         PWR2     Present AC     Supply     5.66         53.53        302.98
 
         '''
-        dash_count=2
-        content_match=False
-        usefulList=[]
+        dash_count = 2
+        content_match = False
+        usefulList = []
         mystr = mystr.split('\n')
         mystr.pop(0)
         mystr.pop(-1)
         for line in mystr:
-          if re.findall(matchContent, line):
-            content_match=True
-            continue
-          if content_match==False :
-            continue
-          if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
-            dash_count=dash_count-1
-            continue
-          if dash_count==1:
-            usefulList.append(line) #print line
-            continue
-          elif dash_count == 0 :
-            content_match=False
-            dash_count=2
+            if re.findall(matchContent, line):
+                content_match = True
+                continue
+            if content_match is False:
+                continue
+            if re.findall('----------', line) or re.findall('System Memory Usage Information:', line):
+                dash_count = dash_count - 1
+                continue
+            if dash_count == 1:
+                usefulList.append(line)  # print line
+                continue
+            elif dash_count == 0:
+                content_match = False
+                dash_count = 2
         return usefulList
 
     def showHardware(self):
@@ -494,125 +513,128 @@ class S9312(BASEHUAWEI):
             "success": "[\r\n]+\S+.+(>|\]) ?$",
             "error": "Invalid command[\s\S]+",
         }
-        cmd='display health'
+        cmd = 'display health'
         result = self.command(cmd=cmd, prompt=prompt)
         if not result['status'] or result['state'] != 'success':
             njInfo['errLog'] = result['errLog']
             return njInfo
 
-        dashCount=2
-        contentMatch=False
-        usefulList=[]
+        dashCount = 2
+        contentMatch = False
+        usefulList = []
         mystr = result['content'].split('\n')
         mystr.pop(0)
         mystr.pop(-1)
         for line in mystr:
-          if re.findall('Slot  Card  Sensor SensorName       Status', line):
-            contentMatch=True
-            continue
-          if contentMatch==False :
-            continue
-          if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
-            dashCount=dashCount-1
-            continue
-          if dashCount==1:
-            usefulList.append(line) #print line
-            continue
-          elif dashCount == 0 :
-            contentMatch=False
-            dashCount=2
+            if re.findall('Slot  Card  Sensor SensorName       Status', line):
+                contentMatch = True
+                continue
+            if contentMatch is False:
+                continue
+            if re.findall('----------', line) or re.findall('System Memory Usage Information:', line):
+                dashCount = dashCount - 1
+                continue
+            if dashCount == 1:
+                usefulList.append(line)  # print line
+                continue
+            elif dashCount == 0:
+                contentMatch = False
+                dashCount = 2
         resultSensor = usefulList
 
-        dashCount=2
-        contentMatch=False
-        usefulList=[]
+        dashCount = 2
+        contentMatch = False
+        usefulList = []
         mystr = result['content'].split('\n')
         mystr.pop(0)
         mystr.pop(-1)
         for line in mystr:
-          if re.findall('PowerID  Online  Mode   State      Current', line):
-            contentMatch=True
-            continue
-          if contentMatch==False :
-            continue
-          if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
-            dashCount=dashCount-1
-            continue
-          if dashCount==1:
-            usefulList.append(line) #print line
-            continue
-          elif dashCount == 0 :
-            contentMatch=False
-            dashCount=2
+            if re.findall('PowerID  Online  Mode   State      Current', line):
+                contentMatch = True
+                continue
+            if contentMatch is False:
+                continue
+            if re.findall('----------', line) or re.findall('System Memory Usage Information:', line):
+                dashCount = dashCount - 1
+                continue
+            if dashCount == 1:
+                usefulList.append(line)  # print line
+                continue
+            elif dashCount == 0:
+                contentMatch = False
+                dashCount = 2
         reultTemperature = usefulList
 
-        dashCount=2
-        contentMatch=False
-        usefulList=[]
+        dashCount = 2
+        contentMatch = False
+        usefulList = []
         mystr = result['content'].split('\n')
         mystr.pop(0)
         mystr.pop(-1)
         for line in mystr:
-          if re.findall('PowerID  Online  Mode   State      Current', line):
-            contentMatch=True
-            continue
-          if contentMatch==False :
-            continue
-          if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
-            dashCount=dashCount-1
-            continue
-          if dashCount==1:
-            usefulList.append(line) #print line
-            continue
-          elif dashCount == 0 :
-            contentMatch=False
-            dashCount=2
+            if re.findall('PowerID  Online  Mode   State      Current', line):
+                contentMatch = True
+                continue
+            if contentMatch is False:
+                continue
+            if re.findall('----------', line) or re.findall('System Memory Usage Information:', line):
+                dashCount = dashCount - 1
+                continue
+            if dashCount == 1:
+                usefulList.append(line)  # print line
+                continue
+            elif dashCount == 0:
+                contentMatch = False
+                dashCount = 2
         resultPower = usefulList
 
-        dashCount=2
-        contentMatch=False
-        usefulList=[]
+        dashCount = 2
+        contentMatch = False
+        usefulList = []
         mystr = result['content'].split('\n')
         mystr.pop(0)
         mystr.pop(-1)
         for line in mystr:
-          if re.findall('FanID   FanNum   Online   Register', line):
-            contentMatch=True
-            continue
-          if contentMatch==False :
-            continue
-          if  re.findall('----------',line) or re.findall('System Memory Usage Information:',line):
-            dashCount=dashCount-1
-            continue
-          if dashCount==1:
-            usefulList.append(line) #print line
-            continue
-          elif dashCount == 0 :
-            contentMatch=False
-            dashCount=2
-        result_fan = usefulList
+            if re.findall('FanID   FanNum   Online   Register', line):
+                contentMatch = True
+                continue
+            if contentMatch is False:
+                continue
+            if re.findall('----------', line) or re.findall('System Memory Usage Information:', line):
+                dashCount = dashCount - 1
+                continue
+            if dashCount == 1:
+                usefulList.append(line)  # print line
+                continue
+            elif dashCount == 0:
+                contentMatch = False
+                dashCount = 2
+        # result_fan = usefulList
 
-        sensorNormal=True
-        temperatureNormal=True
-        powerNormal=True
-        fanNormal=True
+        # sensorNormal = True
+        # temperatureNormal = True
+        # powerNormal = True
+        # fanNormal = True
         errorDevice = []
         for line in resultSensor:
-          if not re.findall('Normal', line): #health output for sensor: If a line include 'Normal', it is normal
-            sensorNormal=False
-            errorDevice.append(line)
+            # health output for sensor: If a line include 'Normal', it is normal
+            if not re.findall('Normal', line):
+                # sensorNormal = False
+                errorDevice.append(line)
         for line in reultTemperature:
-          if not re.findall('Normal', line): #health output for temperature: If a line include 'Normal', it is normal
-            temperatureNormal=False
-            errorDevice.append(line)
-        for line in resultPower:#health output for power: If a line include 'Present' and 'Supply' together, it is normal
+            # health output for temperature: If a line include 'Normal', it is normal
+            if not re.findall('Normal', line):
+                # temperatureNormal = False
+                errorDevice.append(line)
+        for line in resultPower:
+            # health output for power: If a line include 'Present' and 'Supply' together, it is normal
             if re.findall('Present', line):
-                if not re.findall('Supply',line):
-                    temperatureNormal=False
+                if not re.findall('Supply', line):
+                    # temperatureNormal = False
                     errorDevice.append(line)
             if re.findall('FAN', line):
                 if not (re.findall('Registered', line)):
-                    fanNormal = False
+                    # fanNormal = False
                     errorDevice.append(line)
         if not errorDevice:
             njInfo['content'] = 'check pass'
@@ -649,25 +671,25 @@ class S9312(BASEHUAWEI):
         mystr.pop(-1)
         for line in mystr:
             if re.findall('System memory usage at', line):
-                contentMatch=True
+                contentMatch = True
                 continue
-            if contentMatch==False :
+            if contentMatch is False:
                 continue
-            if re.findall('----------',line):
-                dashCount = dashCount-1
+            if re.findall('----------', line):
+                dashCount = dashCount - 1
                 continue
             if dashCount == 1:
-              usefulList.append(line)
-              continue
-            elif dashCount == 0 :
-              contentMatch = False
-              dashCount = 3
+                usefulList.append(line)
+                continue
+            elif dashCount == 0:
+                contentMatch = False
+                dashCount = 3
         resultMemory = usefulList
         # resultMemory=self.usefulContent(result['content'],'System memory usage at') #strip off unuseful line
         for line in resultMemory:
-          value = re.findall('(\d+)%', line)
-          if float(value[0]) >= float(value[1]):
-            memoryEnough = False
+            value = re.findall('(\d+)%', line)
+            if float(value[0]) >= float(value[1]):
+                memoryEnough = False
         njInfo['status'] = True
         njInfo['content'] = memoryEnough
         return njInfo
@@ -700,27 +722,28 @@ class S9312(BASEHUAWEI):
         mystr.pop(-1)
         for line in mystr:
             if re.findall('System memory usage at', line):
-                contentMatch=True
+                contentMatch = True
                 continue
-            if contentMatch==False :
+            if contentMatch is False:
                 continue
-            if  re.findall('----------',line):
-                dashCount = dashCount-1
+            if re.findall('----------', line):
+                dashCount = dashCount - 1
                 continue
             if dashCount == 1:
                 usefulList.append(line)
                 continue
-            elif dashCount == 0 :
+            elif dashCount == 0:
                 contentMatch = False
                 dashCount = 3
-        resultMemory = usefulList
+        # resultMemory = usefulList
         # result_cpu=self.usefulContent(result['content'],'System cpu usage at') #strip off unuseful line
+        resultCPU = usefulList
         for line in resultCPU:
-          value = re.findall('(\d+)%', line)
-          if float(value[0]) >= float(value[1]):
-            cpu_enough = False
+            value = re.findall('(\d+)%', line)
+            if float(value[0]) >= float(value[1]):
+                cpu_enough = False
         njInfo['status'] = True
-        njInfo['content'] = cpu_enough,resultCPU
+        njInfo['content'] = cpu_enough, resultCPU
         return njInfo
 
     def showSpanningTreeStatus(self):

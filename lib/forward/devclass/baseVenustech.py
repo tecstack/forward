@@ -448,15 +448,17 @@ class BASEVENUSTECH(BASETELNET):
         for line in dataLine:
             line = line.split()
             if len(line) == 8:
-                njInfo["content"].append({
-                    "neighbor-id": line[0],
-                    "pri": line[1],
-                    "state": line[2] + line[3],
-                    "uptime": "",
-                    "address": line[5],
-                    "interface": line[6],
-                    "deadTime": line[4]}
-                    )
+                njInfo["content"].append(
+                    {
+                        "neighbor-id": line[0],
+                        "pri": line[1],
+                        "state": line[2] + line[3],
+                        "uptime": "",
+                        "address": line[5],
+                        "interface": line[6],
+                        "deadTime": line[4]
+                    }
+                )
             else:
                 # The line does not matched data of expection.
                 continue

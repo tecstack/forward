@@ -19,8 +19,8 @@
 [Core][forward] Device class for n7018.
 """
 from forward.devclass.baseRaisecom import BASERAISECOM
-from forward.utils.forwardError import ForwardError
-import re
+# from forward.utils.forwardError import ForwardError
+# import re
 
 
 class R3048G(BASERAISECOM):

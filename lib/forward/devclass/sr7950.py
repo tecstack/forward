@@ -26,6 +26,7 @@ import string
 class SR7950(BASEBAER):
     """This is a manufacturer of baer, so it is integrated with BASEBAER library.
     """
+
     def showInterfacePower(self, port):
         njInfo = {
             'status': False,
@@ -48,29 +49,34 @@ class SR7950(BASEBAER):
             resultPower = resultPower['content'].split('\r\n')
             resultPower.pop(0)
             resultPower.pop(-1)
-            for line in  resultPower:
+            result = {}
+            for line in resultPower:
                 power = line.strip().split()
                 if power[0] == '1':
-                  result['TX_1'] = power[3]
-                  result['RX_1'] = power[4]
+                    result['TX_1'] = power[3]
+                    result['RX_1'] = power[4]
                 elif power[0] == '2':
-                  result['TX_2'] = power[3]
-                  result['RX_2'] = power[4]
+                    result['TX_2'] = power[3]
+                    result['RX_2'] = power[4]
                 elif power[0] == '3':
-                  result['TX_3'] = power[3]
-                  result['RX_3'] = power[4]
+                    result['TX_3'] = power[3]
+                    result['RX_3'] = power[4]
                 elif power[0] == '4':
-                  result['TX_4'] = power[3]
-                  result['RX_4'] = power[4]
-            if result['TX_1'] < '-4.80' or result['TX_2'] < '-4.80' or result['TX_3'] < '-4.80' or result['TX_4'] < '-4.80':
+                    result['TX_4'] = power[3]
+                    result['RX_4'] = power[4]
+            if result['TX_1'] < '-4.80' or result['TX_2'] < '-4.80' or \
+               result['TX_3'] < '-4.80' or result['TX_4'] < '-4.80':
                 powerLevel['TX'] = 'LOW'
-            elif result['TX_1'] > '5.00' or result['TX_2'] > '5.00' or result['TX_3'] > '5.00' or result['TX_4'] > '5.00':
+            elif result['TX_1'] > '5.00' or result['TX_2'] > '5.00' or \
+                    result['TX_3'] > '5.00' or result['TX_4'] > '5.00':
                 powerLevel['TX'] = 'HIGH'
             else:
                 powerLevel['TX'] = 'normal'
-            if result['RX_1'] < '-12.10' or result['RX_2'] < '-12.10' or result['RX_3'] < '-12.10' or result['RX_4'] < '-12.10':
+            if result['RX_1'] < '-12.10' or result['RX_2'] < '-12.10' or \
+               result['RX_3'] < '-12.10' or result['RX_4'] < '-12.10':
                 powerLevel['RX'] = 'LOW'
-            elif result['RX_1'] > '5.00' or result['RX_2'] > '5.00' or result['RX_3'] > '5.00' or result['RX_4'] > '5.00':
+            elif result['RX_1'] > '5.00' or result['RX_2'] > '5.00' or \
+                    result['RX_3'] > '5.00' or result['RX_4'] > '5.00':
                 powerLevel['RX'] = 'HIGH'
             else:
                 powerLevel['RX'] = 'normal'
@@ -112,4 +118,4 @@ class SR7950(BASEBAER):
                     result['RX'] = 'normal'
             njInfo['status'] = True
             njInfo['content'] = result
-            return njInfo        
+            return njInfo

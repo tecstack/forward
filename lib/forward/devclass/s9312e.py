@@ -19,8 +19,7 @@
 -----Introduction-----
 [Core][forward] Device class for s9312e.
 """
-import re
-
+# import re
 from forward.devclass.baseHuawei import BASEHUAWEI
 
 
